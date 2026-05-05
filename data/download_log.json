@@ -1,0 +1,62 @@
+{
+  "IPIP_BIG5_openpsychometrics": {
+    "status": "done",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/BIG5",
+    "notes": "307K respondents, 50 items, IPIP Big Five",
+    "timestamp": "2026-05-05T15:09:00.839390"
+  },
+  "SD3_Dark_Triad": {
+    "status": "done",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/SD3",
+    "notes": "",
+    "timestamp": "2026-05-05T15:09:03.202915"
+  },
+  "NPI40_Narcissism": {
+    "status": "done",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/NPI",
+    "notes": "",
+    "timestamp": "2026-05-05T15:09:05.413970"
+  },
+  "TIPI_personality": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/TIPI",
+    "notes": "",
+    "timestamp": "2026-05-05T15:09:06.669577"
+  },
+  "BFI44": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/BFI",
+    "notes": "",
+    "timestamp": "2026-05-05T15:09:08.002609"
+  },
+  "Rosenberg_Self_Esteem": {
+    "status": "done",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/RSE",
+    "notes": "",
+    "timestamp": "2026-05-05T15:09:10.804021"
+  },
+  "PHQ_GAD_counseling_HF": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/phq_gad_counseling",
+    "notes": "Mental health counseling conversations",
+    "timestamp": "2026-05-05T15:09:29.478964"
+  },
+  "PHQ9_GAD7_PSS_students_24k": {
+    "status": "manual_kaggle",
+    "path": "",
+    "notes": "Kaggle: shahzadaalihassan/phq-9-gad-7-pss-isi-dataset-for-mh \u2014 run download_kaggle_datasets.py",
+    "timestamp": "2026-05-05T15:09:29.488875"
+  },
+  "DASS21_normative": {
+    "status": "manual_kaggle",
+    "path": "",
+    "notes": "Kaggle: yamqwe/depression-anxiety-stress-scales-that42k \u2014 run download_kaggle_datasets.py",
+    "timestamp": "2026-05-05T15:09:29.499745"
+  },
+  "MBI_Burnout": {
+    "status": "manual_kaggle",
+    "path": "",
+    "notes": "Kaggle: search 'MBI burnout dataset' \u2014 run download_kaggle_datasets.py",
+    "timestamp": "2026-05-05T15:09:29.508561"
+  }
+}
