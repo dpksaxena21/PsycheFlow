@@ -184,3 +184,52 @@ for name, imp in sorted(zip(feature_names, importance),
                         key=lambda x: x[1], reverse=True):
     bar = "█" * int(imp * 50)
     print(f"  {name:20s}: {imp:.3f} {bar}")
+    
+# ── Train All 5 Personality Models ────────────────────────
+import joblib
+import os
+
+print("\n--- TRAINING ALL 5 PERSONALITY MODELS ---")
+
+models_dir = "models"
+os.makedirs(models_dir, exist_ok=True)
+
+all_features = ['age', 'gender', 'Extraversion', 'Neuroticism',
+                'Agreeableness', 'Conscientiousness', 'Openness']
+
+results = {}
+
+for trait in traits:
+    print(f"\nTraining: {trait}")
+
+    # Features = all traits except the one we're predicting
+    feat_cols = ['age', 'gender'] + [t for t in traits if t != trait]
+    X = df[feat_cols].values
+    y = df[trait + '_label'].values
+
+    X_tr, X_te, y_tr, y_te = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y)
+
+    sc = StandardScaler()
+    X_tr = sc.fit_transform(X_tr)
+    X_te = sc.transform(X_te)
+
+    model = XGBClassifier(
+        n_estimators=100, learning_rate=0.1,
+        max_depth=5, random_state=42,
+        eval_metric='mlogloss', verbosity=0)
+
+    model.fit(X_tr, y_tr)
+    acc = accuracy_score(y_te, model.predict(X_te))
+
+    # Save model and scaler
+    joblib.dump(model, f"models/{trait}_xgb.pkl")
+    joblib.dump(sc,    f"models/{trait}_scaler.pkl")
+
+    results[trait] = acc
+    print(f"  Accuracy: {acc*100:.1f}% — saved to models/{trait}_xgb.pkl")
+
+print("\n--- FINAL RESULTS ---")
+for trait, acc in results.items():
+    bar = "█" * int(acc * 50)
+    print(f"  {trait:20s}: {acc*100:.1f}% {bar}")
