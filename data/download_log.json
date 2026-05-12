@@ -3,60 +3,384 @@
     "status": "done",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/BIG5",
     "notes": "307K respondents, 50 items, IPIP Big Five",
-    "timestamp": "2026-05-05T15:09:00.839390"
+    "timestamp": "2026-05-10T09:47:07.336931"
   },
   "SD3_Dark_Triad": {
     "status": "done",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/SD3",
     "notes": "",
-    "timestamp": "2026-05-05T15:09:03.202915"
+    "timestamp": "2026-05-10T09:47:07.355494"
   },
   "NPI40_Narcissism": {
     "status": "done",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/NPI",
     "notes": "",
-    "timestamp": "2026-05-05T15:09:05.413970"
+    "timestamp": "2026-05-10T09:47:07.372867"
   },
   "TIPI_personality": {
     "status": "failed",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/TIPI",
     "notes": "",
-    "timestamp": "2026-05-05T15:09:06.669577"
+    "timestamp": "2026-05-10T09:47:09.478196"
   },
   "BFI44": {
     "status": "failed",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/BFI",
     "notes": "",
-    "timestamp": "2026-05-05T15:09:08.002609"
+    "timestamp": "2026-05-10T09:47:10.638581"
   },
   "Rosenberg_Self_Esteem": {
     "status": "done",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/RSE",
     "notes": "",
-    "timestamp": "2026-05-05T15:09:10.804021"
+    "timestamp": "2026-05-10T09:47:10.658064"
   },
   "PHQ_GAD_counseling_HF": {
     "status": "failed",
     "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_d_personality/phq_gad_counseling",
     "notes": "Mental health counseling conversations",
-    "timestamp": "2026-05-05T15:09:29.478964"
+    "timestamp": "2026-05-10T09:47:11.263609"
   },
   "PHQ9_GAD7_PSS_students_24k": {
     "status": "manual_kaggle",
     "path": "",
     "notes": "Kaggle: shahzadaalihassan/phq-9-gad-7-pss-isi-dataset-for-mh \u2014 run download_kaggle_datasets.py",
-    "timestamp": "2026-05-05T15:09:29.488875"
+    "timestamp": "2026-05-10T09:47:11.269772"
   },
   "DASS21_normative": {
     "status": "manual_kaggle",
     "path": "",
     "notes": "Kaggle: yamqwe/depression-anxiety-stress-scales-that42k \u2014 run download_kaggle_datasets.py",
-    "timestamp": "2026-05-05T15:09:29.499745"
+    "timestamp": "2026-05-10T09:47:11.276073"
   },
   "MBI_Burnout": {
     "status": "manual_kaggle",
     "path": "",
     "notes": "Kaggle: search 'MBI burnout dataset' \u2014 run download_kaggle_datasets.py",
-    "timestamp": "2026-05-05T15:09:29.508561"
+    "timestamp": "2026-05-10T09:47:11.281499"
+  },
+  "NMHS_2015_NIMHANS": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Full report PDF: https://nimhans.ac.in/wp-content/uploads/2019/07/NMHS-2015-16Report.pdf \u2014 download manually. Numeric tables need manual extraction.",
+    "timestamp": "2026-05-10T09:46:47.200149"
+  },
+  "NFHS5_Mental_Health": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "NFHS-5 at rchiips.org/nfhs/NFHS-5Reports/India.pdf \u2014 unit-level data requires DHS program registration at dhsprogram.com",
+    "timestamp": "2026-05-10T09:46:47.205992"
+  },
+  "NCRB_Suicide_2015_2023": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "NCRB ADSI reports at ncrb.gov.in/accidental-deaths-suicides-in-india-adsi.html \u2014 download ADSI 2015\u20132023 PDFs manually. Key tables: Statement 2.1, A-1 to A-8.",
+    "timestamp": "2026-05-10T09:46:47.212457"
+  },
+  "iCall_TISS_Helpline": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "iCall data is proprietary \u2014 contact icallhelpline@tiss.edu for research collaboration",
+    "timestamp": "2026-05-10T09:46:47.219205"
+  },
+  "Vandrevala_Call_Data": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Proprietary helpline data \u2014 contact contact@vandrevalafoundation.com for research access",
+    "timestamp": "2026-05-10T09:46:47.225250"
+  },
+  "KIRAN_Helpline_Data": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Government helpline (1800-599-0019) \u2014 aggregate data from NIMHANS annual reports",
+    "timestamp": "2026-05-10T09:46:47.230909"
+  },
+  "Census_2011_Mental_Disability": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Census 2011 disability data at censusindia.gov.in \u2014 download D-15 tables for mental illness",
+    "timestamp": "2026-05-10T09:46:47.236152"
+  },
+  "India_Economic_Survey_2023_24": {
+    "status": "manual_required",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_a_india_govt/economic_survey_2023_24_health_chapter.pdf",
+    "notes": "Health chapter for policy context layer",
+    "timestamp": "2026-05-10T09:46:51.353789"
+  },
+  "NSDUH_2022_SAMHSA": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Download from: https://www.samhsa.gov/data/data-we-collect/nsduh-national-survey-drug-use-and-health \u2014 PUFDATA requires registration",
+    "timestamp": "2026-05-10T09:46:51.360693"
+  },
+  "MIDUS_longitudinal": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "MIDUS data at icpsr.umich.edu (free, requires account). ICPSR Study 2760",
+    "timestamp": "2026-05-10T09:46:51.366847"
+  },
+  "Add_Health_longitudinal": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Add Health data at addhealth.unc.edu \u2014 requires data use agreement",
+    "timestamp": "2026-05-10T09:46:51.373140"
+  },
+  "STARD_Depression": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "STAR*D from NIMH Data Archive: nda.nih.gov",
+    "timestamp": "2026-05-10T09:46:51.800246"
+  },
+  "NIMH_RDoC": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "RDoC reference document at nimh.nih.gov/research/rdoc \u2014 no downloadable dataset, use as scoring reference",
+    "timestamp": "2026-05-10T09:46:51.807076"
+  },
+  "NLAAS_Asian_American": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "NLAAS from ICPSR Study 22460 \u2014 free, requires account at icpsr.umich.edu",
+    "timestamp": "2026-05-10T09:46:51.813561"
+  },
+  "CDC_BRFSS_2022": {
+    "status": "manual_large",
+    "path": "",
+    "notes": "CDC BRFSS 2022 full data ~400MB at cdc.gov/brfss \u2014 download manually when on fast internet. URL: https://www.cdc.gov/brfss/annual_data/2022/files/LLCP2022XPT.zip",
+    "timestamp": "2026-05-10T09:46:51.820263"
+  },
+  "IHME_GBD_2021": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Download at healthdata.org/gbd \u2014 free account required. Filter: Mental disorders, India. Download CSV.",
+    "timestamp": "2026-05-10T09:46:51.826074"
+  },
+  "SapienLabs_MHQ": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Sapien Labs MHQ at sapienlabs.org/global-mind-project \u2014 public reports free, raw data requires partnership",
+    "timestamp": "2026-05-10T09:46:51.831733"
+  },
+  "OWID_Mental_Health": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_c_who_international/owid_mental_health_prevalence.csv",
+    "notes": "",
+    "timestamp": "2026-05-10T09:46:52.434749"
+  },
+  "OWID_Depression_Prevalence": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_c_who_international/owid_depression_prevalence.csv",
+    "notes": "",
+    "timestamp": "2026-05-10T09:46:52.987008"
+  },
+  "OWID_Suicide_Rates": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_c_who_international/owid_suicide_rates.csv",
+    "notes": "",
+    "timestamp": "2026-05-10T09:46:53.605687"
+  },
+  "World_Happiness_Report": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_c_who_international/world_happiness",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:06.787758"
+  },
+  "WHO_GHE_2021": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_c_who_international/WHO_GHE_2021_annex.xlsx",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:07.317103"
+  },
+  "GoEmotions_58K": {
+    "status": "done",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/go_emotions",
+    "notes": "58K Reddit comments, 27 emotion labels",
+    "timestamp": "2026-05-10T09:47:28.376682"
+  },
+  "Reddit_MentalHealth_500K": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/reddit_mental_health_500k",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:28.957644"
+  },
+  "SMHD": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "SMHD requires IRB agreement \u2014 request at http://ir.cs.georgetown.edu/resources/smhd.html",
+    "timestamp": "2026-05-10T09:47:29.525795"
+  },
+  "Dreaddit_stress": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/dreaddit",
+    "notes": "3.5K Reddit posts, stress labels",
+    "timestamp": "2026-05-10T09:47:30.082859"
+  },
+  "CAMS_causality": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/CAMS_counseling",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:30.669982"
+  },
+  "MentalLLaMA_benchmark": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/MentalLLaMA",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:31.589139"
+  },
+  "Sentiment140_1.6M": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/sentiment140",
+    "notes": "1.6M tweets, 2-class sentiment",
+    "timestamp": "2026-05-10T09:47:34.109669"
+  },
+  "SemEval2018_emotion": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/semeval2018",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:34.313050"
+  },
+  "EmoBank_VAD": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/emobank",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:34.889361"
+  },
+  "NRC_Emotion_Lexicon": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/NRC_Emotion_Lexicon",
+    "notes": "14K words \u00d7 10 emotions/sentiments",
+    "timestamp": "2026-05-10T09:47:36.601307"
+  },
+  "SuicideWatch_Reddit": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/suicide_watch",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:37.739055"
+  },
+  "Depression_Sentiment": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/depression_sentiment",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:38.317818"
+  },
+  "MBTI_forums": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/mbti_forums",
+    "notes": "8.6K MBTI users text posts",
+    "timestamp": "2026-05-10T09:47:38.906309"
+  },
+  "MentalHealth_Tech_Survey_OSMI": {
+    "status": "manual_kaggle",
+    "path": "",
+    "notes": "Kaggle: osmi/mental-health-in-tech-survey \u2014 run download_kaggle_datasets.py",
+    "timestamp": "2026-05-10T09:47:39.478925"
+  },
+  "COVID_Mental_Health": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/covid_mental_health",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:40.035551"
+  },
+  "Cognitive_Distortion_dataset": {
+    "status": "failed",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_e_nlp_social/cognitive_distortions",
+    "notes": "Labelled CBT cognitive distortions",
+    "timestamp": "2026-05-10T09:47:41.183200"
+  },
+  "DAIC_WOZ": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "DAIC-WOZ depression interview at dcapswoz.ict.usc.edu \u2014 requires data use agreement. Email: steinicke@ict.usc.edu",
+    "timestamp": "2026-05-10T09:47:41.189777"
+  },
+  "AnnoMI_counseling": {
+    "status": "manual_required",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_f_clinical_multimodal/AnnoMI",
+    "notes": "Try: github.com/uccollab/AnnoMI",
+    "timestamp": "2026-05-10T09:47:42.325761"
+  },
+  "HOPE_counseling": {
+    "status": "manual_required",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_f_clinical_multimodal/HOPE",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:42.915066"
+  },
+  "AVEC_2013_2019": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "AVEC challenge data at avec2019.sspnet.eu \u2014 depression + bipolar multimodal. Requires registration.",
+    "timestamp": "2026-05-10T09:47:42.921571"
+  },
+  "MODMA_EEG_Audio": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "MODMA dataset: modma.lzu.edu.cn \u2014 EEG+audio for depression detection. Registration required.",
+    "timestamp": "2026-05-10T09:47:42.927803"
+  },
+  "HappyDB_100K": {
+    "status": "done",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_g_epidemiological/HappyDB",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:47.191046"
+  },
+  "UK_Biobank": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "UK Biobank at ukbiobank.ac.uk \u2014 requires institutional application and fee. Skip for Phase 1.",
+    "timestamp": "2026-05-10T09:47:47.197416"
+  },
+  "ALSPAC": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "ALSPAC at bristol.ac.uk/alspac \u2014 requires institutional access. Skip for Phase 1.",
+    "timestamp": "2026-05-10T09:47:47.202986"
+  },
+  "Korean_MH_Survey": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Available via KOSIS (kosis.kr) \u2014 Korean statistical portal. Tables in Korean.",
+    "timestamp": "2026-05-10T09:47:47.209125"
+  },
+  "WHO_SAGE": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "WHO SAGE at who.int/healthinfo/sage \u2014 public data with registration at apps.who.int/healthinfo/systems/surveydata",
+    "timestamp": "2026-05-10T09:47:47.216359"
+  },
+  "Canadian_CCHS_MH": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Statistics Canada CCHS at statcan.gc.ca \u2014 Public Use Microdata File requires request",
+    "timestamp": "2026-05-10T09:47:47.222546"
+  },
+  "OCD_Reddit": {
+    "status": "manual_kaggle",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_h_specialist/ocd_reddit",
+    "notes": "Kaggle: search 'OCD reddit dataset'",
+    "timestamp": "2026-05-10T09:47:48.390588"
+  },
+  "Bipolar_Social_Media": {
+    "status": "manual_kaggle",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_h_specialist/bipolar_social_media",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:49.540165"
+  },
+  "ADHD_Symptoms": {
+    "status": "manual_required",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_h_specialist/adhd_symptoms",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:50.110434"
+  },
+  "Schizophrenia_Language": {
+    "status": "manual_required",
+    "path": "",
+    "notes": "Look for CLPSYCH shared task data or szproto on GitHub",
+    "timestamp": "2026-05-10T09:47:50.666152"
+  },
+  "LSAS_Social_Anxiety": {
+    "status": "manual_kaggle",
+    "path": "/mnt/d/Projects/PsycheFlow/data/raw/cat_h_specialist/lsas_social_anxiety",
+    "notes": "",
+    "timestamp": "2026-05-10T09:47:51.232455"
   }
 }

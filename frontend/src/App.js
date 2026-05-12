@@ -52,6 +52,43 @@ function JournalSection({ userId }) {
 
       {analysis && (
         <div style={{ marginTop:20 }}>
+
+          {/* Condition Detection */}
+          {analysis.condition_detection && (
+            <div style={{ background: analysis.condition_detection.alert
+              ? '#fef2f2' : '#f0f9ff', borderRadius:12, padding:16, marginBottom:12,
+              border: analysis.condition_detection.alert
+              ? '2px solid #ef4444' : '1px solid #bae6fd' }}>
+              <strong style={{ color: analysis.condition_detection.alert
+                ? '#dc2626' : '#0369a1' }}>
+                {analysis.condition_detection.alert ? '🚨' : '🔍'} Condition Detection
+              </strong>
+              <div style={{ marginTop:8 }}>
+                <span style={{ fontSize:15, fontWeight:'bold',
+                  color: analysis.condition_detection.alert ? '#dc2626' : '#1e293b' }}>
+                  {analysis.condition_detection.primary_condition}
+                </span>
+                <span style={{ fontSize:13, color:'#64748b', marginLeft:8 }}>
+                  ({analysis.condition_detection.confidence}% confidence)
+                </span>
+              </div>
+              <div style={{ fontSize:12, color:'#94a3b8', marginTop:6 }}>
+                {analysis.condition_detection.top3.map((t, i) => (
+                  <span key={i} style={{ marginRight:12 }}>
+                    {t.condition}: {t.probability}%
+                  </span>
+                ))}
+              </div>
+              {analysis.condition_detection.alert && (
+                <div style={{ marginTop:10, padding:'8px 12px',
+                  background:'#fee2e2', borderRadius:8, fontSize:13, color:'#dc2626' }}>
+                  ⚠️ If you are in crisis, please call iCall: <strong>9152987821</strong>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Emotions */}
           <div style={{ background:'#f8fafc', borderRadius:12, padding:16, marginBottom:12 }}>
             <strong>Primary Emotion:</strong>{' '}
             <span style={{ color:'#6366f1', textTransform:'capitalize' }}>
@@ -64,6 +101,7 @@ function JournalSection({ userId }) {
             </span>
           </div>
 
+          {/* Risk Signals */}
           <div style={{ background:'#fff7ed', borderRadius:12, padding:16, marginBottom:12 }}>
             <strong>Risk Signals</strong>
             <div style={{ fontSize:13, marginTop:8, display:'grid',
@@ -78,6 +116,7 @@ function JournalSection({ userId }) {
             </div>
           </div>
 
+          {/* Cognitive Distortions */}
           {analysis.cognitive_distortions.length > 0 && (
             <div style={{ background:'#fef2f2', borderRadius:12, padding:16, marginBottom:12 }}>
               <strong>Cognitive Distortions Detected</strong>
@@ -91,6 +130,7 @@ function JournalSection({ userId }) {
             </div>
           )}
 
+          {/* Clinical Summary */}
           <div style={{ background:'#f0fdf4', borderRadius:12, padding:16 }}>
             <strong>Clinical Summary</strong>
             <p style={{ fontSize:13, color:'#374151', margin:'8px 0' }}>
@@ -101,6 +141,7 @@ function JournalSection({ userId }) {
               {analysis.recommended_focus}
             </span>
           </div>
+
         </div>
       )}
     </div>
@@ -313,6 +354,7 @@ export default function App() {
           </div>
 
           <JournalSection userId={user.id} />
+
         </div>
       </div>
     );

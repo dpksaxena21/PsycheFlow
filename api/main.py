@@ -6,6 +6,7 @@ import joblib
 import numpy as np
 import os
 import sys, os
+from sklearn.feature_extraction.text import TfidfVectorizer
 sys.path.insert(0, os.path.dirname(__file__))
 from journal_analysis import analyze_journal
 app = FastAPI(title="PsycheFlow API", version="2.0")
@@ -87,5 +88,49 @@ class JournalInput(BaseModel):
 def journal_endpoint(data: JournalInput):
     if len(data.text.strip()) < 20:
         return {"error": "Please write at least a few sentences."}
+    
+    # Claude AI analysis
     result = analyze_journal(data.text)
+    
+    # Condition classification
+    X = cond_tfidf.transform([data.text])
+    pred  = cond_model.predict(X)[0]
+    proba = cond_model.predict_proba(X)[0]
+    label = cond_labels.inverse_transform([pred])[0]
+    top3  = sorted(zip(cond_labels.classes_, proba),
+                   key=lambda x: -x[1])[:3]
+    
+    result['condition_detection'] = {
+        "primary_condition": label,
+        "confidence": round(float(max(proba)) * 100, 1),
+        "top3": [{"condition": c, "probability": round(p*100,1)}
+                 for c, p in top3],
+        "alert": label in ["Suicidal"] and max(proba) > 0.5
+    }
+    
     return result
+
+# Load condition classifier
+cond_model  = joblib.load("models/condition_classifier.pkl")
+cond_tfidf  = joblib.load("models/condition_tfidf.pkl")
+cond_labels = joblib.load("models/condition_labels.pkl")
+
+class TextInput(BaseModel):
+    text: str
+
+@app.post("/classify-condition")
+def classify_condition(data: TextInput):
+    if len(data.text.strip()) < 5:
+        return {"error": "Text too short"}
+    X = cond_tfidf.transform([data.text])
+    pred  = cond_model.predict(X)[0]
+    proba = cond_model.predict_proba(X)[0]
+    label = cond_labels.inverse_transform([pred])[0]
+    top3  = sorted(zip(cond_labels.classes_,
+                       proba), key=lambda x: -x[1])[:3]
+    return {
+        "condition":   label,
+        "confidence":  round(float(max(proba)) * 100, 1),
+        "top3": [{"condition": c, "probability": round(p*100,1)}
+                 for c, p in top3]
+    }
