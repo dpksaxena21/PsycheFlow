@@ -1,14 +1,20 @@
-# ── PsycheFlow API v2 — 8 Psychological Models ───────────
+# ── PsycheFlow API v2 ─────────────────────────────────────
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
-import os
-import sys, os
-from sklearn.feature_extraction.text import TfidfVectorizer
-sys.path.insert(0, os.path.dirname(__file__))
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path="/mnt/d/Projects/PsycheFlow/.env")
+
 from journal_analysis import analyze_journal
+from report_generator import generate_full_report
+
 app = FastAPI(title="PsycheFlow API", version="2.0")
 
 app.add_middleware(
@@ -27,8 +33,15 @@ for t in targets:
     models[t]  = joblib.load(f"models/{t}_xgb.pkl")
     scalers[t] = joblib.load(f"models/{t}_scaler.pkl")
 
-print("✓ All 8 models loaded")
+cond_model  = joblib.load("models/condition_classifier.pkl")
+cond_tfidf  = joblib.load("models/condition_tfidf.pkl")
+cond_labels = joblib.load("models/condition_labels.pkl")
 
+print("✓ All models loaded")
+
+label_map = {0: "Low", 1: "Medium", 2: "High"}
+
+# ── Input Models ──────────────────────────────────────────
 class ProfileInput(BaseModel):
     age: float
     gender: int
@@ -41,8 +54,20 @@ class ProfileInput(BaseModel):
     Narcissism: float
     Psychopathy: float
 
-label_map = {0: "Low", 1: "Medium", 2: "High"}
+class JournalInput(BaseModel):
+    text: str
 
+class TextInput(BaseModel):
+    text: str
+
+class ReportInput(BaseModel):
+    predictions: dict
+    phq_score: int
+    gad_score: int
+    age: float
+    gender: int
+
+# ── Endpoints ─────────────────────────────────────────────
 @app.get("/")
 def root():
     return {"status": "PsycheFlow API v2 running", "models": targets}
@@ -52,7 +77,6 @@ def predict(data: ProfileInput):
     results = {}
     d = data.dict()
 
-    # Scale 1-5 scores to match training range (10-50 for Big Five, 9-45 for Dark Triad)
     scale_map = {
         'Extraversion': 10, 'Neuroticism': 10, 'Agreeableness': 10,
         'Conscientiousness': 10, 'Openness': 10,
@@ -60,7 +84,6 @@ def predict(data: ProfileInput):
     }
 
     for trait in targets:
-        feat_cols = ['age','gender'] + [t for t in targets if t != trait]
         scaled_d = {k: v * scale_map.get(k, 1) for k, v in d.items()
                     if k in scale_map}
         scaled_d['age']    = d['age']
@@ -81,25 +104,20 @@ def predict(data: ProfileInput):
 
     return {"predictions": results, "total_models": len(targets)}
 
-class JournalInput(BaseModel):
-    text: str
-
 @app.post("/analyze-journal")
 def journal_endpoint(data: JournalInput):
     if len(data.text.strip()) < 20:
         return {"error": "Please write at least a few sentences."}
-    
-    # Claude AI analysis
+
     result = analyze_journal(data.text)
-    
-    # Condition classification
+
     X = cond_tfidf.transform([data.text])
     pred  = cond_model.predict(X)[0]
     proba = cond_model.predict_proba(X)[0]
     label = cond_labels.inverse_transform([pred])[0]
     top3  = sorted(zip(cond_labels.classes_, proba),
                    key=lambda x: -x[1])[:3]
-    
+
     result['condition_detection'] = {
         "primary_condition": label,
         "confidence": round(float(max(proba)) * 100, 1),
@@ -107,16 +125,8 @@ def journal_endpoint(data: JournalInput):
                  for c, p in top3],
         "alert": label in ["Suicidal"] and max(proba) > 0.5
     }
-    
+
     return result
-
-# Load condition classifier
-cond_model  = joblib.load("models/condition_classifier.pkl")
-cond_tfidf  = joblib.load("models/condition_tfidf.pkl")
-cond_labels = joblib.load("models/condition_labels.pkl")
-
-class TextInput(BaseModel):
-    text: str
 
 @app.post("/classify-condition")
 def classify_condition(data: TextInput):
@@ -129,8 +139,13 @@ def classify_condition(data: TextInput):
     top3  = sorted(zip(cond_labels.classes_,
                        proba), key=lambda x: -x[1])[:3]
     return {
-        "condition":   label,
-        "confidence":  round(float(max(proba)) * 100, 1),
+        "condition":  label,
+        "confidence": round(float(max(proba)) * 100, 1),
         "top3": [{"condition": c, "probability": round(p*100,1)}
                  for c, p in top3]
     }
+
+@app.post("/generate-report")
+def report_endpoint(data: ReportInput):
+    result = generate_full_report(data.dict())
+    return result

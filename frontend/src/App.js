@@ -22,9 +22,7 @@ function JournalSection({ userId }) {
       const res = await axios.post('http://127.0.0.1:8000/analyze-journal', { text });
       setAnalysis(res.data);
       await supabase.from('journal_entries').insert({
-        user_id: userId,
-        text,
-        analysis: res.data
+        user_id: userId, text, analysis: res.data
       });
     } catch {
       alert('Journal analysis failed');
@@ -52,8 +50,6 @@ function JournalSection({ userId }) {
 
       {analysis && (
         <div style={{ marginTop:20 }}>
-
-          {/* Condition Detection */}
           {analysis.condition_detection && (
             <div style={{ background: analysis.condition_detection.alert
               ? '#fef2f2' : '#f0f9ff', borderRadius:12, padding:16, marginBottom:12,
@@ -88,7 +84,6 @@ function JournalSection({ userId }) {
             </div>
           )}
 
-          {/* Emotions */}
           <div style={{ background:'#f8fafc', borderRadius:12, padding:16, marginBottom:12 }}>
             <strong>Primary Emotion:</strong>{' '}
             <span style={{ color:'#6366f1', textTransform:'capitalize' }}>
@@ -101,7 +96,6 @@ function JournalSection({ userId }) {
             </span>
           </div>
 
-          {/* Risk Signals */}
           <div style={{ background:'#fff7ed', borderRadius:12, padding:16, marginBottom:12 }}>
             <strong>Risk Signals</strong>
             <div style={{ fontSize:13, marginTop:8, display:'grid',
@@ -116,7 +110,6 @@ function JournalSection({ userId }) {
             </div>
           </div>
 
-          {/* Cognitive Distortions */}
           {analysis.cognitive_distortions.length > 0 && (
             <div style={{ background:'#fef2f2', borderRadius:12, padding:16, marginBottom:12 }}>
               <strong>Cognitive Distortions Detected</strong>
@@ -130,7 +123,6 @@ function JournalSection({ userId }) {
             </div>
           )}
 
-          {/* Clinical Summary */}
           <div style={{ background:'#f0fdf4', borderRadius:12, padding:16 }}>
             <strong>Clinical Summary</strong>
             <p style={{ fontSize:13, color:'#374151', margin:'8px 0' }}>
@@ -141,7 +133,6 @@ function JournalSection({ userId }) {
               {analysis.recommended_focus}
             </span>
           </div>
-
         </div>
       )}
     </div>
@@ -149,9 +140,11 @@ function JournalSection({ userId }) {
 }
 
 export default function App() {
-  const [screen, setScreen]   = useState('home');
-  const [results, setResults] = useState(null);
-  const [user, setUser]       = useState(null);
+  const [screen, setScreen]           = useState('home');
+  const [results, setResults]         = useState(null);
+  const [user, setUser]               = useState(null);
+  const [fullReport, setFullReport]   = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -164,6 +157,7 @@ export default function App() {
 
   const handleComplete = async ({ answers, age, gender }) => {
     setScreen('loading');
+    setFullReport(null);
 
     const score = (ids) => ids.reduce((s, id) => s + (answers[id] || 3), 0) / ids.length;
 
@@ -190,15 +184,12 @@ export default function App() {
 
       if (user) {
         await supabase.from('sessions').insert({
-          user_id:     user.id,
-          phq_score:   phq,
-          gad_score:   gad,
-          predictions,
-          answers
+          user_id: user.id, phq_score: phq,
+          gad_score: gad, predictions, answers
         });
       }
 
-      setResults({ predictions, phq, gad });
+      setResults({ predictions, phq, gad, age, gender });
       setScreen('results');
     } catch {
       alert('API error — is FastAPI running?');
@@ -206,11 +197,29 @@ export default function App() {
     }
   };
 
+  const handleGenerateReport = async () => {
+    setReportLoading(true);
+    try {
+      const res = await axios.post('http://127.0.0.1:8000/generate-report', {
+        predictions: results.predictions,
+        phq_score:   results.phq,
+        gad_score:   results.gad,
+        age:         results.age || 25,
+        gender:      results.gender || 1
+      });
+      setFullReport(res.data);
+    } catch {
+      alert('Report generation failed');
+    }
+    setReportLoading(false);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setScreen('home');
     setResults(null);
+    setFullReport(null);
   };
 
   const TraitBar = ({ name, data, colorFn }) => (
@@ -268,7 +277,7 @@ export default function App() {
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:48, marginBottom:16 }}>⚙️</div>
         <h3 style={{ color:'#6366f1' }}>Analyzing your profile...</h3>
-        <p style={{ color:'#94a3b8' }}>Running 8 psychological models</p>
+        <p style={{ color:'#94a3b8' }}>Running 13 psychological models</p>
       </div>
     </div>
   );
@@ -290,7 +299,7 @@ export default function App() {
                   fontSize:13, marginRight:8 }}>
                 Dashboard
               </button>
-              <button onClick={() => { setScreen('questionnaire'); setResults(null); }}
+              <button onClick={() => { setScreen('questionnaire'); setResults(null); setFullReport(null); }}
                 style={{ padding:'8px 16px', background:'#fff', color:'#6366f1',
                   border:'1px solid #6366f1', borderRadius:8,
                   cursor:'pointer', fontSize:13 }}>
@@ -299,48 +308,37 @@ export default function App() {
             </div>
           </div>
 
+          {/* Mental Health Screening */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Mental Health Screening</h3>
             <div style={{ display:'flex', gap:16 }}>
               <div style={{ flex:1, background:'#f8fafc', borderRadius:12,
                 padding:16, textAlign:'center' }}>
-                <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>
-                  Depression (PHQ-9)
-                </div>
-                <div style={{ fontSize:28, fontWeight:'bold', color:phq.color }}>
-                  {results.phq}
-                </div>
-                <div style={{ fontSize:13, color:phq.color, fontWeight:'bold' }}>
-                  {phq.label}
-                </div>
+                <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>Depression (PHQ-9)</div>
+                <div style={{ fontSize:28, fontWeight:'bold', color:phq.color }}>{results.phq}</div>
+                <div style={{ fontSize:13, color:phq.color, fontWeight:'bold' }}>{phq.label}</div>
               </div>
               <div style={{ flex:1, background:'#f8fafc', borderRadius:12,
                 padding:16, textAlign:'center' }}>
-                <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>
-                  Anxiety (GAD-7)
-                </div>
-                <div style={{ fontSize:28, fontWeight:'bold', color:gad.color }}>
-                  {results.gad}
-                </div>
-                <div style={{ fontSize:13, color:gad.color, fontWeight:'bold' }}>
-                  {gad.label}
-                </div>
+                <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>Anxiety (GAD-7)</div>
+                <div style={{ fontSize:28, fontWeight:'bold', color:gad.color }}>{results.gad}</div>
+                <div style={{ fontSize:13, color:gad.color, fontWeight:'bold' }}>{gad.label}</div>
               </div>
             </div>
           </div>
 
+          {/* Big Five */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>
-              Personality — Big Five (OCEAN)
-            </h3>
+            <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>Personality — Big Five (OCEAN)</h3>
             {bigFive.map(t => (
               <TraitBar key={t} name={t} data={results.predictions[t]}
                 colorFn={(l) => colorMap[l]} />
             ))}
           </div>
 
+          {/* Dark Triad */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 16px', color:'#dc2626' }}>Dark Triad Assessment</h3>
@@ -353,6 +351,48 @@ export default function App() {
             ))}
           </div>
 
+          {/* Full Claude AI Report */}
+          <div style={{ background:'#fff', borderRadius:16, padding:24,
+            border:'1px solid #e2e8f0', marginBottom:20 }}>
+            <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>✨ Full Psychological Report</h3>
+            <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>
+              A comprehensive 2000+ word psychological profile written by our AI psychologist.
+            </p>
+            {!fullReport ? (
+              <button onClick={handleGenerateReport} disabled={reportLoading}
+                style={{ padding:'12px 32px',
+                  background:'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color:'#fff', border:'none', borderRadius:10, cursor:'pointer',
+                  fontSize:15, fontWeight:'bold',
+                  boxShadow:'0 4px 20px rgba(99,102,241,0.3)' }}>
+                {reportLoading ? '⏳ Generating your report...' : '✨ Generate My Full Report'}
+              </button>
+            ) : (
+              <div>
+                {Object.entries(fullReport.sections).map(([title, content]) => (
+                  content && (
+                    <div key={title} style={{ marginBottom:24 }}>
+                      <h4 style={{ color:'#6366f1', fontSize:13, fontWeight:'bold',
+                        textTransform:'uppercase', letterSpacing:'0.5px',
+                        borderBottom:'2px solid #eef2ff', paddingBottom:8, marginBottom:12 }}>
+                        {title}
+                      </h4>
+                      <p style={{ fontSize:14, color:'#374151', lineHeight:1.8,
+                        margin:0, whiteSpace:'pre-wrap' }}>
+                        {content}
+                      </p>
+                    </div>
+                  )
+                ))}
+                <div style={{ background:'#f8fafc', borderRadius:8, padding:12,
+                  fontSize:12, color:'#94a3b8', marginTop:16 }}>
+                  {fullReport.word_count} words · Generated by PsycheFlow AI
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Journal */}
           <JournalSection userId={user.id} />
 
         </div>
