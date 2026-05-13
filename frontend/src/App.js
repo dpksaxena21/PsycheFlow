@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { supabase } from './supabase';
 import Auth from './Auth';
-import Questionnaire from './Questionnaire';
+import AdaptiveQuestionnaire from './AdaptiveQuestionnaire';
 import Dashboard from './Dashboard';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
@@ -140,10 +140,10 @@ function JournalSection({ userId }) {
 }
 
 export default function App() {
-  const [screen, setScreen]           = useState('home');
-  const [results, setResults]         = useState(null);
-  const [user, setUser]               = useState(null);
-  const [fullReport, setFullReport]   = useState(null);
+  const [screen, setScreen]               = useState('home');
+  const [results, setResults]             = useState(null);
+  const [user, setUser]                   = useState(null);
+  const [fullReport, setFullReport]       = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
 
   React.useEffect(() => {
@@ -155,7 +155,7 @@ export default function App() {
     });
   }, []);
 
-  const handleComplete = async ({ answers, age, gender }) => {
+  const handleComplete = async ({ answers, age, gender, occupation, concern }) => {
     setScreen('loading');
     setFullReport(null);
 
@@ -173,9 +173,23 @@ export default function App() {
       Psychopathy:        score(['P1','P2']),
     };
 
-    const phq = ['PHQ1','PHQ2','PHQ3','PHQ4','PHQ5','PHQ6','PHQ7']
+    const phq = ['PHQ1','PHQ2','PHQ3','PHQ4','PHQ5','PHQ6','PHQ7','PHQ8','PHQ9']
       .reduce((s, id) => s + (answers[id] || 0), 0);
     const gad = ['GAD1','GAD2','GAD3','GAD4','GAD5','GAD6','GAD7']
+      .reduce((s, id) => s + (answers[id] || 0), 0);
+
+    // Additional scores
+    const bipolar = ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5']
+      .reduce((s, id) => s + (answers[id] || 0), 0);
+    const ptsd = ['PCL1','PCL2','PCL3','PCL4','PCL5']
+      .reduce((s, id) => s + (answers[id] || 0), 0);
+    const ocd = ['OCD1','OCD2','OCD3','OCD4','OCD5']
+      .reduce((s, id) => s + (answers[id] || 0), 0);
+    const adhd = ['ADHD1','ADHD2','ADHD3','ADHD4','ADHD5']
+      .reduce((s, id) => s + (answers[id] || 0), 0);
+    const burnout = ['BRN1','BRN2','BRN3','BRN4','BRN5']
+      .reduce((s, id) => s + (answers[id] || 0), 0);
+    const selfEsteem = ['RSE1','RSE2','RSE3','RSE4']
       .reduce((s, id) => s + (answers[id] || 0), 0);
 
     try {
@@ -184,12 +198,19 @@ export default function App() {
 
       if (user) {
         await supabase.from('sessions').insert({
-          user_id: user.id, phq_score: phq,
-          gad_score: gad, predictions, answers
+          user_id:    user.id,
+          phq_score:  phq,
+          gad_score:  gad,
+          predictions,
+          answers
         });
       }
 
-      setResults({ predictions, phq, gad, age, gender });
+      setResults({
+        predictions, phq, gad, age, gender,
+        occupation, concern,
+        bipolar, ptsd, ocd, adhd, burnout, selfEsteem
+      });
       setScreen('results');
     } catch {
       alert('API error — is FastAPI running?');
@@ -237,6 +258,14 @@ export default function App() {
     </div>
   );
 
+  const scoreLevel = (s, max) => {
+    const pct = s / max;
+    if (pct < 0.2) return { label:'Minimal',  color:'#22c55e' };
+    if (pct < 0.4) return { label:'Mild',     color:'#f59e0b' };
+    if (pct < 0.6) return { label:'Moderate', color:'#f97316' };
+    return               { label:'Severe',   color:'#ef4444' };
+  };
+
   const phqLevel = (s) => s <= 4  ? {label:'Minimal',  color:'#22c55e'}
     : s <= 9  ? {label:'Mild',     color:'#f59e0b'}
     : s <= 14 ? {label:'Moderate', color:'#f97316'}
@@ -260,12 +289,12 @@ export default function App() {
   if (screen === 'questionnaire') return (
     <div style={{ fontFamily:'sans-serif', minHeight:'100vh',
       background:'linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%)', padding:40 }}>
-      <div style={{ maxWidth:640, margin:'0 auto' }}>
+      <div style={{ maxWidth:600, margin:'0 auto' }}>
         <div style={{ display:'flex', alignItems:'center', marginBottom:32 }}>
           <span style={{ fontSize:24, marginRight:10 }}>🧠</span>
           <h2 style={{ color:'#6366f1', margin:0 }}>PsycheFlow</h2>
         </div>
-        <Questionnaire onComplete={handleComplete} />
+        <AdaptiveQuestionnaire onComplete={handleComplete} />
       </div>
     </div>
   );
@@ -288,7 +317,7 @@ export default function App() {
     return (
       <div style={{ fontFamily:'sans-serif', background:'#f1f5f9',
         minHeight:'100vh', padding:32 }}>
-        <div style={{ maxWidth:640, margin:'0 auto' }}>
+        <div style={{ maxWidth:680, margin:'0 auto' }}>
           <div style={{ display:'flex', justifyContent:'space-between',
             alignItems:'center', marginBottom:24 }}>
             <h2 style={{ color:'#6366f1', margin:0 }}>🧠 Your Psychological Report</h2>
@@ -308,30 +337,76 @@ export default function App() {
             </div>
           </div>
 
-          {/* Mental Health Screening */}
+          {/* Primary Mental Health */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Mental Health Screening</h3>
-            <div style={{ display:'flex', gap:16 }}>
-              <div style={{ flex:1, background:'#f8fafc', borderRadius:12,
-                padding:16, textAlign:'center' }}>
-                <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>Depression (PHQ-9)</div>
-                <div style={{ fontSize:28, fontWeight:'bold', color:phq.color }}>{results.phq}</div>
-                <div style={{ fontSize:13, color:phq.color, fontWeight:'bold' }}>{phq.label}</div>
-              </div>
-              <div style={{ flex:1, background:'#f8fafc', borderRadius:12,
-                padding:16, textAlign:'center' }}>
-                <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>Anxiety (GAD-7)</div>
-                <div style={{ fontSize:28, fontWeight:'bold', color:gad.color }}>{results.gad}</div>
-                <div style={{ fontSize:13, color:gad.color, fontWeight:'bold' }}>{gad.label}</div>
-              </div>
+            <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>
+              Mental Health Screening
+            </h3>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              {[
+                { label:'Depression (PHQ-9)', score: results.phq, max:27, level: phq },
+                { label:'Anxiety (GAD-7)',    score: results.gad, max:21, level: gad },
+              ].map((item, i) => (
+                <div key={i} style={{ background:'#f8fafc', borderRadius:12,
+                  padding:16, textAlign:'center' }}>
+                  <div style={{ fontSize:12, color:'#64748b', marginBottom:4 }}>
+                    {item.label}
+                  </div>
+                  <div style={{ fontSize:28, fontWeight:'bold', color:item.level.color }}>
+                    {item.score}
+                  </div>
+                  <div style={{ fontSize:12, color:item.level.color, fontWeight:'bold' }}>
+                    {item.level.label}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Additional Scores — only show if assessed */}
+          {(results.bipolar > 0 || results.ptsd > 0 ||
+            results.ocd > 0 || results.adhd > 0 || results.burnout > 0) && (
+            <div style={{ background:'#fff', borderRadius:16, padding:24,
+              border:'1px solid #e2e8f0', marginBottom:20 }}>
+              <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>
+                Additional Screening Results
+              </h3>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+                {[
+                  { label:'Bipolar (MDQ)',  score: results.bipolar,  max:20 },
+                  { label:'PTSD (PCL-5)',   score: results.ptsd,     max:20 },
+                  { label:'OCD (OCI-R)',    score: results.ocd,      max:20 },
+                  { label:'ADHD (ASRS)',    score: results.adhd,     max:20 },
+                  { label:'Burnout (MBI)',  score: results.burnout,  max:20 },
+                  { label:'Self-Esteem',    score: results.selfEsteem, max:12 },
+                ].filter(item => item.score > 0).map((item, i) => {
+                  const lv = scoreLevel(item.score, item.max);
+                  return (
+                    <div key={i} style={{ background:'#f8fafc', borderRadius:10,
+                      padding:12, textAlign:'center' }}>
+                      <div style={{ fontSize:11, color:'#64748b', marginBottom:4 }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize:22, fontWeight:'bold', color:lv.color }}>
+                        {item.score}
+                      </div>
+                      <div style={{ fontSize:11, color:lv.color, fontWeight:'bold' }}>
+                        {lv.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Big Five */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>Personality — Big Five (OCEAN)</h3>
+            <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>
+              Personality — Big Five (OCEAN)
+            </h3>
             {bigFive.map(t => (
               <TraitBar key={t} name={t} data={results.predictions[t]}
                 colorFn={(l) => colorMap[l]} />
@@ -354,7 +429,9 @@ export default function App() {
           {/* Full Claude AI Report */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>✨ Full Psychological Report</h3>
+            <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>
+              ✨ Full Psychological Report
+            </h3>
             <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>
               A comprehensive 2000+ word psychological profile written by our AI psychologist.
             </p>
@@ -365,7 +442,9 @@ export default function App() {
                   color:'#fff', border:'none', borderRadius:10, cursor:'pointer',
                   fontSize:15, fontWeight:'bold',
                   boxShadow:'0 4px 20px rgba(99,102,241,0.3)' }}>
-                {reportLoading ? '⏳ Generating your report...' : '✨ Generate My Full Report'}
+                {reportLoading
+                  ? '⏳ Generating your report (~2 min)...'
+                  : '✨ Generate My Full Report'}
               </button>
             ) : (
               <div>
@@ -374,7 +453,8 @@ export default function App() {
                     <div key={title} style={{ marginBottom:24 }}>
                       <h4 style={{ color:'#6366f1', fontSize:13, fontWeight:'bold',
                         textTransform:'uppercase', letterSpacing:'0.5px',
-                        borderBottom:'2px solid #eef2ff', paddingBottom:8, marginBottom:12 }}>
+                        borderBottom:'2px solid #eef2ff', paddingBottom:8,
+                        marginBottom:12 }}>
                         {title}
                       </h4>
                       <p style={{ fontSize:14, color:'#374151', lineHeight:1.8,
