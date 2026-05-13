@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
-const darkTriad = ['Machiavellianism','Narcissism','Psychopathy'];
 const colorMap  = { High:'#ef4444', Medium:'#f59e0b', Low:'#22c55e' };
-const dtColor   = { High:'#dc2626', Medium:'#f97316', Low:'#16a34a' };
 
 export default function Dashboard({ user, onStartAssessment, onLogout }) {
   const [sessions, setSessions]   = useState([]);
@@ -12,23 +10,13 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
-    const { data: s } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    const { data: j } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
+    const { data: s } = await supabase.from('sessions').select('*')
+      .eq('user_id', user.id).order('created_at', { ascending: false });
+    const { data: j } = await supabase.from('journal_entries').select('*')
+      .eq('user_id', user.id).order('created_at', { ascending: false });
     setSessions(s || []);
     setJournals(j || []);
     setLoading(false);
@@ -45,8 +33,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
     padding:'10px 20px', border:'none', borderRadius:8, cursor:'pointer',
     fontSize:14, fontWeight: activeTab===tab ? 'bold' : 'normal',
     background: activeTab===tab ? '#6366f1' : '#fff',
-    color: activeTab===tab ? '#fff' : '#64748b',
-    marginRight:8
+    color: activeTab===tab ? '#fff' : '#64748b', marginRight:8
   });
 
   if (loading) return (
@@ -99,7 +86,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
           </button>
         </div>
 
-        {/* Overview Tab */}
+        {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div>
             {sessions.length === 0 ? (
@@ -118,29 +105,28 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
               </div>
             ) : (
               <div>
-                {/* Mental Health Cards */}
+                {/* Stats Cards */}
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr',
                   gap:16, marginBottom:20 }}>
                   {[
-                    { label:'Total Sessions', value: sessions.length, icon:'📊' },
-                    { label:'Latest PHQ-9', value: latest?.phq_score ?? '-',
-                      color: phqLevel(latest?.phq_score).color, icon:'😔' },
-                    { label:'Latest GAD-7', value: latest?.gad_score ?? '-',
-                      color: phqLevel(latest?.gad_score).color, icon:'😰' },
-                    { label:'Journal Entries', value: journals.length, icon:'📝' },
+                    { label:'Total Sessions',    value: sessions.length,          icon:'📊', color:'#6366f1' },
+                    { label:'Latest PHQ-9',       value: latest?.phq_score ?? '-', icon:'😔', color: phqLevel(latest?.phq_score||0).color },
+                    { label:'Latest GAD-7',       value: latest?.gad_score ?? '-', icon:'😰', color: phqLevel(latest?.gad_score||0).color },
+                    { label:'Journal Entries',    value: journals.length,          icon:'📝', color:'#6366f1' },
                   ].map((card, i) => (
                     <div key={i} style={{ background:'#fff', borderRadius:16,
                       padding:20, border:'1px solid #e2e8f0' }}>
-                      <div style={{ fontSize:24, marginBottom:8 }}>{card.icon}</div>
-                      <div style={{ fontSize:28, fontWeight:'bold',
-                        color: card.color || '#1e293b' }}>{card.value}</div>
+                      <div style={{ fontSize:28, marginBottom:8 }}>{card.icon}</div>
+                      <div style={{ fontSize:28, fontWeight:'bold', color:card.color }}>
+                        {card.value}
+                      </div>
                       <div style={{ fontSize:13, color:'#94a3b8' }}>{card.label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Latest Personality */}
-                {latest?.predictions && (
+                {latest?.predictions && Object.keys(latest.predictions).length > 0 && (
                   <div style={{ background:'#fff', borderRadius:16, padding:24,
                     border:'1px solid #e2e8f0', marginBottom:20 }}>
                     <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>
@@ -148,6 +134,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                     </h3>
                     {bigFive.map(t => {
                       const d = latest.predictions[t];
+                      if (!d) return null;
                       return (
                         <div key={t} style={{ marginBottom:12 }}>
                           <div style={{ display:'flex', justifyContent:'space-between',
@@ -172,7 +159,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                 {/* PHQ Trend */}
                 {sessions.length > 1 && (
                   <div style={{ background:'#fff', borderRadius:16, padding:24,
-                    border:'1px solid #e2e8f0' }}>
+                    border:'1px solid #e2e8f0', marginBottom:20 }}>
                     <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>
                       Depression Score Trend (PHQ-9)
                     </h3>
@@ -195,12 +182,77 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                     </div>
                   </div>
                 )}
+
+                {/* Latest Journal */}
+                {journals.length > 0 && (
+                  <div style={{ background:'#fff', borderRadius:16, padding:24,
+                    border:'1px solid #e2e8f0', marginBottom:20 }}>
+                    <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>
+                      Latest Journal Entry
+                    </h3>
+                    <div style={{ background:'#f8fafc', borderRadius:12, padding:16 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between',
+                        marginBottom:8 }}>
+                        <strong style={{ color:'#6366f1', textTransform:'capitalize' }}>
+                          {journals[0].analysis?.emotions?.primary || 'Entry'} —{' '}
+                          {journals[0].analysis?.emotions?.intensity || ''}
+                        </strong>
+                        <span style={{ fontSize:12, color:'#94a3b8' }}>
+                          {new Date(journals[0].created_at).toLocaleDateString('en-IN')}
+                        </span>
+                      </div>
+                      <p style={{ fontSize:13, color:'#475569', margin:'0 0 8px',
+                        fontStyle:'italic' }}>
+                        "{journals[0].text?.slice(0,200)}..."
+                      </p>
+                      {journals[0].analysis?.condition_detection && (
+                        <div style={{ fontSize:12, color:'#6366f1' }}>
+                          Condition detected: <strong>
+                            {journals[0].analysis.condition_detection.primary_condition}
+                          </strong> ({journals[0].analysis.condition_detection.confidence}%)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Actions */}
+                <div style={{ background:'#fff', borderRadius:16, padding:24,
+                  border:'1px solid #e2e8f0' }}>
+                  <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Quick Actions</h3>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                    {[
+                      { icon:'💬', label:'Conversational Interview', desc:'Talk to Dr. PsycheFlow' },
+                      { icon:'📋', label:'Take Assessment',          desc:'Structured questionnaire' },
+                      { icon:'📈', label:'View History',             desc:'See your progress' },
+                      { icon:'📝', label:'View Journals',            desc:'Past journal entries' },
+                    ].map((action, i) => (
+                      <div key={i}
+                        onClick={() => {
+                          if (i < 2) onStartAssessment();
+                          else if (i === 2) setActiveTab('history');
+                          else setActiveTab('journal');
+                        }}
+                        style={{ background:'#f8fafc', borderRadius:12, padding:16,
+                          cursor:'pointer', border:'1px solid #e2e8f0',
+                          transition:'all 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor='#6366f1'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor='#e2e8f0'}>
+                        <div style={{ fontSize:24, marginBottom:6 }}>{action.icon}</div>
+                        <div style={{ fontSize:13, fontWeight:'bold', color:'#1e293b' }}>
+                          {action.label}
+                        </div>
+                        <div style={{ fontSize:11, color:'#94a3b8' }}>{action.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
         )}
 
-        {/* History Tab */}
+        {/* HISTORY TAB */}
         {activeTab === 'history' && (
           <div>
             {sessions.length === 0 ? (
@@ -221,36 +273,49 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                       { day:'numeric', month:'short', year:'numeric' })}
                   </span>
                 </div>
-                <div style={{ display:'flex', gap:12 }}>
-                  <div style={{ background:'#f8fafc', borderRadius:8,
-                    padding:'8px 16px', textAlign:'center' }}>
-                    <div style={{ fontSize:20, fontWeight:'bold',
-                      color: phqLevel(s.phq_score).color }}>{s.phq_score}</div>
-                    <div style={{ fontSize:11, color:'#94a3b8' }}>PHQ-9</div>
+
+                {s.answers?.interview_assessment ? (
+                  <div style={{ background:'#f0f9ff', borderRadius:8,
+                    padding:12, fontSize:13, color:'#374151' }}>
+                    <strong style={{ color:'#0369a1' }}>💬 Conversational Interview</strong>
+                    <p style={{ margin:'8px 0 0', fontSize:12 }}>
+                      {s.answers.interview_assessment.slice(0,200)}...
+                    </p>
                   </div>
-                  <div style={{ background:'#f8fafc', borderRadius:8,
-                    padding:'8px 16px', textAlign:'center' }}>
-                    <div style={{ fontSize:20, fontWeight:'bold',
-                      color: phqLevel(s.gad_score).color }}>{s.gad_score}</div>
-                    <div style={{ fontSize:11, color:'#94a3b8' }}>GAD-7</div>
-                  </div>
-                  {s.predictions && bigFive.slice(0,3).map(t => (
-                    <div key={t} style={{ background:'#f8fafc', borderRadius:8,
+                ) : (
+                  <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+                    <div style={{ background:'#f8fafc', borderRadius:8,
                       padding:'8px 16px', textAlign:'center' }}>
-                      <div style={{ fontSize:13, fontWeight:'bold',
-                        color: colorMap[s.predictions[t].label] }}>
-                        {s.predictions[t].label}
-                      </div>
-                      <div style={{ fontSize:11, color:'#94a3b8' }}>{t.slice(0,4)}</div>
+                      <div style={{ fontSize:20, fontWeight:'bold',
+                        color: phqLevel(s.phq_score).color }}>{s.phq_score}</div>
+                      <div style={{ fontSize:11, color:'#94a3b8' }}>PHQ-9</div>
                     </div>
-                  ))}
-                </div>
+                    <div style={{ background:'#f8fafc', borderRadius:8,
+                      padding:'8px 16px', textAlign:'center' }}>
+                      <div style={{ fontSize:20, fontWeight:'bold',
+                        color: phqLevel(s.gad_score).color }}>{s.gad_score}</div>
+                      <div style={{ fontSize:11, color:'#94a3b8' }}>GAD-7</div>
+                    </div>
+                    {s.predictions && bigFive.slice(0,3).map(t => (
+                      s.predictions[t] && (
+                        <div key={t} style={{ background:'#f8fafc', borderRadius:8,
+                          padding:'8px 16px', textAlign:'center' }}>
+                          <div style={{ fontSize:13, fontWeight:'bold',
+                            color: colorMap[s.predictions[t].label] }}>
+                            {s.predictions[t].label}
+                          </div>
+                          <div style={{ fontSize:11, color:'#94a3b8' }}>{t.slice(0,4)}</div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
-        {/* Journal Tab */}
+        {/* JOURNAL TAB */}
         {activeTab === 'journal' && (
           <div>
             {journals.length === 0 ? (
@@ -273,7 +338,18 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                   </span>
                 </div>
                 <p style={{ fontSize:13, color:'#475569', margin:'0 0 8px',
-                  fontStyle:'italic' }}>"{j.text.slice(0, 150)}..."</p>
+                  fontStyle:'italic' }}>"{j.text?.slice(0,150)}..."</p>
+                {j.analysis?.condition_detection && (
+                  <div style={{ fontSize:12, marginBottom:8 }}>
+                    <span style={{ color:'#64748b' }}>Condition: </span>
+                    <strong style={{ color:'#6366f1' }}>
+                      {j.analysis.condition_detection.primary_condition}
+                    </strong>
+                    <span style={{ color:'#94a3b8', marginLeft:6 }}>
+                      ({j.analysis.condition_detection.confidence}%)
+                    </span>
+                  </div>
+                )}
                 {j.analysis?.clinical_summary && (
                   <p style={{ fontSize:12, color:'#64748b', margin:0,
                     background:'#f8fafc', padding:'8px 12px', borderRadius:8 }}>

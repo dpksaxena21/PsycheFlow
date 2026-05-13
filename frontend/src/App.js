@@ -3,6 +3,7 @@ import axios from 'axios';
 import { supabase } from './supabase';
 import Auth from './Auth';
 import AdaptiveQuestionnaire from './AdaptiveQuestionnaire';
+import ClinicalInterview from './ClinicalInterview';
 import Dashboard from './Dashboard';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
@@ -145,6 +146,7 @@ export default function App() {
   const [user, setUser]                   = useState(null);
   const [fullReport, setFullReport]       = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
+  const [assessMode, setAssessMode]       = useState(null);
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -177,20 +179,12 @@ export default function App() {
       .reduce((s, id) => s + (answers[id] || 0), 0);
     const gad = ['GAD1','GAD2','GAD3','GAD4','GAD5','GAD6','GAD7']
       .reduce((s, id) => s + (answers[id] || 0), 0);
-
-    // Additional scores
-    const bipolar = ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5']
-      .reduce((s, id) => s + (answers[id] || 0), 0);
-    const ptsd = ['PCL1','PCL2','PCL3','PCL4','PCL5']
-      .reduce((s, id) => s + (answers[id] || 0), 0);
-    const ocd = ['OCD1','OCD2','OCD3','OCD4','OCD5']
-      .reduce((s, id) => s + (answers[id] || 0), 0);
-    const adhd = ['ADHD1','ADHD2','ADHD3','ADHD4','ADHD5']
-      .reduce((s, id) => s + (answers[id] || 0), 0);
-    const burnout = ['BRN1','BRN2','BRN3','BRN4','BRN5']
-      .reduce((s, id) => s + (answers[id] || 0), 0);
-    const selfEsteem = ['RSE1','RSE2','RSE3','RSE4']
-      .reduce((s, id) => s + (answers[id] || 0), 0);
+    const bipolar    = ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5'].reduce((s,id)=>s+(answers[id]||0),0);
+    const ptsd       = ['PCL1','PCL2','PCL3','PCL4','PCL5'].reduce((s,id)=>s+(answers[id]||0),0);
+    const ocd        = ['OCD1','OCD2','OCD3','OCD4','OCD5'].reduce((s,id)=>s+(answers[id]||0),0);
+    const adhd       = ['ADHD1','ADHD2','ADHD3','ADHD4','ADHD5'].reduce((s,id)=>s+(answers[id]||0),0);
+    const burnout    = ['BRN1','BRN2','BRN3','BRN4','BRN5'].reduce((s,id)=>s+(answers[id]||0),0);
+    const selfEsteem = ['RSE1','RSE2','RSE3','RSE4'].reduce((s,id)=>s+(answers[id]||0),0);
 
     try {
       const res = await axios.post('http://127.0.0.1:8000/predict', payload);
@@ -198,19 +192,13 @@ export default function App() {
 
       if (user) {
         await supabase.from('sessions').insert({
-          user_id:    user.id,
-          phq_score:  phq,
-          gad_score:  gad,
-          predictions,
-          answers
+          user_id: user.id, phq_score: phq,
+          gad_score: gad, predictions, answers
         });
       }
 
-      setResults({
-        predictions, phq, gad, age, gender,
-        occupation, concern,
-        bipolar, ptsd, ocd, adhd, burnout, selfEsteem
-      });
+      setResults({ predictions, phq, gad, age, gender,
+        occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
     } catch {
       alert('API error — is FastAPI running?');
@@ -241,6 +229,7 @@ export default function App() {
     setScreen('home');
     setResults(null);
     setFullReport(null);
+    setAssessMode(null);
   };
 
   const TraitBar = ({ name, data, colorFn }) => (
@@ -281,7 +270,7 @@ export default function App() {
   if (screen === 'home') return (
     <Dashboard
       user={user}
-      onStartAssessment={() => setScreen('questionnaire')}
+      onStartAssessment={() => { setAssessMode(null); setScreen('questionnaire'); }}
       onLogout={handleLogout}
     />
   );
@@ -289,12 +278,79 @@ export default function App() {
   if (screen === 'questionnaire') return (
     <div style={{ fontFamily:'sans-serif', minHeight:'100vh',
       background:'linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%)', padding:40 }}>
-      <div style={{ maxWidth:600, margin:'0 auto' }}>
+      <div style={{ maxWidth:680, margin:'0 auto' }}>
         <div style={{ display:'flex', alignItems:'center', marginBottom:32 }}>
           <span style={{ fontSize:24, marginRight:10 }}>🧠</span>
           <h2 style={{ color:'#6366f1', margin:0 }}>PsycheFlow</h2>
+          <button onClick={() => { setScreen('home'); setAssessMode(null); }}
+            style={{ marginLeft:'auto', padding:'6px 14px', background:'transparent',
+              border:'1px solid #e2e8f0', borderRadius:8, color:'#94a3b8',
+              cursor:'pointer', fontSize:12 }}>
+            ← Back
+          </button>
         </div>
-        <AdaptiveQuestionnaire onComplete={handleComplete} />
+
+        {!assessMode ? (
+          <div style={{ background:'#fff', borderRadius:20, padding:36,
+            border:'1px solid #e2e8f0',
+            boxShadow:'0 4px 24px rgba(99,102,241,0.08)' }}>
+            <h3 style={{ color:'#1e293b', margin:'0 0 8px' }}>
+              Choose Assessment Mode
+            </h3>
+            <p style={{ color:'#64748b', fontSize:14, marginBottom:28 }}>
+              How would you like to be assessed today?
+            </p>
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div onClick={() => setAssessMode('interview')}
+                style={{ padding:24, borderRadius:16, border:'2px solid #e2e8f0',
+                  cursor:'pointer', transition:'all 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor='#6366f1'}
+                onMouseLeave={e => e.currentTarget.style.borderColor='#e2e8f0'}>
+                <div style={{ fontSize:28, marginBottom:8 }}>💬</div>
+                <h4 style={{ color:'#6366f1', margin:'0 0 6px' }}>
+                  Conversational Interview
+                </h4>
+                <p style={{ color:'#64748b', fontSize:13, margin:0 }}>
+                  Talk to Dr. PsycheFlow like a real psychologist. Natural conversation,
+                  adaptive follow-up questions. Takes 10-15 minutes. Most accurate.
+                </p>
+                <div style={{ marginTop:10, fontSize:12, color:'#6366f1',
+                  fontWeight:'bold' }}>⭐ Recommended</div>
+              </div>
+
+              <div onClick={() => setAssessMode('questionnaire')}
+                style={{ padding:24, borderRadius:16, border:'2px solid #e2e8f0',
+                  cursor:'pointer', transition:'all 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor='#6366f1'}
+                onMouseLeave={e => e.currentTarget.style.borderColor='#e2e8f0'}>
+                <div style={{ fontSize:28, marginBottom:8 }}>📋</div>
+                <h4 style={{ color:'#6366f1', margin:'0 0 6px' }}>
+                  Structured Questionnaire
+                </h4>
+                <p style={{ color:'#64748b', fontSize:13, margin:0 }}>
+                  Validated clinical questionnaires (PHQ-9, GAD-7, Big Five, and more).
+                  Adaptive — adjusts based on your answers. Takes 10-20 minutes.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : assessMode === 'interview' ? (
+          <ClinicalInterview user={user} onComplete={async (assessment) => {
+            if (user) {
+              await supabase.from('sessions').insert({
+                user_id:     user.id,
+                phq_score:   0,
+                gad_score:   0,
+                predictions: {},
+                answers:     { interview_assessment: assessment }
+              });
+            }
+            setAssessMode(null);
+            setScreen('home');
+          }} />
+        ) : (
+          <AdaptiveQuestionnaire onComplete={handleComplete} />
+        )}
       </div>
     </div>
   );
@@ -328,7 +384,12 @@ export default function App() {
                   fontSize:13, marginRight:8 }}>
                 Dashboard
               </button>
-              <button onClick={() => { setScreen('questionnaire'); setResults(null); setFullReport(null); }}
+              <button onClick={() => {
+                setScreen('questionnaire');
+                setResults(null);
+                setFullReport(null);
+                setAssessMode(null);
+              }}
                 style={{ padding:'8px 16px', background:'#fff', color:'#6366f1',
                   border:'1px solid #6366f1', borderRadius:8,
                   cursor:'pointer', fontSize:13 }}>
@@ -337,16 +398,14 @@ export default function App() {
             </div>
           </div>
 
-          {/* Primary Mental Health */}
+          {/* Mental Health */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>
-              Mental Health Screening
-            </h3>
+            <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Mental Health Screening</h3>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               {[
-                { label:'Depression (PHQ-9)', score: results.phq, max:27, level: phq },
-                { label:'Anxiety (GAD-7)',    score: results.gad, max:21, level: gad },
+                { label:'Depression (PHQ-9)', score:results.phq, level:phq },
+                { label:'Anxiety (GAD-7)',    score:results.gad, level:gad },
               ].map((item, i) => (
                 <div key={i} style={{ background:'#f8fafc', borderRadius:12,
                   padding:16, textAlign:'center' }}>
@@ -364,7 +423,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Additional Scores — only show if assessed */}
+          {/* Additional Scores */}
           {(results.bipolar > 0 || results.ptsd > 0 ||
             results.ocd > 0 || results.adhd > 0 || results.burnout > 0) && (
             <div style={{ background:'#fff', borderRadius:16, padding:24,
@@ -374,12 +433,12 @@ export default function App() {
               </h3>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
                 {[
-                  { label:'Bipolar (MDQ)',  score: results.bipolar,  max:20 },
-                  { label:'PTSD (PCL-5)',   score: results.ptsd,     max:20 },
-                  { label:'OCD (OCI-R)',    score: results.ocd,      max:20 },
-                  { label:'ADHD (ASRS)',    score: results.adhd,     max:20 },
-                  { label:'Burnout (MBI)',  score: results.burnout,  max:20 },
-                  { label:'Self-Esteem',    score: results.selfEsteem, max:12 },
+                  { label:'Bipolar (MDQ)',  score:results.bipolar,    max:20 },
+                  { label:'PTSD (PCL-5)',   score:results.ptsd,       max:20 },
+                  { label:'OCD (OCI-R)',    score:results.ocd,        max:20 },
+                  { label:'ADHD (ASRS)',    score:results.adhd,       max:20 },
+                  { label:'Burnout (MBI)', score:results.burnout,    max:20 },
+                  { label:'Self-Esteem',   score:results.selfEsteem, max:12 },
                 ].filter(item => item.score > 0).map((item, i) => {
                   const lv = scoreLevel(item.score, item.max);
                   return (
@@ -426,7 +485,7 @@ export default function App() {
             ))}
           </div>
 
-          {/* Full Claude AI Report */}
+          {/* Full Report */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>
@@ -472,9 +531,7 @@ export default function App() {
             )}
           </div>
 
-          {/* Journal */}
           <JournalSection userId={user.id} />
-
         </div>
       </div>
     );

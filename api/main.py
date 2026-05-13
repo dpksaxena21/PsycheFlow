@@ -149,3 +149,98 @@ def classify_condition(data: TextInput):
 def report_endpoint(data: ReportInput):
     result = generate_full_report(data.dict())
     return result
+
+# ── Clinical Interview ────────────────────────────────────
+class InterviewInput(BaseModel):
+    messages: list
+    turn: int
+
+@app.post("/clinical-interview")
+def clinical_interview(data: InterviewInput):
+    messages = data.messages
+    turn     = data.turn
+
+    system_prompt = """You are Dr. PsycheFlow, a senior clinical psychologist conducting an initial intake interview. You are warm, empathetic, professional, and deeply skilled at drawing out clinically relevant information through natural conversation.
+
+Your role:
+- Conduct a thorough psychological intake interview over 10-12 turns
+- Ask ONE focused question per response (never multiple questions at once)
+- Build on what the person shares — ask natural follow-ups
+- Cover these clinical domains progressively:
+  1. Presenting problem (what brings them here)
+  2. Duration and severity of symptoms  
+  3. Mood and emotional state (depression, anxiety, stress)
+  4. Sleep, appetite, energy levels
+  5. Daily functioning (work, relationships, activities)
+  6. Trauma history (gently, if relevant)
+  7. Suicidal ideation (sensitively, if risk signals present)
+  8. Social support and relationships
+  9. Coping strategies (healthy and unhealthy)
+  10. Goals for therapy — what they hope to achieve
+  11. Family history of mental health
+  12. Previous therapy or treatment
+
+Clinical guidelines:
+- Never give diagnoses — only gather information
+- If suicidal ideation is mentioned, take it seriously and ask directly but gently
+- Frame all questions conversationally, not like a form
+- Reflect back what you hear to show understanding
+- Use clinical curiosity — go deeper when something important emerges
+- After turn 10, if you have enough information, end with a warm closing and generate assessment
+
+After turn 10 or when you have sufficient information, respond with:
+ASSESSMENT_READY: [your clinical summary]
+
+The assessment should include:
+- Primary presenting concerns
+- Key symptoms identified
+- Risk level (low/medium/high)
+- Strengths observed
+- Recommended focus areas
+- Suggested therapeutic approach"""
+
+    # Build message history for Claude
+    claude_messages = []
+    for msg in messages:
+        if msg['role'] in ['user', 'assistant']:
+            claude_messages.append({
+                'role': msg['role'],
+                'content': msg['content']
+            })
+
+    # Add turn guidance
+    if turn >= 10:
+        claude_messages.append({
+            'role': 'user',
+            'content': '[SYSTEM: You have gathered sufficient information. Wrap up warmly and generate the clinical assessment using ASSESSMENT_READY: format]'
+        })
+
+    import anthropic as _anthropic
+    import os as _os
+    _client = _anthropic.Anthropic(api_key=_os.getenv("CLAUDE_API_KEY"))
+
+    response = _client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=1000,
+        system=system_prompt,
+        messages=claude_messages[1:]  # skip the initial assistant message
+    )
+
+    reply = response.content[0].text.strip()
+
+    # Check if assessment is ready
+    if 'ASSESSMENT_READY:' in reply:
+        parts = reply.split('ASSESSMENT_READY:')
+        closing = parts[0].strip()
+        assessment = parts[1].strip()
+        return {
+            'reply': closing if closing else "Thank you for sharing all of this with me. I've completed your clinical assessment.",
+            'finished': True,
+            'assessment': assessment
+        }
+
+    return {
+        'reply': reply,
+        'finished': False,
+        'assessment': None
+    }
