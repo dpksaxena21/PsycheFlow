@@ -69,7 +69,7 @@ function ShareCodeSection({ userId }) {
   );
 }
 
-export default function Dashboard({ user, onStartAssessment, onLogout, onPsychologistMode }) {
+export default function Dashboard({ user, onStartAssessment, onLogout, onPsychologistMode, onACTEngine }) {
   const [sessions, setSessions]   = useState([]);
   const [journals, setJournals]   = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -124,6 +124,11 @@ export default function Dashboard({ user, onStartAssessment, onLogout, onPsychol
             </p>
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            <button onClick={onACTEngine}
+              style={{ padding:'10px 16px', background:'#10b981', color:'#fff',
+                border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
+              🌱 ACT Engine
+            </button>
             <button onClick={onPsychologistMode}
               style={{ padding:'10px 16px', background:'#1e1b4b', color:'#a5b4fc',
                 border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
@@ -292,13 +297,13 @@ export default function Dashboard({ user, onStartAssessment, onLogout, onPsychol
                     {[
                       { icon:'💬', label:'Conversational Interview', desc:'Talk to Dr. PsycheFlow' },
                       { icon:'📋', label:'Take Assessment',          desc:'Structured questionnaire' },
-                      { icon:'📈', label:'View History',             desc:'See your progress' },
+                      { icon:'🌱', label:'ACT Engine',               desc:'Therapy exercises' },
                       { icon:'📝', label:'View Journals',            desc:'Past journal entries' },
                     ].map((action, i) => (
                       <div key={i}
                         onClick={() => {
                           if (i < 2) onStartAssessment();
-                          else if (i === 2) setActiveTab('history');
+                          else if (i === 2) onACTEngine();
                           else setActiveTab('journal');
                         }}
                         style={{ background:'#f8fafc', borderRadius:12, padding:16,

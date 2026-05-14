@@ -6,6 +6,7 @@ import AdaptiveQuestionnaire from './AdaptiveQuestionnaire';
 import ClinicalInterview from './ClinicalInterview';
 import Dashboard from './Dashboard';
 import PsychologistPortal from './PsychologistPortal';
+import ACTEngine from './ACTEngine';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
 const darkTriad = ['Machiavellianism','Narcissism','Psychopathy'];
@@ -149,6 +150,7 @@ export default function App() {
   const [reportLoading, setReportLoading] = useState(false);
   const [assessMode, setAssessMode]       = useState(null);
   const [isPsychologist, setIsPsychologist] = useState(false);
+  const [showACT, setShowACT]             = useState(false);
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -233,6 +235,7 @@ export default function App() {
     setFullReport(null);
     setAssessMode(null);
     setIsPsychologist(false);
+    setShowACT(false);
   };
 
   const TraitBar = ({ name, data, colorFn }) => (
@@ -274,12 +277,31 @@ export default function App() {
     <PsychologistPortal user={user} onLogout={handleLogout} />
   );
 
+  if (showACT) return (
+    <div style={{ fontFamily:'sans-serif', minHeight:'100vh',
+      background:'linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%)', padding:40 }}>
+      <div style={{ maxWidth:720, margin:'0 auto' }}>
+        <div style={{ display:'flex', alignItems:'center', marginBottom:24 }}>
+          <h2 style={{ color:'#6366f1', margin:0 }}>🧠 PsycheFlow</h2>
+          <button onClick={() => setShowACT(false)}
+            style={{ marginLeft:'auto', padding:'6px 14px', background:'transparent',
+              border:'1px solid #e2e8f0', borderRadius:8, color:'#94a3b8',
+              cursor:'pointer', fontSize:12 }}>
+            ← Dashboard
+          </button>
+        </div>
+        <ACTEngine user={user} phqScore={0} gadScore={0} condition="normal" />
+      </div>
+    </div>
+  );
+
   if (screen === 'home') return (
     <Dashboard
       user={user}
       onStartAssessment={() => { setAssessMode(null); setScreen('questionnaire'); }}
       onLogout={handleLogout}
       onPsychologistMode={() => setIsPsychologist(true)}
+      onACTEngine={() => setShowACT(true)}
     />
   );
 
@@ -406,7 +428,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Mental Health */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Mental Health Screening</h3>
@@ -431,7 +452,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Additional Scores */}
           {(results.bipolar > 0 || results.ptsd > 0 ||
             results.ocd > 0 || results.adhd > 0 || results.burnout > 0) && (
             <div style={{ background:'#fff', borderRadius:16, padding:24,
@@ -468,7 +488,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Big Five */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>
@@ -480,7 +499,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Dark Triad */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 16px', color:'#dc2626' }}>Dark Triad Assessment</h3>
@@ -493,7 +511,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Full Report */}
           <div style={{ background:'#fff', borderRadius:16, padding:24,
             border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>
@@ -510,7 +527,7 @@ export default function App() {
                   fontSize:15, fontWeight:'bold',
                   boxShadow:'0 4px 20px rgba(99,102,241,0.3)' }}>
                 {reportLoading
-                  ? '⏳ Generating your report (~2 min)...'
+                  ? '⏳ Generating your report (~1 min)...'
                   : '✨ Generate My Full Report'}
               </button>
             ) : (

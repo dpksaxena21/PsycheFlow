@@ -540,3 +540,69 @@ Keep it professional, evidence-based, and clinically precise."""
         messages=[{"role":"user","content":prompt}]
     )
     return {"narrative": res.content[0].text.strip()}
+
+
+# ── ACT Engine Endpoints ──────────────────────────────────
+from act_engine import ACT_EXERCISES, jitai, get_recommended_exercise
+
+class ACTRecommendInput(BaseModel):
+    condition: str = "normal"
+    phq_score: int = 0
+    gad_score: int = 0
+    journal_risk: dict = {}
+    days_since_last: int = 1
+
+@app.post("/act/recommend")
+def act_recommend(data: ACTRecommendInput):
+    result = get_recommended_exercise(
+        condition=data.condition,
+        phq=data.phq_score,
+        gad=data.gad_score,
+        journal_risk=data.journal_risk,
+        days_since_last=data.days_since_last
+    )
+    return result
+
+@app.get("/act/exercises")
+def get_all_exercises():
+    return ACT_EXERCISES
+
+@app.get("/act/exercises/{process}")
+def get_exercises_by_process(process: str):
+    return ACT_EXERCISES.get(process, {})
+
+class FeedbackInput(BaseModel):
+    exercise_id: str
+    helpful: bool
+
+@app.post("/act/feedback")
+def act_feedback(data: FeedbackInput):
+    jitai.record_feedback(data.exercise_id, data.helpful)
+    return {"status": "recorded"}
+
+class AAQInput(BaseModel):
+    answers: list  # 7 answers, scale 1-7
+
+@app.post("/act/aaq-score")
+def aaq_score(data: AAQInput):
+    """
+    AAQ-II Psychological Flexibility Score
+    7 items, 1-7 scale, higher = more inflexible
+    """
+    if len(data.answers) != 7:
+        return {"error": "Need exactly 7 answers"}
+
+    total = sum(data.answers)
+    # AAQ-II: score >= 28 indicates psychological inflexibility
+    flexible = total < 28
+    level = "High Flexibility" if total < 18 \
+        else "Moderate Flexibility" if total < 28 \
+        else "Low Flexibility (ACT indicated)"
+
+    return {
+        "total_score": total,
+        "level": level,
+        "psychologically_flexible": flexible,
+        "interpretation": f"Score of {total}/49. {level}.",
+        "act_indicated": total >= 28
+    }
