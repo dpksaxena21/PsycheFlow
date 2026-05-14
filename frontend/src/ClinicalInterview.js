@@ -72,29 +72,67 @@ I'll ask you some questions, just like a real psychologist would in a first sess
     }
   };
 
+  const progressPct = Math.round((turnCount / 15) * 100);
+
   return (
     <div style={{ fontFamily:'sans-serif', maxWidth:680, margin:'0 auto',
       height:'85vh', display:'flex', flexDirection:'column' }}>
 
       {/* Header */}
       <div style={{ background:'#6366f1', borderRadius:'16px 16px 0 0',
-        padding:'16px 24px', display:'flex', alignItems:'center', gap:12 }}>
-        <div style={{ width:40, height:40, borderRadius:'50%',
-          background:'rgba(255,255,255,0.2)', display:'flex',
-          alignItems:'center', justifyContent:'center', fontSize:20 }}>
-          🧠
-        </div>
-        <div>
-          <div style={{ color:'#fff', fontWeight:'bold', fontSize:15 }}>
-            Dr. PsycheFlow
+        padding:'16px 24px', display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ width:40, height:40, borderRadius:'50%',
+            background:'rgba(255,255,255,0.2)', display:'flex',
+            alignItems:'center', justifyContent:'center', fontSize:20 }}>
+            🧠
           </div>
-          <div style={{ color:'rgba(255,255,255,0.7)', fontSize:12 }}>
-            AI Clinical Psychologist • Confidential Session
+          <div>
+            <div style={{ color:'#fff', fontWeight:'bold', fontSize:15 }}>
+              Dr. PsycheFlow
+            </div>
+            <div style={{ color:'rgba(255,255,255,0.7)', fontSize:12 }}>
+              AI Clinical Psychologist • Confidential Session
+            </div>
+          </div>
+          <div style={{ marginLeft:'auto', background:'rgba(255,255,255,0.15)',
+            borderRadius:20, padding:'4px 12px', fontSize:12, color:'#fff' }}>
+            Turn {turnCount}/15
           </div>
         </div>
-        <div style={{ marginLeft:'auto', background:'rgba(255,255,255,0.15)',
-          borderRadius:20, padding:'4px 12px', fontSize:12, color:'#fff' }}>
-          Turn {turnCount}/12
+
+        {/* Progress bar */}
+        <div style={{ background:'rgba(255,255,255,0.2)', borderRadius:4, height:4 }}>
+          <div style={{ width:`${progressPct}%`, background:'#fff',
+            height:4, borderRadius:4, transition:'width 0.4s ease' }} />
+        </div>
+
+        {/* Domain indicators */}
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          {[
+            { label:'Mood', turns:[1,2,3] },
+            { label:'Anxiety', turns:[3,4] },
+            { label:'Sleep', turns:[5,6] },
+            { label:'History', turns:[7,8] },
+            { label:'Relationships', turns:[9,10] },
+            { label:'Strengths', turns:[11,12] },
+            { label:'Goals', turns:[13,14,15] },
+          ].map((domain, i) => {
+            const active = domain.turns.includes(turnCount);
+            const done   = domain.turns[domain.turns.length-1] < turnCount;
+            return (
+              <span key={i} style={{
+                fontSize:10, padding:'2px 8px', borderRadius:10,
+                background: done ? 'rgba(255,255,255,0.4)'
+                  : active ? 'rgba(255,255,255,0.25)'
+                  : 'rgba(255,255,255,0.1)',
+                color: done ? '#fff' : 'rgba(255,255,255,0.7)',
+                fontWeight: active ? 'bold' : 'normal'
+              }}>
+                {done ? '✓ ' : ''}{domain.label}
+              </span>
+            );
+          })}
         </div>
       </div>
 
