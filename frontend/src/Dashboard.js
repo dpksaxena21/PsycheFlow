@@ -1,10 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 
-const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
-const colorMap  = { High:'#ef4444', Medium:'#f59e0b', Low:'#22c55e' };
+const bigFive  = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
+const colorMap = { High:'#ef4444', Medium:'#f59e0b', Low:'#22c55e' };
 
-export default function Dashboard({ user, onStartAssessment, onLogout }) {
+function ShareCodeSection({ userId }) {
+  const [shareCode, setShareCode] = useState(null);
+  const [loading, setLoading]     = useState(false);
+
+  const fetchExisting = async () => {
+    const { data } = await supabase
+      .from('patient_psychologist')
+      .select('share_code')
+      .eq('patient_id', userId)
+      .eq('active', true)
+      .order('linked_at', { ascending: false })
+      .limit(1);
+    if (data && data.length > 0) setShareCode(data[0].share_code);
+  };
+
+  useEffect(() => { fetchExisting(); }, []);
+
+  const generateCode = async () => {
+    setLoading(true);
+    const code = Math.random().toString(36).substring(2,10).toUpperCase();
+    const { error } = await supabase.from('patient_psychologist').insert({
+      patient_id: userId,
+      share_code: code,
+      active:     true
+    });
+    if (!error) setShareCode(code);
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ background:'#fff', borderRadius:16, padding:24,
+      border:'1px solid #e2e8f0', marginTop:16 }}>
+      <h3 style={{ margin:'0 0 8px', color:'#1e293b' }}>🔗 Share With Psychologist</h3>
+      <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>
+        Generate a Share Code and give it to your psychologist to link your profile.
+      </p>
+      {shareCode ? (
+        <div>
+          <div style={{ background:'#eef2ff', borderRadius:12, padding:20,
+            textAlign:'center', marginBottom:12 }}>
+            <div style={{ fontSize:32, fontWeight:'bold', letterSpacing:8,
+              color:'#6366f1' }}>{shareCode}</div>
+            <div style={{ fontSize:12, color:'#94a3b8', marginTop:4 }}>
+              Share this code with your psychologist
+            </div>
+          </div>
+          <button onClick={generateCode}
+            style={{ padding:'8px 16px', background:'transparent',
+              border:'1px solid #e2e8f0', borderRadius:8,
+              cursor:'pointer', fontSize:12, color:'#64748b' }}>
+            Generate New Code
+          </button>
+        </div>
+      ) : (
+        <button onClick={generateCode} disabled={loading}
+          style={{ padding:'12px 24px', background:'#6366f1',
+            color:'#fff', border:'none', borderRadius:10,
+            cursor:'pointer', fontSize:14, fontWeight:'bold' }}>
+          {loading ? 'Generating...' : '🔗 Generate Share Code'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default function Dashboard({ user, onStartAssessment, onLogout, onPsychologistMode }) {
   const [sessions, setSessions]   = useState([]);
   const [journals, setJournals]   = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -13,6 +78,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
+    setLoading(true);
     const { data: s } = await supabase.from('sessions').select('*')
       .eq('user_id', user.id).order('created_at', { ascending: false });
     const { data: j } = await supabase.from('journal_entries').select('*')
@@ -57,11 +123,15 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
               {user.email}
             </p>
           </div>
-          <div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            <button onClick={onPsychologistMode}
+              style={{ padding:'10px 16px', background:'#1e1b4b', color:'#a5b4fc',
+                border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
+              🩺 Clinician Mode
+            </button>
             <button onClick={onStartAssessment}
               style={{ padding:'10px 20px', background:'#6366f1', color:'#fff',
-                border:'none', borderRadius:8, cursor:'pointer',
-                fontSize:14, marginRight:8 }}>
+                border:'none', borderRadius:8, cursor:'pointer', fontSize:14 }}>
               + New Assessment
             </button>
             <button onClick={onLogout}
@@ -109,10 +179,10 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr',
                   gap:16, marginBottom:20 }}>
                   {[
-                    { label:'Total Sessions',    value: sessions.length,          icon:'📊', color:'#6366f1' },
-                    { label:'Latest PHQ-9',       value: latest?.phq_score ?? '-', icon:'😔', color: phqLevel(latest?.phq_score||0).color },
-                    { label:'Latest GAD-7',       value: latest?.gad_score ?? '-', icon:'😰', color: phqLevel(latest?.gad_score||0).color },
-                    { label:'Journal Entries',    value: journals.length,          icon:'📝', color:'#6366f1' },
+                    { label:'Total Sessions',  value:sessions.length,           icon:'📊', color:'#6366f1' },
+                    { label:'Latest PHQ-9',    value:latest?.phq_score ?? '-',  icon:'😔', color:phqLevel(latest?.phq_score||0).color },
+                    { label:'Latest GAD-7',    value:latest?.gad_score ?? '-',  icon:'😰', color:phqLevel(latest?.gad_score||0).color },
+                    { label:'Journal Entries', value:journals.length,           icon:'📝', color:'#6366f1' },
                   ].map((card, i) => (
                     <div key={i} style={{ background:'#fff', borderRadius:16,
                       padding:20, border:'1px solid #e2e8f0' }}>
@@ -140,15 +210,14 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                           <div style={{ display:'flex', justifyContent:'space-between',
                             marginBottom:4 }}>
                             <span style={{ fontSize:14 }}>{t}</span>
-                            <span style={{ color: colorMap[d.label],
+                            <span style={{ color:colorMap[d.label],
                               fontWeight:'bold', fontSize:14 }}>
                               {d.label} ({d.confidence}%)
                             </span>
                           </div>
                           <div style={{ background:'#e2e8f0', borderRadius:6, height:8 }}>
                             <div style={{ width:`${d.confidence}%`,
-                              background: colorMap[d.label],
-                              height:8, borderRadius:6 }} />
+                              background:colorMap[d.label], height:8, borderRadius:6 }} />
                           </div>
                         </div>
                       );
@@ -163,10 +232,9 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                     <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>
                       Depression Score Trend (PHQ-9)
                     </h3>
-                    <div style={{ display:'flex', alignItems:'flex-end',
-                      gap:8, height:80 }}>
+                    <div style={{ display:'flex', alignItems:'flex-end', gap:8, height:80 }}>
                       {[...sessions].reverse().map((s, i) => {
-                        const h = Math.max((s.phq_score / 27) * 80, 4);
+                        const h = Math.max((s.phq_score/27)*80, 4);
                         const c = phqLevel(s.phq_score).color;
                         return (
                           <div key={i} style={{ flex:1, display:'flex',
@@ -186,7 +254,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                 {/* Latest Journal */}
                 {journals.length > 0 && (
                   <div style={{ background:'#fff', borderRadius:16, padding:24,
-                    border:'1px solid #e2e8f0', marginBottom:20 }}>
+                    border:'1px solid #e2e8f0', marginBottom:16 }}>
                     <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>
                       Latest Journal Entry
                     </h3>
@@ -218,7 +286,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
 
                 {/* Quick Actions */}
                 <div style={{ background:'#fff', borderRadius:16, padding:24,
-                  border:'1px solid #e2e8f0' }}>
+                  border:'1px solid #e2e8f0', marginBottom:16 }}>
                   <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Quick Actions</h3>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                     {[
@@ -247,6 +315,9 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                     ))}
                   </div>
                 </div>
+
+                {/* Share Code */}
+                <ShareCodeSection userId={user.id} />
               </div>
             )}
           </div>
@@ -287,13 +358,13 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                     <div style={{ background:'#f8fafc', borderRadius:8,
                       padding:'8px 16px', textAlign:'center' }}>
                       <div style={{ fontSize:20, fontWeight:'bold',
-                        color: phqLevel(s.phq_score).color }}>{s.phq_score}</div>
+                        color:phqLevel(s.phq_score).color }}>{s.phq_score}</div>
                       <div style={{ fontSize:11, color:'#94a3b8' }}>PHQ-9</div>
                     </div>
                     <div style={{ background:'#f8fafc', borderRadius:8,
                       padding:'8px 16px', textAlign:'center' }}>
                       <div style={{ fontSize:20, fontWeight:'bold',
-                        color: phqLevel(s.gad_score).color }}>{s.gad_score}</div>
+                        color:phqLevel(s.gad_score).color }}>{s.gad_score}</div>
                       <div style={{ fontSize:11, color:'#94a3b8' }}>GAD-7</div>
                     </div>
                     {s.predictions && bigFive.slice(0,3).map(t => (
@@ -301,7 +372,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout }) {
                         <div key={t} style={{ background:'#f8fafc', borderRadius:8,
                           padding:'8px 16px', textAlign:'center' }}>
                           <div style={{ fontSize:13, fontWeight:'bold',
-                            color: colorMap[s.predictions[t].label] }}>
+                            color:colorMap[s.predictions[t].label] }}>
                             {s.predictions[t].label}
                           </div>
                           <div style={{ fontSize:11, color:'#94a3b8' }}>{t.slice(0,4)}</div>

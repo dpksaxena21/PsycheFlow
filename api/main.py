@@ -351,3 +351,50 @@ If ANY suicidal ideation is expressed — immediately acknowledge, assess severi
         'finished': False,
         'assessment': None
     }
+    
+class SOAPInput(BaseModel):
+    session_data: dict
+    patient_concern: str
+    interview_assessment: str
+
+@app.post("/generate-soap")
+def generate_soap(data: SOAPInput):
+    import anthropic as _anthropic
+    import os as _os
+    _client = _anthropic.Anthropic(api_key=_os.getenv("CLAUDE_API_KEY"))
+
+    s = data.session_data
+    phq = s.get('phq_score', 0)
+    gad = s.get('gad_score', 0)
+
+    prompt = f"""You are a clinical psychologist. Generate a professional SOAP note based on this session data.
+
+Session Data:
+- PHQ-9 Score: {phq} ({'Minimal' if phq<=4 else 'Mild' if phq<=9 else 'Moderate' if phq<=14 else 'Severe'})
+- GAD-7 Score: {gad} ({'Minimal' if gad<=4 else 'Mild' if gad<=9 else 'Moderate' if gad<=14 else 'Severe'})
+- Patient Concern: {data.patient_concern or 'Not specified'}
+- Interview Assessment: {data.interview_assessment or 'Structured questionnaire only'}
+- Session Date: {s.get('created_at', 'Unknown')}
+
+Generate a complete SOAP note:
+
+S (Subjective):
+[Patient's reported symptoms, concerns, mood in their own words]
+
+O (Objective):
+[Clinician observations, test scores, mental status]
+
+A (Assessment):
+[Clinical formulation, risk level, progress]
+
+P (Plan):
+[Interventions, homework, next session focus, referrals if needed]
+
+Keep it professional, concise, and clinically appropriate."""
+
+    response = _client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=800,
+        messages=[{"role":"user","content":prompt}]
+    )
+    return {"soap_note": response.content[0].text.strip()}

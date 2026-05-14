@@ -64,35 +64,55 @@ const instruments = {
   ],
 
   OCD_OCIR: [
-    { id:'OCD1', text:'I have saved so many things that they get in the way', scale:5 },
-    { id:'OCD2', text:'I check things more often than necessary', scale:5 },
-    { id:'OCD3', text:'I get upset if objects are not arranged properly', scale:5 },
-    { id:'OCD4', text:'I feel compelled to count while I am doing things', scale:5 },
-    { id:'OCD5', text:'I wash my hands more than necessary', scale:5 },
+    { id:'OCD1', text:'I have saved so many things that they get in the way', scale:5,
+      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
+    { id:'OCD2', text:'I check things more often than necessary', scale:5,
+      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
+    { id:'OCD3', text:'I get upset if objects are not arranged properly', scale:5,
+      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
+    { id:'OCD4', text:'I feel compelled to count while I am doing things', scale:5,
+      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
+    { id:'OCD5', text:'I wash my hands more than necessary', scale:5,
+      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
   ],
 
   PTSD_PCL5: [
-    { id:'PCL1', text:'Repeated disturbing memories or dreams of the traumatic event', scale:5 },
-    { id:'PCL2', text:'Feeling very upset when reminded of the experience', scale:5 },
-    { id:'PCL3', text:'Avoiding memories, thoughts or feelings related to it', scale:5 },
-    { id:'PCL4', text:'Feeling distant from other people', scale:5 },
-    { id:'PCL5', text:'Feeling irritable or having angry outbursts', scale:5 },
+    { id:'PCL1', text:'Repeated disturbing memories or dreams of the traumatic event', scale:5,
+      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
+    { id:'PCL2', text:'Feeling very upset when reminded of the experience', scale:5,
+      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
+    { id:'PCL3', text:'Avoiding memories, thoughts or feelings related to it', scale:5,
+      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
+    { id:'PCL4', text:'Feeling distant from other people', scale:5,
+      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
+    { id:'PCL5', text:'Feeling irritable or having angry outbursts', scale:5,
+      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
   ],
 
   ADHD_ASRS: [
-    { id:'ADHD1', text:'How often do you have trouble wrapping up the final details of a project?', scale:5 },
-    { id:'ADHD2', text:'How often do you have difficulty keeping attention when doing boring work?', scale:5 },
-    { id:'ADHD3', text:'How often do you have difficulty concentrating on what people say?', scale:5 },
-    { id:'ADHD4', text:'How often do you leave your seat in meetings or other situations?', scale:5 },
-    { id:'ADHD5', text:'How often do you feel overly active and compelled to do things?', scale:5 },
+    { id:'ADHD1', text:'How often do you have trouble wrapping up the final details of a project?', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
+    { id:'ADHD2', text:'How often do you have difficulty keeping attention when doing boring work?', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
+    { id:'ADHD3', text:'How often do you have difficulty concentrating on what people say to you?', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
+    { id:'ADHD4', text:'How often do you leave your seat in meetings or situations where you are expected to sit?', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
+    { id:'ADHD5', text:'How often do you feel overly active and compelled to do things?', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
   ],
 
   BURNOUT: [
-    { id:'BRN1', text:'I feel emotionally drained from my work', scale:5 },
-    { id:'BRN2', text:'I feel used up at the end of the workday', scale:5 },
-    { id:'BRN3', text:'I feel fatigued when I get up to face another day', scale:5 },
-    { id:'BRN4', text:'Working with people all day is really a strain for me', scale:5 },
-    { id:'BRN5', text:'I feel burned out from my work', scale:5 },
+    { id:'BRN1', text:'I feel emotionally drained from my work', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Always'] },
+    { id:'BRN2', text:'I feel used up at the end of the workday', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Always'] },
+    { id:'BRN3', text:'I feel fatigued when I get up to face another day at work', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Always'] },
+    { id:'BRN4', text:'Working with people all day is really a strain for me', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Always'] },
+    { id:'BRN5', text:'I feel burned out from my work', scale:5,
+      labels:['Never','Rarely','Sometimes','Often','Always'] },
   ],
 
   DARK_TRIAD: [
@@ -114,11 +134,16 @@ const instruments = {
     { id:'SLP4', text:'Do you take medication to help you sleep?', scale:4,
       labels:['Not at all','Less than once a week','Once or twice a week','Three or more times a week'] },
   ],
+
   RSE: [
-    { id:'RSE1', text:'On the whole, I am satisfied with myself', scale:4 },
-    { id:'RSE2', text:'I feel that I have a number of good qualities', scale:4 },
-    { id:'RSE3', text:'I am able to do things as well as most other people', scale:4 },
-    { id:'RSE4', text:'I feel I do not have much to be proud of', scale:4 },
+    { id:'RSE1', text:'On the whole, I am satisfied with myself', scale:4,
+      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
+    { id:'RSE2', text:'I feel that I have a number of good qualities', scale:4,
+      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
+    { id:'RSE3', text:'I am able to do things as well as most other people', scale:4,
+      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
+    { id:'RSE4', text:'I feel I do not have much to be proud of', scale:4,
+      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
   ],
 };
 
@@ -169,15 +194,15 @@ const labels4 = ['Not at all','Several days','More than half the days','Nearly e
 const labels5 = ['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'];
 
 export default function AdaptiveQuestionnaire({ onComplete }) {
-  const [phase, setPhase]           = useState('intake');
-  const [answers, setAnswers]       = useState({});
-  const [age, setAge]               = useState('');
-  const [gender, setGender]         = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [concern, setConcern]       = useState('');
-  const [sectionIdx, setSectionIdx] = useState(0);
+  const [phase, setPhase]             = useState('intake');
+  const [answers, setAnswers]         = useState({});
+  const [age, setAge]                 = useState('');
+  const [gender, setGender]           = useState('');
+  const [occupation, setOccupation]   = useState('');
+  const [concern, setConcern]         = useState('');
+  const [sectionIdx, setSectionIdx]   = useState(0);
   const [questionIdx, setQuestionIdx] = useState(0);
-  const [flow, setFlow]             = useState(null);
+  const [flow, setFlow]               = useState(null);
 
   const handleIntakeSubmit = () => {
     const initialFlow = buildQuestionFlow({});

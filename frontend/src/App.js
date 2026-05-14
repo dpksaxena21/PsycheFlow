@@ -5,6 +5,7 @@ import Auth from './Auth';
 import AdaptiveQuestionnaire from './AdaptiveQuestionnaire';
 import ClinicalInterview from './ClinicalInterview';
 import Dashboard from './Dashboard';
+import PsychologistPortal from './PsychologistPortal';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
 const darkTriad = ['Machiavellianism','Narcissism','Psychopathy'];
@@ -147,6 +148,7 @@ export default function App() {
   const [fullReport, setFullReport]       = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [assessMode, setAssessMode]       = useState(null);
+  const [isPsychologist, setIsPsychologist] = useState(false);
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -230,6 +232,7 @@ export default function App() {
     setResults(null);
     setFullReport(null);
     setAssessMode(null);
+    setIsPsychologist(false);
   };
 
   const TraitBar = ({ name, data, colorFn }) => (
@@ -267,11 +270,16 @@ export default function App() {
 
   if (!user) return <Auth onLogin={setUser} />;
 
+  if (isPsychologist) return (
+    <PsychologistPortal user={user} onLogout={handleLogout} />
+  );
+
   if (screen === 'home') return (
     <Dashboard
       user={user}
       onStartAssessment={() => { setAssessMode(null); setScreen('questionnaire'); }}
       onLogout={handleLogout}
+      onPsychologistMode={() => setIsPsychologist(true)}
     />
   );
 
