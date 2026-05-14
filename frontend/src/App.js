@@ -7,6 +7,7 @@ import ClinicalInterview from './ClinicalInterview';
 import Dashboard from './Dashboard';
 import PsychologistPortal from './PsychologistPortal';
 import ACTEngine from './ACTEngine';
+import CrisisManagement from './CrisisManagement';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
 const darkTriad = ['Machiavellianism','Narcissism','Psychopathy'];
@@ -151,6 +152,7 @@ export default function App() {
   const [assessMode, setAssessMode]       = useState(null);
   const [isPsychologist, setIsPsychologist] = useState(false);
   const [showACT, setShowACT]             = useState(false);
+  const [showCrisis, setShowCrisis]       = useState(false);
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -236,6 +238,7 @@ export default function App() {
     setAssessMode(null);
     setIsPsychologist(false);
     setShowACT(false);
+    setShowCrisis(false);
   };
 
   const TraitBar = ({ name, data, colorFn }) => (
@@ -295,6 +298,15 @@ export default function App() {
     </div>
   );
 
+  if (showCrisis) return (
+    <div style={{ fontFamily:'sans-serif', minHeight:'100vh',
+      background:'#f1f5f9', padding:40 }}>
+      <div style={{ maxWidth:720, margin:'0 auto' }}>
+        <CrisisManagement user={user} onBack={() => setShowCrisis(false)} />
+      </div>
+    </div>
+  );
+
   if (screen === 'home') return (
     <Dashboard
       user={user}
@@ -302,6 +314,7 @@ export default function App() {
       onLogout={handleLogout}
       onPsychologistMode={() => setIsPsychologist(true)}
       onACTEngine={() => setShowACT(true)}
+      onCrisis={() => setShowCrisis(true)}
     />
   );
 

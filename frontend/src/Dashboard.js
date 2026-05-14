@@ -69,7 +69,8 @@ function ShareCodeSection({ userId }) {
   );
 }
 
-export default function Dashboard({ user, onStartAssessment, onLogout, onPsychologistMode, onACTEngine }) {
+export default function Dashboard({ user, onStartAssessment, onLogout,
+  onPsychologistMode, onACTEngine, onCrisis }) {
   const [sessions, setSessions]   = useState([]);
   const [journals, setJournals]   = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -116,7 +117,7 @@ export default function Dashboard({ user, onStartAssessment, onLogout, onPsychol
 
         {/* Header */}
         <div style={{ display:'flex', justifyContent:'space-between',
-          alignItems:'center', marginBottom:24 }}>
+          alignItems:'center', marginBottom:24, flexWrap:'wrap', gap:8 }}>
           <div>
             <h2 style={{ color:'#6366f1', margin:0 }}>🧠 PsycheFlow</h2>
             <p style={{ color:'#94a3b8', fontSize:13, margin:'4px 0 0' }}>
@@ -124,6 +125,11 @@ export default function Dashboard({ user, onStartAssessment, onLogout, onPsychol
             </p>
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            <button onClick={onCrisis}
+              style={{ padding:'10px 16px', background:'#dc2626', color:'#fff',
+                border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
+              🆘 Crisis Help
+            </button>
             <button onClick={onACTEngine}
               style={{ padding:'10px 16px', background:'#10b981', color:'#fff',
                 border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
@@ -298,19 +304,22 @@ export default function Dashboard({ user, onStartAssessment, onLogout, onPsychol
                       { icon:'💬', label:'Conversational Interview', desc:'Talk to Dr. PsycheFlow' },
                       { icon:'📋', label:'Take Assessment',          desc:'Structured questionnaire' },
                       { icon:'🌱', label:'ACT Engine',               desc:'Therapy exercises' },
-                      { icon:'📝', label:'View Journals',            desc:'Past journal entries' },
+                      { icon:'🆘', label:'Crisis Help',              desc:'Immediate support' },
                     ].map((action, i) => (
                       <div key={i}
                         onClick={() => {
-                          if (i < 2) onStartAssessment();
+                          if (i === 0 || i === 1) onStartAssessment();
                           else if (i === 2) onACTEngine();
-                          else setActiveTab('journal');
+                          else onCrisis();
                         }}
-                        style={{ background:'#f8fafc', borderRadius:12, padding:16,
-                          cursor:'pointer', border:'1px solid #e2e8f0',
+                        style={{ background: i === 3 ? '#fef2f2' : '#f8fafc',
+                          borderRadius:12, padding:16, cursor:'pointer',
+                          border:`1px solid ${i === 3 ? '#fecaca' : '#e2e8f0'}`,
                           transition:'all 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor='#6366f1'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor='#e2e8f0'}>
+                        onMouseEnter={e => e.currentTarget.style.borderColor =
+                          i === 3 ? '#ef4444' : '#6366f1'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor =
+                          i === 3 ? '#fecaca' : '#e2e8f0'}>
                         <div style={{ fontSize:24, marginBottom:6 }}>{action.icon}</div>
                         <div style={{ fontSize:13, fontWeight:'bold', color:'#1e293b' }}>
                           {action.label}

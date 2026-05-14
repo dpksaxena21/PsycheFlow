@@ -1,5 +1,5 @@
 # PsycheFlow — Master Product Bible
-## Auto-Updated: 2026-05-14 13:57
+## Auto-Updated: 2026-05-14 18:25
 ## Builder: Deepak Saxena | github.com/dpksaxena21/PsycheFlow
 ## Domain: psycheflow.in | GitHub: github.com/dpksaxena21/PsycheFlow
 
@@ -66,7 +66,7 @@ PsycheFlow = Clinical Assessment + ACT Therapy + JITAI + Wearables + Psychologis
 ✅ Therapy preferences
 
 ### LAYER 2 — ACT ENGINE
-❌ Cognitive defusion tool
+✅ Cognitive defusion tool
 ❌ Values discovery module (6 life domains)
 ❌ Acceptance coach (body scan, urge surfing)
 ❌ Mindfulness library (2-min exercises)
