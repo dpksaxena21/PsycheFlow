@@ -327,7 +327,7 @@ If ANY suicidal ideation is expressed — immediately acknowledge, assess severi
     _client = _anthropic.Anthropic(api_key=_os.getenv("CLAUDE_API_KEY"))
 
     response = _client.messages.create(
-        model="claude-opus-4-5",
+        model="claude-haiku-4-5-20251001",
         max_tokens=1000,
         system=system_prompt,
         messages=claude_messages[1:]  # skip the initial assistant message
@@ -393,8 +393,150 @@ P (Plan):
 Keep it professional, concise, and clinically appropriate."""
 
     response = _client.messages.create(
-        model="claude-opus-4-5",
+        model="claude-haiku-4-5-20251001",
         max_tokens=800,
         messages=[{"role":"user","content":prompt}]
     )
     return {"soap_note": response.content[0].text.strip()}
+
+# ── Pre-Session Brief ─────────────────────────────────────
+class BriefInput(BaseModel):
+    patient_email: str
+    sessions_count: int
+    latest_phq: int
+    latest_gad: int
+    prev_phq: int
+    prev_gad: int
+    interview_assessment: str
+    recent_journals: str
+    risk_level: str
+
+@app.post("/pre-session-brief")
+def pre_session_brief(data: BriefInput):
+    import anthropic as _a, os as _o
+    client = _a.Anthropic(api_key=_o.getenv("CLAUDE_API_KEY"))
+
+    phq_change = data.latest_phq - data.prev_phq
+    gad_change = data.latest_gad - data.prev_gad
+
+    prompt = f"""You are a senior clinical psychologist preparing for a therapy session.
+Generate a concise pre-session brief for the following patient:
+
+Sessions completed: {data.sessions_count}
+Latest PHQ-9: {data.latest_phq} (change from last: {phq_change:+d})
+Latest GAD-7: {data.latest_gad} (change from last: {gad_change:+d})
+Risk Level: {data.risk_level}
+Last Interview Assessment: {data.interview_assessment[:500] if data.interview_assessment else 'None'}
+Recent Journal Entries: {data.recent_journals[:500] if data.recent_journals else 'None'}
+
+Generate a structured pre-session brief with:
+1. CLINICAL STATUS SUMMARY (2-3 sentences)
+2. KEY CHANGES SINCE LAST SESSION
+3. RISK FLAGS TO MONITOR (if any)
+4. SUGGESTED FOCUS AREAS FOR TODAY
+5. RECOMMENDED OPENING QUESTIONS (3 specific questions)
+6. CLINICAL REMINDERS
+
+Keep it concise, practical, and clinically focused."""
+
+    res = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=800,
+        messages=[{"role":"user","content":prompt}]
+    )
+    return {"brief": res.content[0].text.strip()}
+
+
+# ── Cognitive Pattern Detector ────────────────────────────
+class PatternInput(BaseModel):
+    journals: list
+
+@app.post("/detect-patterns")
+def detect_patterns(data: PatternInput):
+    import anthropic as _a, os as _o
+    client = _a.Anthropic(api_key=_o.getenv("CLAUDE_API_KEY"))
+
+    journal_text = "\n---\n".join([
+        f"Date: {j.get('date','')}\nEmotion: {j.get('emotion','')}\nCondition: {j.get('condition','')}\nText: {j.get('text','')}"
+        for j in data.journals[:10]
+    ])
+
+    prompt = f"""Analyze these patient journal entries and identify cognitive patterns:
+
+{journal_text}
+
+Respond in JSON format:
+{{
+  "dominant_patterns": ["pattern1", "pattern2", "pattern3"],
+  "risk_trend": "improving/stable/worsening with brief explanation",
+  "clinical_observations": "2-3 sentence clinical observation about recurring themes, cognitive distortions, and emotional patterns"
+}}
+
+Only respond with valid JSON, no other text."""
+
+    res = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=500,
+        messages=[{"role":"user","content":prompt}]
+    )
+    import json as _json
+    try:
+        return _json.loads(res.content[0].text.strip())
+    except:
+        return {"dominant_patterns":[],"risk_trend":"Unable to analyze","clinical_observations":res.content[0].text}
+
+
+# ── Longitudinal Narrative ────────────────────────────────
+class NarrativeInput(BaseModel):
+    patient_email: str
+    sessions: list
+    journals: list
+
+@app.post("/longitudinal-narrative")
+def longitudinal_narrative(data: NarrativeInput):
+    import anthropic as _a, os as _o
+    client = _a.Anthropic(api_key=_o.getenv("CLAUDE_API_KEY"))
+
+    sessions_text = "\n".join([
+        f"Session {i+1} ({s.get('date','')[:10]}): PHQ={s.get('phq',0)}, GAD={s.get('gad',0)}. {s.get('interview','')[:200]}"
+        for i, s in enumerate(data.sessions)
+    ])
+
+    journals_text = "\n".join([
+        f"Journal ({j.get('date','')[:10]}): {j.get('emotion','')} — {j.get('text','')}"
+        for j in data.journals
+    ])
+
+    prompt = f"""You are a senior clinical psychologist writing a living case formulation.
+
+Patient Sessions:
+{sessions_text}
+
+Recent Journal Entries:
+{journals_text}
+
+Write a comprehensive case formulation covering:
+
+PREDISPOSING FACTORS:
+[Biological, psychological, social vulnerability factors]
+
+PRECIPITATING FACTORS:
+[What triggered the current presentation]
+
+PERPETUATING FACTORS:
+[What maintains the current difficulties]
+
+PROTECTIVE FACTORS & STRENGTHS:
+[Resilience factors, support systems, personal strengths]
+
+CLINICAL TRAJECTORY:
+[How the patient has progressed across sessions — improving, stable, or declining]
+
+FORMULATION SUMMARY:
+[2-3 paragraph clinical narrative integrating all factors]
+
+Keep it professional, evidence-based, and clinically precise."""
+
+    res = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=1000,
+        messages=[{"role":"user","content":prompt}]
+    )
+    return {"narrative": res.content[0].text.strip()}
