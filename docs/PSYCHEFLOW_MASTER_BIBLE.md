@@ -1,5 +1,5 @@
 # PsycheFlow — Master Product Bible
-## Auto-Updated: 2026-05-14 18:25
+## Auto-Updated: 2026-05-14 18:43
 ## Builder: Deepak Saxena | github.com/dpksaxena21/PsycheFlow
 ## Domain: psycheflow.in | GitHub: github.com/dpksaxena21/PsycheFlow
 
@@ -99,7 +99,7 @@ PsycheFlow = Clinical Assessment + ACT Therapy + JITAI + Wearables + Psychologis
 ❌ Session note generator (SOAP/DAP/BIRP)
 ❌ Treatment plan builder (CBT/DBT/ACT mapping)
 ❌ Clinical report generator (formal PDF)
-❌ Crisis management + safety planning
+✅ Crisis management + safety planning
 ❌ SOAP note AI generator (Claude)
 ❌ Pre-session patient summary (AI generated before each session)
 ❌ Patient invitation link system
