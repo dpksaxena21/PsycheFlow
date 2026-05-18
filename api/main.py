@@ -606,3 +606,66 @@ def aaq_score(data: AAQInput):
         "interpretation": f"Score of {total}/49. {level}.",
         "act_indicated": total >= 28
     }
+# ── NEW MODELS ─────────────────────────────────────────────
+import pickle as _pickle
+
+def _load(path):
+    try:
+        with open(path, 'rb') as f:
+            return _pickle.load(f)
+    except:
+        return None
+
+_suicide_model  = _load('models/suicide_risk_model.pkl')
+_mh_model       = _load('models/mh_multiclass_model.pkl')
+_topic_model    = _load('models/therapy_topic_model.pkl')
+_sleep_model    = _load('models/sleep_quality_model.pkl')
+
+print(f"✓ Suicide risk model: {'loaded' if _suicide_model else 'failed'}")
+print(f"✓ MH multiclass model: {'loaded' if _mh_model else 'failed'}")
+print(f"✓ Therapy topic model: {'loaded' if _topic_model else 'failed'}")
+print(f"✓ Sleep quality model: {'loaded' if _sleep_model else 'failed'}")
+
+class TextInput(BaseModel):
+    text: str
+
+class SleepInput(BaseModel):
+    age: float = 30
+    sleep_duration: float = 7
+    physical_activity: float = 50
+    stress_level: float = 5
+    heart_rate: float = 70
+    daily_steps: float = 7000
+
+@app.post("/predict-suicide-risk")
+async def predict_suicide_risk(inp: TextInput):
+    if not _suicide_model:
+        raise HTTPException(status_code=503, detail="Suicide risk model not loaded")
+    prob = float(_suicide_model.predict_proba([inp.text])[0][1])
+    risk = "high" if prob > 0.7 else "medium" if prob > 0.4 else "low"
+    return {
+        "risk_level": risk,
+        "probability": round(prob, 4),
+        "alert": prob > 0.6,
+        "message": "Please seek immediate support" if prob > 0.7 else "Monitor closely" if prob > 0.4 else "Low risk detected"
+    }
+
+@app.post("/predict-mh-condition")
+async def predict_mh_condition(inp: TextInput):
+    if not _mh_model:
+        raise HTTPException(status_code=503, detail="MH model not loaded")
+    pred = _mh_model.predict([inp.text])[0]
+    prob = float(_mh_model.predict_proba([inp.text]).max())
+    return {"condition": int(pred), "confidence": round(prob * 100, 1)}
+
+@app.post("/predict-therapy-topic")
+async def predict_therapy_topic(inp: TextInput):
+    if not _topic_model:
+        raise HTTPException(status_code=503, detail="Topic model not loaded")
+    topic = _topic_model.predict([inp.text])[0]
+    probs = _topic_model.predict_proba([inp.text])[0]
+    top3 = sorted(zip(_topic_model.classes_, probs), key=lambda x: -x[1])[:3]
+    return {
+        "primary_topic": topic,
+        "top3": [{"topic": t, "confidence": round(float(p)*100,1)} for t,p in top3]
+    }
