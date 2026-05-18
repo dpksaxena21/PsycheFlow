@@ -8,6 +8,7 @@ import Dashboard from './Dashboard';
 import PsychologistPortal from './PsychologistPortal';
 import ACTEngine from './ACTEngine';
 import CrisisManagement from './CrisisManagement';
+import Onboarding from './Onboarding';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
 const darkTriad = ['Machiavellianism','Narcissism','Psychopathy'];
@@ -153,13 +154,26 @@ export default function App() {
   const [isPsychologist, setIsPsychologist] = useState(false);
   const [showACT, setShowACT]             = useState(false);
   const [showCrisis, setShowCrisis]       = useState(false);
+  const [onboarded, setOnboarded]       = useState(null);
+
+  const checkOnboarding = async (userId) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('onboarded')
+      .eq('id', userId)
+      .single();
+    // If no profile exists or onboarded is false/null → show onboarding
+    setOnboarded(data?.onboarded === true ? true : false);
+  };
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) checkOnboarding(session.user.id);
     });
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) checkOnboarding(session.user.id);
     });
   }, []);
 
@@ -238,6 +252,7 @@ export default function App() {
     setAssessMode(null);
     setIsPsychologist(false);
     setShowACT(false);
+    setOnboarded(null);
     setShowCrisis(false);
   };
 
@@ -275,6 +290,9 @@ export default function App() {
     :           {label:'Severe',   color:'#ef4444'};
 
   if (!user) return <Auth onLogin={setUser} />;
+  if (user && onboarded === false) return (
+    <Onboarding user={user} onComplete={() => setOnboarded(true)} />
+  );
 
   if (isPsychologist) return (
     <PsychologistPortal user={user} onLogout={handleLogout} />
