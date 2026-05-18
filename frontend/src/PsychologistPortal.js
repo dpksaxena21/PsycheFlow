@@ -538,7 +538,7 @@ export default function PsychologistPortal({ user, onLogout }) {
 
       return {
         ...link,
-        email:          link.patient_id,
+        email: link.profiles?.display_name || 'Patient ' + link.patient_id?.slice(0,8),
         sessions:       authData || [],
         journals:       jData || [],
         riskLevel,
@@ -568,7 +568,7 @@ export default function PsychologistPortal({ user, onLogout }) {
       .from('patient_psychologist')
       .select('*')
       .eq('share_code', shareCode.trim().toUpperCase())
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       setLinkMsg('❌ Invalid share code.');
@@ -579,10 +579,13 @@ export default function PsychologistPortal({ user, onLogout }) {
       return;
     }
 
-    await supabase.from('patient_psychologist')
+    const { error: updateError } = await supabase.from('patient_psychologist')
       .update({ psychologist_id: user.id, active: true })
       .eq('share_code', shareCode.trim().toUpperCase());
-
+    if (updateError) {
+      setLinkMsg('❌ Failed to link: ' + updateError.message);
+      return;
+    }
     setLinkMsg('✅ Patient linked successfully!');
     setShareCode('');
     fetchPatients();
@@ -684,7 +687,7 @@ export default function PsychologistPortal({ user, onLogout }) {
               </button>
               <div>
                 <h2 style={{ margin:0, color:'#1e293b', fontSize:18 }}>
-                  Patient: {selected.patient_id?.slice(0,8)}...
+                  Patient: {selected.email}
                 </h2>
                 <div style={{ display:'flex', gap:12, marginTop:4 }}>
                   <span style={{ fontSize:12, color:'#94a3b8' }}>
@@ -1064,7 +1067,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                   <div>
                     <strong style={{ color:'#dc2626' }}>⚠️ High Risk Patient</strong>
                     <div style={{ fontSize:12, color:'#94a3b8', marginTop:4 }}>
-                      Patient ID: {p.patient_id?.slice(0,8)}...
+                      Patient: {p.email}
                     </div>
                   </div>
                   <button onClick={() => {
