@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import AppointmentsList from './AppointmentsList';
 import Messages from './Messages';
+import { exportPatientReport } from './pdfExport';
 import axios from 'axios';
 
 // ── UTILITIES ─────────────────────────────────────────────
@@ -699,6 +700,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                   borderRadius:8, cursor:'pointer', fontSize:13, color:'#64748b' }}>
                 ← Roster
               </button>
+              <button onClick={() => exportPatientReport({ name: selected.email }, sessions, journals)} style={{ padding:'6px 14px', background:'#4F46E5', border:'none', borderRadius:8, cursor:'pointer', fontSize:13, color:'#fff' }}>Export PDF</button>
               <div>
                 <h2 style={{ margin:0, color:'#1e293b', fontSize:18 }}>
                   Patient: {selected.email}
