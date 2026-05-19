@@ -8,6 +8,7 @@ import Dashboard from './Dashboard';
 import PsychologistPortal from './PsychologistPortal';
 import ACTEngine from './ACTEngine';
 import CrisisManagement from './CrisisManagement';
+import Consent from './Consent';
 import Onboarding from './Onboarding';
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
@@ -101,16 +102,18 @@ export default function App() {
   const [reportLoading, setReportLoading]     = useState(false);
   const [assessMode, setAssessMode]           = useState(null);
   const [isPsychologist, setIsPsychologist]   = useState(false);
+  const [consentGiven, setConsentGiven]       = useState(null);
   const [showACT, setShowACT]                 = useState(false);
   const [showCrisis, setShowCrisis]           = useState(false);
   const [onboarded, setOnboarded]             = useState(null);
   const [profile, setProfile]                 = useState(null);
 
   const checkOnboarding = async (userId) => {
-    const { data } = await supabase.from('profiles').select('onboarded, display_name, concerns, urgency, goals, role').eq('id', userId).single();
+    const { data } = await supabase.from('profiles').select('onboarded, display_name, concerns, urgency, goals, role, consent_given').eq('id', userId).single();
     setOnboarded(data?.onboarded === true ? true : false);
     setProfile(data || null);
     if (data?.role === 'psychologist') { setIsPsychologist(true); setOnboarded(true); }
+    setConsentGiven(data?.consent_given === true);
   };
 
   React.useEffect(() => {
@@ -185,6 +188,7 @@ export default function App() {
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
   if (!user) return <Auth onLogin={setUser} />;
+  if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
   if (isPsychologist) return <PsychologistPortal user={user} onLogout={handleLogout} />;
 
