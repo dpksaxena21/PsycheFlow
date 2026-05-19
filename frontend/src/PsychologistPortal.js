@@ -524,6 +524,7 @@ export default function PsychologistPortal({ user, onLogout }) {
         .order('created_at', { ascending: false })
         .limit(3);
 
+      const { data: pData } = await supabase.from('profiles').select('display_name, full_name').eq('id', link.patient_id).single();
       const latestPHQ  = authData?.[0]?.phq_score || 0;
       const latestGAD  = authData?.[0]?.gad_score || 0;
       const riskLevel  = latestPHQ >= 20 || latestGAD >= 15 ? 'high'
@@ -538,7 +539,7 @@ export default function PsychologistPortal({ user, onLogout }) {
 
       return {
         ...link,
-        email: link.profiles?.display_name || 'Patient ' + link.patient_id?.slice(0,8),
+        email: pData?.display_name || pData?.full_name || 'Patient ' + link.patient_id?.slice(0,8),
         sessions:       authData || [],
         journals:       jData || [],
         riskLevel,
