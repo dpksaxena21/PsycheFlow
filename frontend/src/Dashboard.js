@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import Appointments from './Appointments';
+import Messages from './Messages';
 import Logo from './Logo';
 import MoodCheckIn from './MoodCheckIn';
 
@@ -100,6 +101,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [psychologistId, setPsychologistId] = useState(null);
+  const [psychologistContact, setPsychologistContact] = useState([]);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -108,8 +110,9 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
     const { data: s } = await supabase.from('sessions').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
     const { data: j } = await supabase.from('journal_entries').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
     setSessions(s || []);
-    const { data: link } = await supabase.from('patient_psychologist').select('psychologist_id').eq('patient_id', user.id).eq('active', true).not('psychologist_id', 'is', null).limit(1).maybeSingle();
+    const { data: link } = await supabase.from('patient_psychologist').select('psychologist_id').eq('patient_id', user.id).eq('active', true).not('psychologist_id', 'is', null).neq('psychologist_id', user.id).limit(1).maybeSingle();
     if (link?.psychologist_id) setPsychologistId(link.psychologist_id);
+    if (link?.psychologist_id) setPsychologistContact([{ id: link.psychologist_id, name: 'My Psychologist', role: 'psychologist' }]);
     setJournals(j || []);
     setLoading(false);
   };
@@ -161,6 +164,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           <button style={tabStyle('history')}  onClick={() => setActiveTab('history')}>History ({sessions.length})</button>
           <button style={tabStyle('journal')}  onClick={() => setActiveTab('journal')}>Journal ({journals.length})</button>
           <button style={tabStyle('appointments')} onClick={() => setActiveTab('appointments')}>Appointments</button>
+          <button style={tabStyle('messages')} onClick={() => setActiveTab('messages')}>Messages</button>
         </div>
 
         {/* OVERVIEW */}
@@ -355,6 +359,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
         )}
       </div>
         {activeTab === 'appointments' && <Appointments user={user} psychologistId={psychologistId} />}
+        {activeTab === 'messages' && <Messages user={user} contacts={psychologistContact} />}
     </div>
   );
 }

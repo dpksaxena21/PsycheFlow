@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import AppointmentsList from './AppointmentsList';
+import Messages from './Messages';
 import axios from 'axios';
 
 // ── UTILITIES ─────────────────────────────────────────────
@@ -20,6 +21,7 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, patientCount, alertC
     { id:'analytics', icon:'📊', label:'Practice Analytics' },
     { id:'alerts',    icon:'🚨', label:'Crisis Alerts',    badge: alertCount, badgeColor:'#ef4444' },
     { id:'appointments', icon:'📅', label:'Appointments' },
+    { id:'messages', icon:'msg', label:'Messages' },
   ];
 
   return (
@@ -1114,6 +1116,7 @@ export default function PsychologistPortal({ user, onLogout }) {
             <AppointmentsList psychologistId={user.id} />
           </div>
         )}
+        {activeTab === 'messages' && <Messages user={user} contacts={patients.map(p => ({ id: p.patient_id, name: p.email, role: 'patient' }))} />}
       </div>
     </div>
   );
