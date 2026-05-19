@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { logAction, ACTIONS } from './audit';
 import axios from 'axios';
 import { supabase } from './supabase';
 import Auth from './Auth';
@@ -120,12 +121,27 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) checkOnboarding(session.user.id);
+      logAction(session.user.id, ACTIONS.LOGIN, 'auth');
     });
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) checkOnboarding(session.user.id);
     });
   }, []);
+
+  // Session timeout after 30 mins inactivity
+  React.useEffect(() => {
+    if (!user) return;
+    let timer = setTimeout(() => {
+      supabase.auth.signOut();
+      setUser(null);
+      alert("Session expired. Please log in again.");
+    }, 30 * 60 * 1000);
+    const reset = () => { clearTimeout(timer); timer = setTimeout(() => { supabase.auth.signOut(); setUser(null); }, 30 * 60 * 1000); };
+    window.addEventListener("mousemove", reset);
+    window.addEventListener("keydown", reset);
+    return () => { clearTimeout(timer); window.removeEventListener("mousemove", reset); window.removeEventListener("keydown", reset); };
+  }, [user]);
 
   const handleComplete = async ({ answers, age, gender, occupation, concern }) => {
     setScreen('loading');
@@ -166,6 +182,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    logAction(user?.id, ACTIONS.LOGOUT, 'auth');
     await supabase.auth.signOut();
     setUser(null); setScreen('home'); setResults(null); setFullReport(null);
     setAssessMode(null); setIsPsychologist(false); setShowACT(false);

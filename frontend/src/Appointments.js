@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
+import { logAction, ACTIONS } from './audit';
 
 export default function Appointments({ user, psychologistId }) {
   const [appointments, setAppointments] = useState([]);
@@ -49,6 +50,7 @@ export default function Appointments({ user, psychologistId }) {
     });
     if (error) setMsg('❌ Booking failed: ' + error.message);
     else {
+      logAction(user.id, ACTIONS.APPOINTMENT_BOOKED, 'appointments', { psychologist_id: psychologistId });
       setMsg('✅ Appointment booked successfully!');
       setSelectedDate('');
       setSelectedTime('');

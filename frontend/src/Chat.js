@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase';
+import { logAction, ACTIONS } from './audit';
 
 export default function Chat({ user, contactId, contactName }) {
   const [messages, setMessages] = useState([]);

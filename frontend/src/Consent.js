@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from './supabase';
+import { logAction, ACTIONS } from './audit';
 import Logo from './Logo';
 
 export default function Consent({ user, onConsent }) {
@@ -17,6 +18,7 @@ export default function Consent({ user, onConsent }) {
       consent_given_at: new Date().toISOString()
     });
     setLoading(false);
+    logAction(user.id, ACTIONS.CONSENT_GIVEN, 'consent', { timestamp: new Date().toISOString() });
     onConsent();
   };
 
