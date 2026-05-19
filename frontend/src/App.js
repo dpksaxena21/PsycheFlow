@@ -150,6 +150,7 @@ export default function App() {
       const res = await axios.post('http://127.0.0.1:8000/predict', payload);
       const predictions = res.data.predictions;
       if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
+      if (user) { try { await axios.post('http://127.0.0.1:8000/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers }); } catch(e) { console.log('Crisis check error:', e); } }
       setResults({ predictions, phq, gad, age, gender, occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
     } catch { alert('API error — is FastAPI running?'); setScreen('home'); }

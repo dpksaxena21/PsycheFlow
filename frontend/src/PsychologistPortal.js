@@ -492,8 +492,17 @@ export default function PsychologistPortal({ user, onLogout }) {
   const [soapNote, setSoapNote]     = useState('');
   const [generating, setGenerating] = useState(false);
   const [alerts, setAlerts]         = useState([]);
+  const [crisisAlerts, setCrisisAlerts] = useState([]);
 
-  useEffect(() => { fetchPatients(); }, []);
+  const fetchCrisisAlerts = async () => {
+    try {
+      const res = await axios.get(`http://127.0.0.1:8000/crisis-alerts/${user.id}`);
+      if (res.data.alerts && res.data.alerts.length > 0) {
+        setCrisisAlerts(res.data.alerts);
+      }
+    } catch(e) { console.log("Crisis alerts fetch error:", e); }
+  };
+  useEffect(() => { fetchPatients(); fetchCrisisAlerts(); }, []);
 
   const fetchPatients = async () => {
     setLoading(true);

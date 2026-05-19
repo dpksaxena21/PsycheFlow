@@ -16,6 +16,7 @@ load_dotenv(dotenv_path="/mnt/d/Projects/PsycheFlow/.env")
 from journal_analysis import analyze_journal
 from report_generator import generate_full_report
 
+from crisis_escalation import check_and_escalate, get_unacknowledged_alerts, acknowledge_alert
 app = FastAPI(title="PsycheFlow API", version="2.0")
 
 app.add_middleware(
@@ -669,3 +670,32 @@ async def predict_therapy_topic(inp: TextInput):
         "primary_topic": topic,
         "top3": [{"topic": t, "confidence": round(float(p)*100,1)} for t,p in top3]
     }
+
+# ── CRISIS ESCALATION ENDPOINTS ──────────────────────────────────────────────
+
+class CrisisCheckRequest(BaseModel):
+    patient_id: str
+    phq_score: int
+    gad_score: int
+    suicide_risk: float = None
+    answers: dict = {}
+
+@app.post("/check-crisis")
+async def check_crisis(req: CrisisCheckRequest):
+    result = await check_and_escalate(
+        patient_id=req.patient_id,
+        phq_score=req.phq_score,
+        gad_score=req.gad_score,
+        suicide_risk=req.suicide_risk,
+        answers=req.answers
+    )
+    return result
+
+@app.get("/crisis-alerts/{psychologist_id}")
+async def get_crisis_alerts(psychologist_id: str):
+    alerts = await get_unacknowledged_alerts(psychologist_id)
+    return {"alerts": alerts}
+
+@app.post("/crisis-alerts/{alert_id}/acknowledge")
+async def ack_alert(alert_id: str):
+    return await acknowledge_alert(alert_id)
