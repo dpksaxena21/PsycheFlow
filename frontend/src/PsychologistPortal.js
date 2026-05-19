@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 import AppointmentsList from './AppointmentsList';
 import Messages from './Messages';
 import { exportPatientReport } from './pdfExport';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import axios from 'axios';
 
 // ── UTILITIES ─────────────────────────────────────────────
@@ -1003,68 +1004,8 @@ export default function PsychologistPortal({ user, onLogout }) {
 
         {/* ── ANALYTICS ── */}
         {activeTab === 'analytics' && (
-          <div>
-            <h2 style={{ color:'#1e293b', margin:'0 0 24px' }}>Practice Analytics</h2>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr',
-              gap:16, marginBottom:24 }}>
-              {[
-                { label:'Total Patients',    value:patients.length,                            icon:'👥', color:'#6366f1' },
-                { label:'High Risk Patients', value:patients.filter(p=>p.riskLevel==='high').length, icon:'🚨', color:'#ef4444' },
-                { label:'Active Alerts',      value:alerts.length,                              icon:'⚠️', color:'#f59e0b' },
-              ].map((c,i) => (
-                <div key={i} style={{ background:'#fff', borderRadius:16, padding:24,
-                  border:'1px solid #e2e8f0', textAlign:'center' }}>
-                  <div style={{ fontSize:32, marginBottom:8 }}>{c.icon}</div>
-                  <div style={{ fontSize:32, fontWeight:'bold', color:c.color }}>{c.value}</div>
-                  <div style={{ fontSize:13, color:'#94a3b8' }}>{c.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Risk Distribution */}
-            <div style={{ background:'#fff', borderRadius:16, padding:24,
-              border:'1px solid #e2e8f0', marginBottom:20 }}>
-              <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Risk Distribution</h3>
-              {['high','medium','low'].map(risk => {
-                const count = patients.filter(p => p.riskLevel === risk).length;
-                const pct   = patients.length ? (count/patients.length)*100 : 0;
-                return (
-                  <div key={risk} style={{ marginBottom:12 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between',
-                      marginBottom:4 }}>
-                      <span style={{ fontSize:13, textTransform:'capitalize',
-                        color: riskColor(risk) }}>{risk} Risk</span>
-                      <span style={{ fontSize:13, color:'#94a3b8' }}>
-                        {count} patients
-                      </span>
-                    </div>
-                    <div style={{ background:'#e2e8f0', borderRadius:6, height:8 }}>
-                      <div style={{ width:`${pct}%`, background:riskColor(risk),
-                        height:8, borderRadius:6 }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div style={{ background:'#fff', borderRadius:16, padding:24,
-              border:'1px solid #e2e8f0' }}>
-              <h3 style={{ margin:'0 0 8px', color:'#1e293b' }}>📊 Power BI Integration</h3>
-              <p style={{ fontSize:13, color:'#94a3b8', margin:'0 0 16px' }}>
-                Connect Supabase to Power BI for advanced practice analytics.
-              </p>
-              <div style={{ background:'#f8fafc', borderRadius:8, padding:12,
-                fontSize:12, color:'#64748b', fontFamily:'monospace' }}>
-                Host: db.uckgvukjdekoxfbxnqew.supabase.co<br/>
-                Port: 5432<br/>
-                Database: postgres<br/>
-                Schema: public
-              </div>
-            </div>
-          </div>
+          <AnalyticsDashboard patients={patients} alerts={crisisAlerts} />
         )}
-
-        {/* ── CRISIS ALERTS ── */}
         {activeTab === 'alerts' && (
           <div>
             <h2 style={{ color:'#1e293b', margin:'0 0 24px' }}>🚨 Crisis Alerts</h2>

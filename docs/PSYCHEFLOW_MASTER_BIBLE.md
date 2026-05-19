@@ -1,5 +1,5 @@
 # PsycheFlow — Master Product Bible
-## Auto-Updated: 2026-05-19 19:39
+## Auto-Updated: 2026-05-19 19:49
 ## Builder: Deepak Saxena | github.com/dpksaxena21/PsycheFlow
 ## Domain: psycheflow.in | GitHub: github.com/dpksaxena21/PsycheFlow
 
@@ -113,7 +113,7 @@ PsycheFlow = Clinical Assessment + ACT Therapy + JITAI + Wearables + Psychologis
 ❌ Relapse prevention plan
 
 ### LAYER 6 — PLATFORM
-❌ PDF report export (jsPDF)
+✅ PDF report export (jsPDF)
 ❌ Hindi/Hinglish support
 ❌ Mobile app (React Native)
 ❌ Power BI connector (Supabase → Power BI)
