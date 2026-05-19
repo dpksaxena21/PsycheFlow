@@ -6,12 +6,12 @@ export default function Auth({ onLogin }) {
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole]         = useState('patient');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState('');
 
   const handleAuth = async () => {
-    if (!email || !password) { setError('Please fill in all fields'); return; }
     setLoading(true);
     setError('');
     if (mode === 'login') {
@@ -19,9 +19,12 @@ export default function Auth({ onLogin }) {
       if (err) setError(err.message);
       else onLogin(data.user);
     } else {
-      const { error: err } = await supabase.auth.signUp({ email, password });
-      if (err) setError(err.message);
-      else setSuccess('Account created! Check your email to verify, then sign in.');
+      const { data, error: err } = await supabase.auth.signUp({ email, password });
+      if (err) { setError(err.message); setLoading(false); return; }
+      if (data?.user) {
+        await supabase.from('profiles').upsert({ id: data.user.id, email, role });
+      }
+      setSuccess('Account created! Check your email to verify, then sign in.');
     }
     setLoading(false);
   };
@@ -160,6 +163,26 @@ export default function Auth({ onLogin }) {
             onFocus={e => e.target.style.borderColor='#4F46E5'}
             onBlur={e  => e.target.style.borderColor='#E5E7EB'}
           />
+          {mode === 'signup' && (
+            <div style={{ marginBottom:'24px' }}>
+              <p style={{ fontSize:'13px', color:'#6B7280', marginBottom:'10px', fontWeight:500 }}>I am a:</p>
+              <div style={{ display:'flex', gap:'12px' }}>
+                {['patient','psychologist'].map(r => (
+                  <button key={r} onClick={() => setRole(r)} type='button'
+                    style={{
+                      flex:1, padding:'12px', borderRadius:'10px', cursor:'pointer',
+                      border: role === r ? '2px solid #4F46E5' : '1.5px solid #E5E7EB',
+                      background: role === r ? '#EEF2FF' : '#fff',
+                      color: role === r ? '#4F46E5' : '#6B7280',
+                      fontWeight: role === r ? 600 : 400,
+                      fontSize:'14px', textTransform:'capitalize', transition:'all 0.15s'
+                    }}>
+                    {r === 'patient' ? '🧠 Patient' : '🩺 Psychologist'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && (
             <div style={{

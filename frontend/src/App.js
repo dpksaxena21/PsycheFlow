@@ -107,9 +107,10 @@ export default function App() {
   const [profile, setProfile]                 = useState(null);
 
   const checkOnboarding = async (userId) => {
-    const { data } = await supabase.from('profiles').select('onboarded, display_name, concerns, urgency, goals').eq('id', userId).single();
+    const { data } = await supabase.from('profiles').select('onboarded, display_name, concerns, urgency, goals, role').eq('id', userId).single();
     setOnboarded(data?.onboarded === true ? true : false);
     setProfile(data || null);
+    if (data?.role === 'psychologist') { setIsPsychologist(true); setOnboarded(true); }
   };
 
   React.useEffect(() => {

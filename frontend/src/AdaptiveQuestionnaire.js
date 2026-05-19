@@ -1,392 +1,268 @@
 import React, { useState } from 'react';
 
-// ── INSTRUMENT DEFINITIONS ────────────────────────────────
-const instruments = {
+const QUESTIONS = {
+  // ── DEMOGRAPHICS ──────────────────────────────────────────
+  AGE:    { id:'AGE',    text:'How old are you?',    type:'number', section:'About You' },
+  GENDER: { id:'GENDER', text:'What is your gender?', type:'choice', options:['Male','Female','Non-binary','Prefer not to say'], section:'About You' },
+  OCC:    { id:'OCC',    text:'What is your occupation?', type:'choice', options:['Student','Employed','Self-employed','Unemployed','Retired','Other'], section:'About You' },
 
-  PHQ9: [
-    { id:'PHQ1', text:'Little interest or pleasure in doing things', scale:4 },
-    { id:'PHQ2', text:'Feeling down, depressed, or hopeless', scale:4 },
-    { id:'PHQ3', text:'Trouble falling or staying asleep, or sleeping too much', scale:4 },
-    { id:'PHQ4', text:'Feeling tired or having little energy', scale:4 },
-    { id:'PHQ5', text:'Poor appetite or overeating', scale:4 },
-    { id:'PHQ6', text:'Feeling bad about yourself — or that you are a failure', scale:4 },
-    { id:'PHQ7', text:'Trouble concentrating on things', scale:4 },
-    { id:'PHQ8', text:'Moving or speaking slowly, or being fidgety or restless', scale:4 },
-    { id:'PHQ9', text:'Thoughts that you would be better off dead or hurting yourself', scale:4 },
-  ],
+  // ── PHQ-9 ─────────────────────────────────────────────────
+  PHQ1: { id:'PHQ1', text:'Little interest or pleasure in doing things', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ2: { id:'PHQ2', text:'Feeling down, depressed, or hopeless', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ3: { id:'PHQ3', text:'Trouble falling or staying asleep, or sleeping too much', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ4: { id:'PHQ4', text:'Feeling tired or having little energy', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ5: { id:'PHQ5', text:'Poor appetite or overeating', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ6: { id:'PHQ6', text:'Feeling bad about yourself — or that you are a failure', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ7: { id:'PHQ7', text:'Trouble concentrating on things', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ8: { id:'PHQ8', text:'Moving or speaking so slowly that others noticed, or being fidgety', type:'frequency4', section:'Depression (PHQ-9)' },
+  PHQ9: { id:'PHQ9', text:'Thoughts that you would be better off dead or of hurting yourself', type:'frequency4', section:'Depression (PHQ-9)' },
 
-  GAD7: [
-    { id:'GAD1', text:'Feeling nervous, anxious, or on edge', scale:4 },
-    { id:'GAD2', text:'Not being able to stop or control worrying', scale:4 },
-    { id:'GAD3', text:'Worrying too much about different things', scale:4 },
-    { id:'GAD4', text:'Trouble relaxing', scale:4 },
-    { id:'GAD5', text:'Being so restless it is hard to sit still', scale:4 },
-    { id:'GAD6', text:'Becoming easily annoyed or irritable', scale:4 },
-    { id:'GAD7', text:'Feeling afraid as if something awful might happen', scale:4 },
-  ],
+  // ── GAD-7 ─────────────────────────────────────────────────
+  GAD1: { id:'GAD1', text:'Feeling nervous, anxious, or on edge', type:'frequency4', section:'Anxiety (GAD-7)' },
+  GAD2: { id:'GAD2', text:'Not being able to stop or control worrying', type:'frequency4', section:'Anxiety (GAD-7)' },
+  GAD3: { id:'GAD3', text:'Worrying too much about different things', type:'frequency4', section:'Anxiety (GAD-7)' },
+  GAD4: { id:'GAD4', text:'Trouble relaxing', type:'frequency4', section:'Anxiety (GAD-7)' },
+  GAD5: { id:'GAD5', text:'Being so restless that it is hard to sit still', type:'frequency4', section:'Anxiety (GAD-7)' },
+  GAD6: { id:'GAD6', text:'Becoming easily annoyed or irritable', type:'frequency4', section:'Anxiety (GAD-7)' },
+  GAD7: { id:'GAD7', text:'Feeling afraid as if something awful might happen', type:'frequency4', section:'Anxiety (GAD-7)' },
 
-  BIG5: [
-    { id:'E1', text:'I am the life of the party', scale:5 },
-    { id:'E2', text:'I feel comfortable around people', scale:5 },
-    { id:'N1', text:'I get stressed out easily', scale:5 },
-    { id:'N2', text:'I worry about things', scale:5 },
-    { id:'A1', text:'I am interested in people and their feelings', scale:5 },
-    { id:'A2', text:'I sympathize with others feelings', scale:5 },
-    { id:'C1', text:'I am always prepared and organized', scale:5 },
-    { id:'C2', text:'I pay attention to details', scale:5 },
-    { id:'O1', text:'I have a vivid imagination', scale:5 },
-    { id:'O2', text:'I have a rich vocabulary and love ideas', scale:5 },
-  ],
+  // ── WHO-5 WELLBEING ───────────────────────────────────────
+  WHO1: { id:'WHO1', text:'I have felt cheerful and in good spirits', type:'frequency6', section:'Wellbeing (WHO-5)' },
+  WHO2: { id:'WHO2', text:'I have felt calm and relaxed', type:'frequency6', section:'Wellbeing (WHO-5)' },
+  WHO3: { id:'WHO3', text:'I have felt active and vigorous', type:'frequency6', section:'Wellbeing (WHO-5)' },
+  WHO4: { id:'WHO4', text:'I woke up feeling fresh and rested', type:'frequency6', section:'Wellbeing (WHO-5)' },
+  WHO5: { id:'WHO5', text:'My daily life has been filled with things that interest me', type:'frequency6', section:'Wellbeing (WHO-5)' },
 
-  DEPRESSION_DEEP: [
-    { id:'DD1', text:'How long have you been feeling depressed or low?', scale:5,
-      labels:['Less than 2 weeks','2-4 weeks','1-3 months','3-6 months','More than 6 months'] },
-    { id:'DD2', text:'Has your depression affected your work or daily activities?', scale:4 },
-    { id:'DD3', text:'Do you have periods of feeling extremely happy or energetic?', scale:4 },
-    { id:'DD4', text:'Have you had thoughts of ending your life?', scale:4 },
-    { id:'DD5', text:'Do you have a history of depression in your family?', scale:4 },
-  ],
+  // ── ISI INSOMNIA ──────────────────────────────────────────
+  ISI1: { id:'ISI1', text:'Difficulty falling asleep', type:'severity5', section:'Sleep (ISI)' },
+  ISI2: { id:'ISI2', text:'Difficulty staying asleep through the night', type:'severity5', section:'Sleep (ISI)' },
+  ISI3: { id:'ISI3', text:'Problems waking up too early', type:'severity5', section:'Sleep (ISI)' },
+  ISI4: { id:'ISI4', text:'How satisfied are you with your current sleep pattern?', type:'satisfaction5', section:'Sleep (ISI)' },
+  ISI5: { id:'ISI5', text:'How noticeable to others is your sleep problem?', type:'severity5', section:'Sleep (ISI)' },
+  ISI6: { id:'ISI6', text:'How worried are you about your current sleep problem?', type:'severity5', section:'Sleep (ISI)' },
+  ISI7: { id:'ISI7', text:'How much does your sleep problem interfere with daily functioning?', type:'severity5', section:'Sleep (ISI)' },
 
-  ANXIETY_DEEP: [
-    { id:'AD1', text:'Do you experience sudden episodes of intense fear or panic?', scale:4 },
-    { id:'AD2', text:'Do you avoid situations because of anxiety?', scale:4 },
-    { id:'AD3', text:'Do you have repetitive thoughts or rituals you feel compelled to do?', scale:4 },
-    { id:'AD4', text:'Have you experienced a traumatic event that still affects you?', scale:4 },
-    { id:'AD5', text:'Does your anxiety cause physical symptoms like racing heart or sweating?', scale:4 },
-  ],
+  // ── BIG FIVE ──────────────────────────────────────────────
+  E1: { id:'E1', text:'I see myself as someone who is talkative', type:'agree5', section:'Personality (Big Five)' },
+  E2: { id:'E2', text:'I see myself as outgoing and sociable', type:'agree5', section:'Personality (Big Five)' },
+  N1: { id:'N1', text:'I see myself as someone who worries a lot', type:'agree5', section:'Personality (Big Five)' },
+  N2: { id:'N2', text:'I see myself as someone who gets nervous easily', type:'agree5', section:'Personality (Big Five)' },
+  A1: { id:'A1', text:'I see myself as someone who is helpful and unselfish', type:'agree5', section:'Personality (Big Five)' },
+  A2: { id:'A2', text:'I see myself as someone who has a forgiving nature', type:'agree5', section:'Personality (Big Five)' },
+  C1: { id:'C1', text:'I see myself as someone who does a thorough job', type:'agree5', section:'Personality (Big Five)' },
+  C2: { id:'C2', text:'I see myself as someone who tends to be organized', type:'agree5', section:'Personality (Big Five)' },
+  O1: { id:'O1', text:'I see myself as someone who is curious about many different things', type:'agree5', section:'Personality (Big Five)' },
+  O2: { id:'O2', text:'I see myself as someone who has an active imagination', type:'agree5', section:'Personality (Big Five)' },
 
-  BIPOLAR_MDQ: [
-    { id:'MDQ1', text:'Has there been a period when you felt so good or hyper that others thought you were not normal?', scale:4 },
-    { id:'MDQ2', text:'Were you much more active than usual during that time?', scale:4 },
-    { id:'MDQ3', text:'Did you need less sleep than usual during that time?', scale:4 },
-    { id:'MDQ4', text:'Did you spend money getting yourself into trouble?', scale:4 },
-    { id:'MDQ5', text:'Were you much more interested in sex than usual?', scale:4 },
-  ],
+  // ── DARK TRIAD ────────────────────────────────────────────
+  M1:  { id:'M1',  text:'I tend to manipulate others to get my way', type:'agree5', section:'Personality (Advanced)' },
+  M2:  { id:'M2',  text:'I have used deceit or lied to get my way', type:'agree5', section:'Personality (Advanced)' },
+  NA1: { id:'NA1', text:'I tend to want others to admire me', type:'agree5', section:'Personality (Advanced)' },
+  NA2: { id:'NA2', text:'I tend to want others to pay attention to me', type:'agree5', section:'Personality (Advanced)' },
+  P1:  { id:'P1',  text:'I tend to lack remorse', type:'agree5', section:'Personality (Advanced)' },
+  P2:  { id:'P2',  text:'I tend to not worry about the morality of my actions', type:'agree5', section:'Personality (Advanced)' },
 
-  OCD_OCIR: [
-    { id:'OCD1', text:'I have saved so many things that they get in the way', scale:5,
-      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
-    { id:'OCD2', text:'I check things more often than necessary', scale:5,
-      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
-    { id:'OCD3', text:'I get upset if objects are not arranged properly', scale:5,
-      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
-    { id:'OCD4', text:'I feel compelled to count while I am doing things', scale:5,
-      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
-    { id:'OCD5', text:'I wash my hands more than necessary', scale:5,
-      labels:['Not at all','A little','Moderately','A lot','Extremely'] },
-  ],
+  // ── OCD ───────────────────────────────────────────────────
+  OCD1: { id:'OCD1', text:'I have saved so many things that they get in the way', type:'severity5', section:'OCD Screening' },
+  OCD2: { id:'OCD2', text:'I check things more often than necessary', type:'severity5', section:'OCD Screening' },
+  OCD3: { id:'OCD3', text:'I get upset if objects are not arranged properly', type:'severity5', section:'OCD Screening' },
+  OCD4: { id:'OCD4', text:'I feel compelled to count while I am doing things', type:'severity5', section:'OCD Screening' },
+  OCD5: { id:'OCD5', text:'I wash my hands more than necessary', type:'severity5', section:'OCD Screening' },
 
-  PTSD_PCL5: [
-    { id:'PCL1', text:'Repeated disturbing memories or dreams of the traumatic event', scale:5,
-      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
-    { id:'PCL2', text:'Feeling very upset when reminded of the experience', scale:5,
-      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
-    { id:'PCL3', text:'Avoiding memories, thoughts or feelings related to it', scale:5,
-      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
-    { id:'PCL4', text:'Feeling distant from other people', scale:5,
-      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
-    { id:'PCL5', text:'Feeling irritable or having angry outbursts', scale:5,
-      labels:['Not at all','A little bit','Moderately','Quite a bit','Extremely'] },
-  ],
+  // ── PTSD ──────────────────────────────────────────────────
+  PCL1: { id:'PCL1', text:'Repeated, disturbing memories or dreams of a stressful experience', type:'frequency5', section:'PTSD Screening' },
+  PCL2: { id:'PCL2', text:'Feeling very upset when reminded of a stressful experience', type:'frequency5', section:'PTSD Screening' },
+  PCL3: { id:'PCL3', text:'Avoiding memories, thoughts, or feelings related to the experience', type:'frequency5', section:'PTSD Screening' },
+  PCL4: { id:'PCL4', text:'Feeling distant or cut off from other people', type:'frequency5', section:'PTSD Screening' },
+  PCL5: { id:'PCL5', text:'Feeling jumpy or easily startled', type:'frequency5', section:'PTSD Screening' },
 
-  ADHD_ASRS: [
-    { id:'ADHD1', text:'How often do you have trouble wrapping up the final details of a project?', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
-    { id:'ADHD2', text:'How often do you have difficulty keeping attention when doing boring work?', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
-    { id:'ADHD3', text:'How often do you have difficulty concentrating on what people say to you?', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
-    { id:'ADHD4', text:'How often do you leave your seat in meetings or situations where you are expected to sit?', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
-    { id:'ADHD5', text:'How often do you feel overly active and compelled to do things?', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Very Often'] },
-  ],
+  // ── ADHD ──────────────────────────────────────────────────
+  ADHD1: { id:'ADHD1', text:'How often do you have trouble wrapping up the final details of a project?', type:'frequency5', section:'ADHD Screening' },
+  ADHD2: { id:'ADHD2', text:'How often do you have difficulty getting things in order?', type:'frequency5', section:'ADHD Screening' },
+  ADHD3: { id:'ADHD3', text:'How often do you have problems remembering appointments?', type:'frequency5', section:'ADHD Screening' },
+  ADHD4: { id:'ADHD4', text:'How often do you avoid tasks that require a lot of thought?', type:'frequency5', section:'ADHD Screening' },
+  ADHD5: { id:'ADHD5', text:'How often do you fidget or squirm when you have to sit for a long time?', type:'frequency5', section:'ADHD Screening' },
 
-  BURNOUT: [
-    { id:'BRN1', text:'I feel emotionally drained from my work', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Always'] },
-    { id:'BRN2', text:'I feel used up at the end of the workday', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Always'] },
-    { id:'BRN3', text:'I feel fatigued when I get up to face another day at work', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Always'] },
-    { id:'BRN4', text:'Working with people all day is really a strain for me', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Always'] },
-    { id:'BRN5', text:'I feel burned out from my work', scale:5,
-      labels:['Never','Rarely','Sometimes','Often','Always'] },
-  ],
+  // ── BURNOUT ───────────────────────────────────────────────
+  BRN1: { id:'BRN1', text:'I feel emotionally drained from my work', type:'frequency7', section:'Burnout Screening' },
+  BRN2: { id:'BRN2', text:'I feel used up at the end of the workday', type:'frequency7', section:'Burnout Screening' },
+  BRN3: { id:'BRN3', text:'I feel fatigued when I get up in the morning and have to face another day', type:'frequency7', section:'Burnout Screening' },
+  BRN4: { id:'BRN4', text:'Working with people all day is really a strain for me', type:'frequency7', section:'Burnout Screening' },
+  BRN5: { id:'BRN5', text:'I feel burned out from my work', type:'frequency7', section:'Burnout Screening' },
 
-  DARK_TRIAD: [
-    { id:'M1', text:'I tend to manipulate others to get my way', scale:5 },
-    { id:'M2', text:'I have used deceit or lied to get what I want', scale:5 },
-    { id:'NA1', text:'I like to be the center of attention', scale:5 },
-    { id:'NA2', text:'I feel I deserve more than others', scale:5 },
-    { id:'P1', text:'I rarely feel guilt or remorse for my actions', scale:5 },
-    { id:'P2', text:'I tend to be calm and unemotional even in tense situations', scale:5 },
-  ],
+  // ── BIPOLAR (MDQ) ─────────────────────────────────────────
+  MDQ1: { id:'MDQ1', text:'I felt so good or hyper that others thought I was not my normal self', type:'yesno', section:'Bipolar Screening' },
+  MDQ2: { id:'MDQ2', text:'I was so irritable that I shouted at people or started fights', type:'yesno', section:'Bipolar Screening' },
+  MDQ3: { id:'MDQ3', text:'I felt much more self-confident than usual', type:'yesno', section:'Bipolar Screening' },
+  MDQ4: { id:'MDQ4', text:'I got much less sleep than usual and found I did not really miss it', type:'yesno', section:'Bipolar Screening' },
+  MDQ5: { id:'MDQ5', text:'I was much more talkative or spoke faster than usual', type:'yesno', section:'Bipolar Screening' },
 
-  SLEEP_PSQI: [
-    { id:'SLP1', text:'During the past month, how often have you had trouble sleeping?', scale:4,
-      labels:['Not at all','Less than once a week','Once or twice a week','Three or more times a week'] },
-    { id:'SLP2', text:'How would you rate your sleep quality overall?', scale:4,
-      labels:['Very good','Fairly good','Fairly bad','Very bad'] },
-    { id:'SLP3', text:'How many hours of actual sleep do you get at night?', scale:5,
-      labels:['Less than 4 hours','4-5 hours','5-6 hours','6-7 hours','7+ hours'] },
-    { id:'SLP4', text:'Do you take medication to help you sleep?', scale:4,
-      labels:['Not at all','Less than once a week','Once or twice a week','Three or more times a week'] },
-  ],
+  // ── SELF ESTEEM (RSE) ────────────────────────────────────
+  RSE1: { id:'RSE1', text:'On the whole, I am satisfied with myself', type:'agree4', section:'Self-Esteem (RSE)' },
+  RSE2: { id:'RSE2', text:'I feel that I have a number of good qualities', type:'agree4', section:'Self-Esteem (RSE)' },
+  RSE3: { id:'RSE3', text:'I am able to do things as well as most other people', type:'agree4', section:'Self-Esteem (RSE)' },
+  RSE4: { id:'RSE4', text:'I feel that I am a person of worth', type:'agree4', section:'Self-Esteem (RSE)' },
 
-  RSE: [
-    { id:'RSE1', text:'On the whole, I am satisfied with myself', scale:4,
-      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
-    { id:'RSE2', text:'I feel that I have a number of good qualities', scale:4,
-      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
-    { id:'RSE3', text:'I am able to do things as well as most other people', scale:4,
-      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
-    { id:'RSE4', text:'I feel I do not have much to be proud of', scale:4,
-      labels:['Strongly Disagree','Disagree','Agree','Strongly Agree'] },
-  ],
+  // ── DASS-21 ───────────────────────────────────────────────
+  DASS1: { id:'DASS1', text:'I found it hard to wind down', type:'dass4', section:'Stress & Mood (DASS-21)' },
+  DASS2: { id:'DASS2', text:'I felt that I had nothing to look forward to', type:'dass4', section:'Stress & Mood (DASS-21)' },
+  DASS3: { id:'DASS3', text:'I felt down-hearted and blue', type:'dass4', section:'Stress & Mood (DASS-21)' },
+  DASS4: { id:'DASS4', text:'I was unable to become enthusiastic about anything', type:'dass4', section:'Stress & Mood (DASS-21)' },
+  DASS5: { id:'DASS5', text:'I felt I was close to panic', type:'dass4', section:'Stress & Mood (DASS-21)' },
+  DASS6: { id:'DASS6', text:'I experienced trembling (e.g. in the hands)', type:'dass4', section:'Stress & Mood (DASS-21)' },
+  DASS7: { id:'DASS7', text:'I tended to over-react to situations', type:'dass4', section:'Stress & Mood (DASS-21)' },
 };
 
-// ── ADAPTIVE LOGIC ────────────────────────────────────────
-function buildQuestionFlow(answers) {
-  const phqScore = ['PHQ1','PHQ2','PHQ3','PHQ4','PHQ5','PHQ6','PHQ7','PHQ8','PHQ9']
-    .reduce((s, id) => s + (answers[id] || 0), 0);
-  const gadScore = ['GAD1','GAD2','GAD3','GAD4','GAD5','GAD6','GAD7']
-    .reduce((s, id) => s + (answers[id] || 0), 0);
+const SCALE = {
+  frequency4:   ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'],
+  frequency5:   ['Not at all', 'A little bit', 'Moderately', 'Quite a bit', 'Extremely'],
+  frequency6:   ['At no time', 'Some of the time', 'Less than half the time', 'More than half', 'Most of the time', 'All of the time'],
+  frequency7:   ['Never', 'A few times a year', 'Monthly', 'A few times/month', 'Weekly', 'A few times/week', 'Daily'],
+  agree5:       ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+  agree4:       ['Strongly Disagree', 'Disagree', 'Agree', 'Strongly Agree'],
+  severity5:    ['None', 'Mild', 'Moderate', 'Severe', 'Very Severe'],
+  satisfaction5:['Very Satisfied', 'Satisfied', 'Neutral', 'Dissatisfied', 'Very Dissatisfied'],
+  dass4:        ['Did not apply to me', 'Applied to me some', 'Applied to me considerably', 'Applied to me very much'],
+  yesno:        ['No', 'Yes'],
+};
 
-  let flow = [
-    { name:'Depression Screening (PHQ-9)',  questions: instruments.PHQ9 },
-    { name:'Anxiety Screening (GAD-7)',     questions: instruments.GAD7 },
-    { name:'Personality Assessment',        questions: instruments.BIG5 },
-    { name:'Self-Esteem Assessment',        questions: instruments.RSE },
-    { name:'Dark Triad Assessment',         questions: instruments.DARK_TRIAD },
-  ];
-
-  if ((answers['PHQ3'] || 0) >= 2 || gadScore >= 8) {
-    flow.push({ name:'Sleep Assessment', questions: instruments.SLEEP_PSQI });
-  }
-  if (phqScore > 10) {
-    flow.push({ name:'Depression — Detailed Assessment', questions: instruments.DEPRESSION_DEEP });
-  }
-  if (gadScore > 10) {
-    flow.push({ name:'Anxiety — Detailed Assessment', questions: instruments.ANXIETY_DEEP });
-  }
-  if ((answers['DD3'] || 0) >= 2) {
-    flow.push({ name:'Bipolar Mood Screening (MDQ)', questions: instruments.BIPOLAR_MDQ });
-  }
-  if ((answers['AD3'] || 0) >= 2) {
-    flow.push({ name:'OCD Screening (OCI-R)', questions: instruments.OCD_OCIR });
-  }
-  if ((answers['AD4'] || 0) >= 2) {
-    flow.push({ name:'Trauma Screening (PCL-5)', questions: instruments.PTSD_PCL5 });
-  }
-  if ((answers['PHQ7'] || 0) >= 2) {
-    flow.push({ name:'Attention Screening (ASRS)', questions: instruments.ADHD_ASRS });
-  }
-  if ((answers['GAD3'] || 0) >= 2 || (answers['PHQ4'] || 0) >= 2) {
-    flow.push({ name:'Burnout Assessment (MBI)', questions: instruments.BURNOUT });
-  }
-
-  return flow;
-}
-
-const labels4 = ['Not at all','Several days','More than half the days','Nearly every day'];
-const labels5 = ['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'];
+const FLOW = [
+  ['AGE','GENDER','OCC'],
+  ['PHQ1','PHQ2','PHQ3','PHQ4','PHQ5','PHQ6','PHQ7','PHQ8','PHQ9'],
+  ['GAD1','GAD2','GAD3','GAD4','GAD5','GAD6','GAD7'],
+  ['WHO1','WHO2','WHO3','WHO4','WHO5'],
+  ['ISI1','ISI2','ISI3','ISI4','ISI5','ISI6','ISI7'],
+  ['E1','E2','N1','N2','A1','A2','C1','C2','O1','O2'],
+  ['M1','M2','NA1','NA2','P1','P2'],
+  ['OCD1','OCD2','OCD3','OCD4','OCD5'],
+  ['PCL1','PCL2','PCL3','PCL4','PCL5'],
+  ['ADHD1','ADHD2','ADHD3','ADHD4','ADHD5'],
+  ['BRN1','BRN2','BRN3','BRN4','BRN5'],
+  ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5'],
+  ['RSE1','RSE2','RSE3','RSE4'],
+  ['DASS1','DASS2','DASS3','DASS4','DASS5','DASS6','DASS7'],
+];
 
 export default function AdaptiveQuestionnaire({ onComplete }) {
-  const [phase, setPhase]             = useState('intake');
-  const [answers, setAnswers]         = useState({});
-  const [age, setAge]                 = useState('');
-  const [gender, setGender]           = useState('');
-  const [occupation, setOccupation]   = useState('');
-  const [concern, setConcern]         = useState('');
-  const [sectionIdx, setSectionIdx]   = useState(0);
-  const [questionIdx, setQuestionIdx] = useState(0);
-  const [flow, setFlow]               = useState(null);
+  const [sectionIdx, setSectionIdx] = useState(0);
+  const [answers, setAnswers]       = useState({});
+  const [age, setAge]               = useState('');
+  const [gender, setGender]         = useState('');
+  const [occupation, setOccupation] = useState('');
 
-  const handleIntakeSubmit = () => {
-    const initialFlow = buildQuestionFlow({});
-    setFlow(initialFlow);
-    setPhase('questions');
-  };
+  const totalSections = FLOW.length;
+  const progress      = Math.round(((sectionIdx) / totalSections) * 100);
+  const currentIds    = FLOW[sectionIdx];
+  const currentQs     = currentIds.map(id => QUESTIONS[id]).filter(Boolean);
+  const section       = currentQs[0]?.section || '';
 
-  const currentSection  = flow ? flow[sectionIdx] : null;
-  const currentQuestion = currentSection ? currentSection.questions[questionIdx] : null;
-  const totalQuestions  = flow ? flow.reduce((s, sec) => s + sec.questions.length, 0) : 0;
-  const answeredSoFar   = flow ? flow.slice(0, sectionIdx).reduce((s, sec) => s + sec.questions.length, 0) + questionIdx : 0;
-  const progress        = totalQuestions > 0 ? Math.round((answeredSoFar / totalQuestions) * 100) : 0;
+  const allAnswered = currentIds.every(id => {
+    if (id === 'AGE')    return age.trim() !== '';
+    if (id === 'GENDER') return gender !== '';
+    if (id === 'OCC')    return occupation !== '';
+    return answers[id] !== undefined;
+  });
 
-  const handleAnswer = (val) => {
-    const updated = { ...answers, [currentQuestion.id]: val };
-    setAnswers(updated);
+  const handleAnswer = (id, val) => setAnswers(prev => ({ ...prev, [id]: val }));
 
-    const isLastQInSection = questionIdx + 1 >= currentSection.questions.length;
-    const isLastSection    = sectionIdx + 1 >= flow.length;
-
-    if (isLastQInSection) {
-      const newFlow = buildQuestionFlow(updated);
-      setFlow(newFlow);
-      if (isLastSection || sectionIdx + 1 >= newFlow.length) {
-        onComplete({ answers: updated, age: parseInt(age),
-                     gender: parseInt(gender), occupation, concern });
-      } else {
-        setSectionIdx(sectionIdx + 1);
-        setQuestionIdx(0);
-      }
-    } else {
-      setQuestionIdx(questionIdx + 1);
+  const handleNext = () => {
+    if (sectionIdx < totalSections - 1) setSectionIdx(s => s + 1);
+    else {
+      onComplete({
+        answers, age: parseInt(age) || 25,
+        gender: gender === 'Male' ? 1 : gender === 'Female' ? 0 : 2,
+        occupation, concern: ''
+      });
     }
   };
 
-  const handleBack = () => {
-    if (questionIdx > 0) {
-      setQuestionIdx(questionIdx - 1);
-    } else if (sectionIdx > 0) {
-      const prevSection = flow[sectionIdx - 1];
-      setSectionIdx(sectionIdx - 1);
-      setQuestionIdx(prevSection.questions.length - 1);
-    }
-  };
+  const renderQuestion = (q) => {
+    if (q.id === 'AGE') return (
+      <input key={q.id} type="number" value={age} onChange={e => setAge(e.target.value)}
+        placeholder="Your age" min="10" max="100"
+        style={{ width:'100%', padding:'12px 16px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:16, boxSizing:'border-box', outline:'none' }}
+        onFocus={e=>e.target.style.borderColor='#4F46E5'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}
+      />
+    );
+    if (q.id === 'GENDER') return (
+      <div key={q.id} style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {['Male','Female','Non-binary','Prefer not to say'].map(opt => (
+          <button key={opt} onClick={() => setGender(opt)}
+            style={{ padding:'10px 16px', borderRadius:10, border:'none', cursor:'pointer', fontSize:13, fontWeight:500, background: gender===opt ? '#4F46E5' : '#F3F4F6', color: gender===opt ? '#fff' : '#374151', transition:'all 0.15s' }}>
+            {opt}
+          </button>
+        ))}
+      </div>
+    );
+    if (q.id === 'OCC') return (
+      <div key={q.id} style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {['Student','Employed','Self-employed','Unemployed','Retired','Other'].map(opt => (
+          <button key={opt} onClick={() => setOccupation(opt)}
+            style={{ padding:'10px 16px', borderRadius:10, border:'none', cursor:'pointer', fontSize:13, fontWeight:500, background: occupation===opt ? '#4F46E5' : '#F3F4F6', color: occupation===opt ? '#fff' : '#374151', transition:'all 0.15s' }}>
+            {opt}
+          </button>
+        ))}
+      </div>
+    );
 
-  // ── INTAKE ────────────────────────────────────────────────
-  if (phase === 'intake') return (
-    <div style={{ fontFamily:'sans-serif', maxWidth:580, margin:'0 auto' }}>
-      <div style={{ background:'#fff', borderRadius:20, padding:36,
-        border:'1px solid #e2e8f0', boxShadow:'0 4px 24px rgba(99,102,241,0.08)' }}>
-        <h2 style={{ color:'#6366f1', margin:'0 0 8px' }}>🧠 PsycheFlow Assessment</h2>
-        <p style={{ color:'#64748b', fontSize:14, marginBottom:28 }}>
-          This adaptive assessment adjusts based on your responses — just like a real psychologist. Takes 10-20 minutes.
-        </p>
-
-        <label style={{ fontSize:13, color:'#475569', fontWeight:'bold' }}>Age</label>
-        <input type="number" placeholder="Your age" value={age}
-          onChange={e => setAge(e.target.value)}
-          style={{ width:'100%', padding:'10px 14px', borderRadius:8,
-            border:'1px solid #e2e8f0', fontSize:15, marginBottom:16,
-            marginTop:4, boxSizing:'border-box' }} />
-
-        <label style={{ fontSize:13, color:'#475569', fontWeight:'bold' }}>Gender</label>
-        <select value={gender} onChange={e => setGender(e.target.value)}
-          style={{ width:'100%', padding:'10px 14px', borderRadius:8,
-            border:'1px solid #e2e8f0', fontSize:15, marginBottom:16,
-            marginTop:4, boxSizing:'border-box' }}>
-          <option value="">Select gender</option>
-          <option value="1">Male</option>
-          <option value="2">Female</option>
-          <option value="3">Other / Prefer not to say</option>
-        </select>
-
-        <label style={{ fontSize:13, color:'#475569', fontWeight:'bold' }}>Occupation</label>
-        <select value={occupation} onChange={e => setOccupation(e.target.value)}
-          style={{ width:'100%', padding:'10px 14px', borderRadius:8,
-            border:'1px solid #e2e8f0', fontSize:15, marginBottom:16,
-            marginTop:4, boxSizing:'border-box' }}>
-          <option value="">Select occupation</option>
-          <option value="student">Student</option>
-          <option value="employed">Employed (Corporate)</option>
-          <option value="self_employed">Self-Employed</option>
-          <option value="healthcare">Healthcare Worker</option>
-          <option value="unemployed">Unemployed</option>
-          <option value="homemaker">Homemaker</option>
-          <option value="retired">Retired</option>
-          <option value="other">Other</option>
-        </select>
-
-        <label style={{ fontSize:13, color:'#475569', fontWeight:'bold' }}>
-          What brings you here today?
-        </label>
-        <textarea placeholder="Briefly describe what you are experiencing..."
-          value={concern} onChange={e => setConcern(e.target.value)}
-          style={{ width:'100%', padding:'10px 14px', borderRadius:8,
-            border:'1px solid #e2e8f0', fontSize:14, marginBottom:24,
-            marginTop:4, minHeight:80, boxSizing:'border-box',
-            fontFamily:'sans-serif', resize:'vertical' }} />
-
-        <div style={{ background:'#fef3c7', borderRadius:10, padding:12,
-          marginBottom:20, fontSize:13, color:'#92400e' }}>
-          🔒 Your responses are private and encrypted. This is a screening tool, not a diagnosis.
+    const scale = SCALE[q.type] || SCALE.frequency4;
+    return (
+      <div key={q.id} style={{ marginBottom:24 }}>
+        <p style={{ fontSize:15, color:'#111827', margin:'0 0 12px', fontWeight:500, lineHeight:1.5 }}>{q.text}</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {scale.map((label, i) => (
+            <button key={i} onClick={() => handleAnswer(q.id, i)}
+              style={{
+                padding:'11px 16px', borderRadius:10, border:'none', cursor:'pointer',
+                textAlign:'left', fontSize:13, fontWeight: answers[q.id]===i ? 600 : 400,
+                transition:'all 0.15s',
+                background: answers[q.id]===i ? '#4F46E5' : '#F9FAFB',
+                color: answers[q.id]===i ? '#fff' : '#374151',
+                outline: answers[q.id]===i ? 'none' : '1px solid #F3F4F6'
+              }}>
+              <span style={{ marginRight:8, opacity:0.6 }}>{i}</span> {label}
+            </button>
+          ))}
         </div>
+      </div>
+    );
+  };
 
-        <button onClick={handleIntakeSubmit}
-          disabled={!age || !gender || !occupation}
-          style={{ width:'100%', padding:'14px', background:'#6366f1',
-            color:'#fff', border:'none', borderRadius:12, fontSize:16,
-            cursor:'pointer', fontWeight:'bold',
-            opacity: (!age || !gender || !occupation) ? 0.5 : 1 }}>
-          Begin Assessment →
+  return (
+    <div style={{ fontFamily:"-apple-system,'DM Sans',sans-serif" }}>
+      {/* Progress */}
+      <div style={{ marginBottom:24 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#9CA3AF', marginBottom:6 }}>
+          <span>{section}</span>
+          <span>{progress}% complete</span>
+        </div>
+        <div style={{ background:'#E5E7EB', borderRadius:6, height:4 }}>
+          <div style={{ width:`${progress}%`, background:'#4F46E5', height:4, borderRadius:6, transition:'width 0.4s ease' }} />
+        </div>
+        <div style={{ fontSize:11, color:'#9CA3AF', marginTop:4 }}>
+          Section {sectionIdx+1} of {totalSections}
+        </div>
+      </div>
+
+      {/* Questions */}
+      <div style={{ background:'#fff', borderRadius:16, padding:28, border:'1px solid #F3F4F6', marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
+        <h3 style={{ margin:'0 0 20px', color:'#4F46E5', fontSize:14, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>{section}</h3>
+        {currentQs.map(q => renderQuestion(q))}
+      </div>
+
+      {/* Navigation */}
+      <div style={{ display:'flex', gap:12 }}>
+        {sectionIdx > 0 && (
+          <button onClick={() => setSectionIdx(s => s-1)}
+            style={{ flex:1, padding:'13px', background:'#fff', color:'#6B7280', border:'1.5px solid #E5E7EB', borderRadius:12, fontSize:15, cursor:'pointer', fontWeight:500 }}>
+            ← Back
+          </button>
+        )}
+        <button onClick={handleNext} disabled={!allAnswered}
+          style={{ flex:2, padding:'13px', background: allAnswered ? '#4F46E5' : '#E5E7EB', color: allAnswered ? '#fff' : '#9CA3AF', border:'none', borderRadius:12, fontSize:15, cursor: allAnswered ? 'pointer' : 'not-allowed', fontWeight:600, transition:'all 0.15s' }}>
+          {sectionIdx === totalSections-1 ? 'Complete Assessment →' : 'Next Section →'}
         </button>
       </div>
     </div>
   );
-
-  // ── QUESTIONS ─────────────────────────────────────────────
-  if (phase === 'questions' && currentQuestion) {
-    const labels = currentQuestion.labels ||
-      (currentQuestion.scale === 4 ? labels4 : labels5);
-
-    return (
-      <div style={{ fontFamily:'sans-serif', maxWidth:580, margin:'0 auto' }}>
-        <div style={{ marginBottom:20 }}>
-          <div style={{ display:'flex', justifyContent:'space-between',
-            fontSize:13, color:'#64748b', marginBottom:6 }}>
-            <span style={{ fontWeight:'bold', color:'#6366f1' }}>
-              {currentSection.name}
-            </span>
-            <span>{progress}% complete</span>
-          </div>
-          <div style={{ background:'#e2e8f0', borderRadius:6, height:6 }}>
-            <div style={{ width:`${progress}%`, background:'#6366f1',
-              height:6, borderRadius:6, transition:'width 0.4s ease' }} />
-          </div>
-          <div style={{ fontSize:12, color:'#94a3b8', marginTop:4 }}>
-            Adaptive — questions adjust based on your answers
-          </div>
-        </div>
-
-        <div style={{ background:'#fff', borderRadius:20, padding:32,
-          border:'1px solid #e2e8f0',
-          boxShadow:'0 4px 24px rgba(99,102,241,0.08)', marginBottom:16 }}>
-          <p style={{ fontSize:19, color:'#1e293b', lineHeight:1.6,
-            margin:'0 0 28px', textAlign:'center', fontWeight:500 }}>
-            {currentQuestion.text}
-          </p>
-
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {labels.map((label, i) => (
-              <button key={i} onClick={() => handleAnswer(i)}
-                style={{ padding:'14px 20px', background:'#f8fafc',
-                  border:'2px solid #e2e8f0', borderRadius:12, fontSize:15,
-                  cursor:'pointer', textAlign:'left', color:'#334155',
-                  transition:'all 0.15s' }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = '#6366f1';
-                  e.currentTarget.style.background  = '#eef2ff';
-                  e.currentTarget.style.color       = '#6366f1';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.background  = '#f8fafc';
-                  e.currentTarget.style.color       = '#334155';
-                }}>
-                <span style={{ color:'#6366f1', fontWeight:'bold',
-                  marginRight:12 }}>{i}.</span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {(sectionIdx > 0 || questionIdx > 0) && (
-          <button onClick={handleBack}
-            style={{ padding:'8px 20px', background:'transparent',
-              border:'1px solid #e2e8f0', borderRadius:8,
-              color:'#94a3b8', cursor:'pointer', fontSize:13 }}>
-            ← Back
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  return null;
 }
