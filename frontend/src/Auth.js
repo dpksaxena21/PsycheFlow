@@ -7,6 +7,7 @@ export default function Auth({ onLogin }) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole]         = useState('patient');
+  const [rciNumber, setRciNumber]   = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState('');
@@ -22,7 +23,7 @@ export default function Auth({ onLogin }) {
       const { data, error: err } = await supabase.auth.signUp({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
       if (data?.user) {
-        await supabase.from('profiles').upsert({ id: data.user.id, email, role });
+        await supabase.from('profiles').upsert({ id: data.user.id, email, role, rci_number: rciNumber || null, verification_status: role === 'psychologist' ? 'pending' : 'verified' });
       }
       setSuccess('Account created! Check your email to verify, then sign in.');
     }
@@ -183,6 +184,7 @@ export default function Auth({ onLogin }) {
               </div>
             </div>
           )}
+          {mode === 'signup' && role === 'psychologist' && <div style={{ marginBottom:'24px' }}><label style={{ fontSize:'13px', color:'#6B7280', display:'block', marginBottom:'6px', fontWeight:500 }}>RCI Registration Number</label><input value={rciNumber} onChange={e => setRciNumber(e.target.value)} placeholder='e.g. A12345' style={{ width:'100%', padding:'12px 16px', borderRadius:'10px', border:'1.5px solid #E5E7EB', fontSize:'15px', boxSizing:'border-box', outline:'none' }} /></div>}
 
           {error && (
             <div style={{
