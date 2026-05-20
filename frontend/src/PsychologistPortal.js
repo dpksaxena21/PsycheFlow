@@ -4,6 +4,7 @@ import AppointmentsList from './AppointmentsList';
 import Messages from './Messages';
 import { exportPatientReport } from './pdfExport';
 import AnalyticsDashboard from './AnalyticsDashboard';
+import InvitePatient from './InvitePatient';
 import axios from 'axios';
 
 // ── UTILITIES ─────────────────────────────────────────────
@@ -20,6 +21,7 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, patientCount, alertC
   const items = [
     { id:'roster',    icon:'👥', label:'Patient Roster',   badge: patientCount },
     { id:'link',      icon:'🔗', label:'Link Patient' },
+    { id:'invite', icon:'msg', label:'Invite Patient' },
     { id:'analytics', icon:'📊', label:'Practice Analytics' },
     { id:'alerts',    icon:'🚨', label:'Crisis Alerts',    badge: alertCount, badgeColor:'#ef4444' },
     { id:'appointments', icon:'📅', label:'Appointments' },
@@ -1060,6 +1062,7 @@ export default function PsychologistPortal({ user, onLogout }) {
           </div>
         )}
         {activeTab === 'messages' && <Messages user={user} contacts={patients.map(p => ({ id: p.patient_id, name: p.email, role: 'patient' }))} />}
+        {activeTab === 'invite' && <InvitePatient user={user} />}
       </div>
     </div>
   );

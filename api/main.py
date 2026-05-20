@@ -699,3 +699,52 @@ async def get_crisis_alerts(psychologist_id: str):
 @app.post("/crisis-alerts/{alert_id}/acknowledge")
 async def ack_alert(alert_id: str):
     return await acknowledge_alert(alert_id)
+
+# ── EMAIL INVITE ENDPOINT ─────────────────────────────────────────────────────
+import resend as resend_client
+
+class InviteRequest(BaseModel):
+    patient_email: str
+    psychologist_name: str
+    invite_link: str
+
+@app.post("/send-invite")
+async def send_invite(req: InviteRequest):
+    try:
+        resend_client.api_key = os.getenv("RESEND_API_KEY")
+        resend_client.Emails.send({
+            "from": "PsycheFlow <onboarding@resend.dev>",
+            "to": req.patient_email,
+            "subject": f"You've been invited to PsycheFlow by {req.psychologist_name}",
+            "html": f"""
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px;">
+                <div style="background: #4F46E5; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 28px;">PsycheFlow</h1>
+                    <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0;">Your mind, understood.</p>
+                </div>
+                <div style="background: white; padding: 32px; border: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
+                    <h2 style="color: #111827;">You've been invited!</h2>
+                    <p style="color: #6B7280; line-height: 1.6;">
+                        <strong>{req.psychologist_name}</strong> has invited you to join PsycheFlow — 
+                        an AI-powered mental health platform to support your wellbeing.
+                    </p>
+                    <div style="text-align: center; margin: 32px 0;">
+                        <a href="{req.invite_link}" style="background: #4F46E5; color: white; padding: 14px 32px; 
+                            border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+                            Accept Invitation
+                        </a>
+                    </div>
+                    <p style="color: #9CA3AF; font-size: 12px; text-align: center;">
+                        This link expires in 7 days. If you did not expect this invitation, please ignore this email.
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+                    <p style="color: #9CA3AF; font-size: 11px; text-align: center;">
+                        Crisis helplines: iCall 9152987821 | Vandrevala 1860-2662-345
+                    </p>
+                </div>
+            </div>
+            """
+        })
+        return {"sent": True}
+    except Exception as e:
+        return {"sent": False, "error": str(e)}
