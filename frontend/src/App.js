@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { logAction, ACTIONS } from './audit';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Landing from './Landing';
 import axios from 'axios';
 import { supabase } from './supabase';
@@ -207,6 +208,7 @@ export default function App() {
   const phqLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
+  // Route guards
   if (showLanding && !user) return <Landing onGetStarted={() => setShowLanding(false)} />;
   if (!user) return <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
