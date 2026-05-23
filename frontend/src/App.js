@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { logAction, ACTIONS } from './audit';
+import { useAuthStore, useAssessmentStore } from './store';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Landing from './Landing';
 import axios from 'axios';
@@ -98,27 +99,19 @@ function JournalSection({ userId }) {
 }
 
 export default function App() {
-  const [screen, setScreen]                   = useState('home');
-  const [results, setResults]                 = useState(null);
-  const [user, setUser]                       = useState(null);
-  const [fullReport, setFullReport]           = useState(null);
+  // Zustand stores
+  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding,
+          consentGiven, setConsentGiven, onboarded, setOnboarded, login, logout, checkOnboarding } = useAuthStore();
+  const { screen, setScreen, results, setResults, fullReport, setFullReport } = useAssessmentStore();
+
+  // Local UI state
   const [reportLoading, setReportLoading]     = useState(false);
   const [assessMode, setAssessMode]           = useState(null);
-  const [isPsychologist, setIsPsychologist]   = useState(false);
-  const [showLanding, setShowLanding] = useState(true);
-  const [consentGiven, setConsentGiven]       = useState(null);
   const [showACT, setShowACT]                 = useState(false);
   const [showCrisis, setShowCrisis]           = useState(false);
-  const [onboarded, setOnboarded]             = useState(null);
-  const [profile, setProfile]                 = useState(null);
 
-  const checkOnboarding = async (userId) => {
-    const { data } = await supabase.from('profiles').select('onboarded, display_name, concerns, urgency, goals, role, consent_given').eq('id', userId).single();
-    setOnboarded(data?.onboarded === true ? true : false);
-    setProfile(data || null);
-    if (data?.role === 'psychologist') { setIsPsychologist(true); setOnboarded(true); }
-    setConsentGiven(data?.consent_given === true);
-  };
+
+  // checkOnboarding now handled by Zustand store
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -189,7 +182,7 @@ export default function App() {
     await supabase.auth.signOut();
     setUser(null); setScreen('home'); setResults(null); setFullReport(null);
     setAssessMode(null); setIsPsychologist(false); setShowACT(false);
-    setShowCrisis(false); setOnboarded(null); setProfile(null);
+    setShowCrisis(false); setOnboarded(null); 
   };
 
   const TraitBar = ({ name, data, colorFn }) => (
