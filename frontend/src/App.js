@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { logAction, ACTIONS } from './audit';
+import Landing from './Landing';
 import axios from 'axios';
 import { supabase } from './supabase';
 import Auth from './Auth';
@@ -103,6 +104,7 @@ export default function App() {
   const [reportLoading, setReportLoading]     = useState(false);
   const [assessMode, setAssessMode]           = useState(null);
   const [isPsychologist, setIsPsychologist]   = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
   const [consentGiven, setConsentGiven]       = useState(null);
   const [showACT, setShowACT]                 = useState(false);
   const [showCrisis, setShowCrisis]           = useState(false);
@@ -121,7 +123,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) checkOnboarding(session.user.id);
-      logAction(session.user.id, ACTIONS.LOGIN, 'auth');
+      if (session?.user) logAction(session.user.id, ACTIONS.LOGIN, 'auth');
     });
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -205,7 +207,8 @@ export default function App() {
   const phqLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
-  if (!user) return <Auth onLogin={setUser} />;
+  if (showLanding && !user) return <Landing onGetStarted={() => setShowLanding(false)} />;
+  if (!user) return <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
   if (isPsychologist) return <PsychologistPortal user={user} onLogout={handleLogout} />;

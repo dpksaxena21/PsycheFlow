@@ -25,7 +25,44 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>React App</title>
-  </head>
+    <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap">
+  <style>
+    :root {
+      --teal-950: #042F2E;
+      --teal-900: #0D3D3D;
+      --teal-800: #115E59;
+      --teal-600: #0D9488;
+      --teal-500: #14B8A6;
+      --teal-400: #2DD4BF;
+      --cyan-400: #22D3EE;
+      --cyan-300: #67E8F9;
+      --cyan-50:  #ECFEFF;
+      --black:    #0C1A1A;
+      --white:    #FAFFFE;
+      --gray-50:  #F0FDFA;
+      --gray-100: #CCFBF1;
+      --gray-500: #6B7280;
+      --text:     #0C1A1A;
+      --text-muted: #4B7C78;
+      --border:   #CCFBF1;
+      --shadow:   0 2px 16px rgba(13,148,136,0.08);
+      --shadow-lg: 0 8px 40px rgba(13,148,136,0.15);
+      --radius:   20px;
+      --radius-sm: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Satoshi', -apple-system, sans-serif;
+      background: var(--white);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--teal-400); border-radius: 3px; }
+  </style>
+</head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>

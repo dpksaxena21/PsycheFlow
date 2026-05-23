@@ -4,7 +4,11 @@ import os as _os
 _sys.path.insert(0, _os.path.dirname(__file__))
 from rag import get_relevant_context
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
@@ -17,13 +21,27 @@ from journal_analysis import analyze_journal
 from report_generator import generate_full_report
 
 from crisis_escalation import check_and_escalate, get_unacknowledged_alerts, acknowledge_alert
-app = FastAPI(title="PsycheFlow API", version="2.0")
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+
+app = FastAPI(
+    title="PsycheFlow API",
+    version="2.0.0",
+    description="AI-powered clinical psychology platform API",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+ALLOWED_ORIGINS = ["http://localhost:3000", "https://psycheflow.in"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 targets = ['Extraversion','Neuroticism','Agreeableness',
