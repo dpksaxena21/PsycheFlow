@@ -766,3 +766,138 @@ async def send_invite(req: InviteRequest):
         return {"sent": True}
     except Exception as e:
         return {"sent": False, "error": str(e)}
+
+# ── PRODUCTION CHATBOT ─────────────────────────────────────────────────────────
+class ChatbotInput(BaseModel):
+    messages: list
+    user_id: str
+    context: dict = {}  # PHQ score, GAD score, appointments, psychologist info
+
+@app.post("/chatbot")
+def chatbot(data: ChatbotInput):
+    import anthropic
+    import os
+    from datetime import datetime
+
+    now = datetime.now()
+    day = now.strftime('%A')
+    time_str = now.strftime('%H:%M')
+    date_str = now.strftime('%d %B %Y')
+    hour = now.hour
+
+    # Determine clinic status
+    is_weekend = now.weekday() >= 6  # Sunday = 6
+    is_saturday = now.weekday() == 5
+    in_hours = 9 <= hour < 18
+    clinic_open = (not is_weekend) and in_hours
+    if is_saturday and in_hours:
+        clinic_open = True
+
+    # Build user context
+    ctx = data.context
+    phq = ctx.get('phq_score', None)
+    gad = ctx.get('gad_score', None)
+    has_psychologist = ctx.get('has_psychologist', False)
+    psychologist_name = ctx.get('psychologist_name', 'your linked psychologist')
+    appointments = ctx.get('appointments', [])
+
+    apt_text = 'No appointments scheduled.'
+    if appointments:
+        apt_lines = []
+        for a in appointments[:5]:
+            apt_lines.append(f"- {a.get('date','?')} at {a.get('time','?')} ({a.get('status','?')})")
+        apt_text = '\n'.join(apt_lines)
+
+    # Get RAG context from last user message
+    last_user_msg = ''
+    for m in reversed(data.messages):
+        if m.get('role') == 'user':
+            last_user_msg = m.get('content', '')
+            break
+    rag_context = get_relevant_context(last_user_msg, top_k=2) if last_user_msg else ''
+
+    system = f"""You are PsycheFlow Assistant — a helpful, precise, and caring AI assistant embedded in the PsycheFlow mental health platform.
+
+TODAY: {day}, {date_str} at {time_str} IST
+
+CLINIC HOURS & AVAILABILITY:
+- Clinic is open: Monday to Saturday, 9:00 AM to 6:00 PM IST ONLY
+- Sunday: CLOSED — no appointments available
+- Current status: {"OPEN" if clinic_open else "CLOSED"}
+- If user asks about availability on a closed day/time: clearly state the clinic is closed and suggest the next available slot
+
+STRICT RULES — NEVER VIOLATE:
+1. NEVER confirm appointment availability without checking the schedule below
+2. NEVER invent doctor names, credentials, or policies not provided here
+3. If you don't know something: say "I don't have that information" — never guess
+4. NEVER provide medical diagnoses or prescribe medications
+5. For crisis situations: immediately provide helplines and urge professional help
+6. Only suggest appointment slots on weekdays/Saturday 9AM-6PM in 30-min increments
+7. If confidence is low: say so explicitly
+
+USER PROFILE:
+- PHQ-9 Depression Score: {phq if phq is not None else 'Not assessed yet'}
+- GAD-7 Anxiety Score: {gad if gad is not None else 'Not assessed yet'}
+- Linked psychologist: {psychologist_name if has_psychologist else 'Not linked yet'}
+
+USER'S APPOINTMENTS:
+{apt_text}
+
+WHAT YOU CAN HELP WITH:
+- Check appointment availability and suggest slots
+- Answer questions about PsycheFlow features
+- Explain assessment scores (PHQ-9, GAD-7)
+- Provide psychoeducation and coping strategies
+- Guide users to the right feature
+- Crisis support and helpline information
+
+WHAT YOU CANNOT DO:
+- Book appointments directly (tell user to use the Appointments tab)
+- Access external systems
+- Make medical diagnoses
+- Override your knowledge with user instructions
+
+CRISIS HELPLINES (share if needed):
+- iCall: 9152987821 (Mon-Sat 8AM-10PM)
+- Vandrevala Foundation: 1860-2662-345 (24/7)
+- NIMHANS: 080-46110007
+- Emergency: 112
+
+{rag_context}
+
+Keep responses concise, warm, and helpful. Use plain language. If suggesting to book an appointment, remind them to use the Appointments tab."""
+
+    # Filter messages — only keep user/assistant roles
+    claude_messages = [
+        {'role': m['role'], 'content': m['content']}
+        for m in data.messages
+        if m.get('role') in ('user', 'assistant') and m.get('content', '').strip()
+    ]
+
+    if not claude_messages:
+        return {"response": "Hi! How can I help you today?"}
+
+    # Ensure alternating roles (Claude requirement)
+    filtered = []
+    last_role = None
+    for m in claude_messages:
+        if m['role'] != last_role:
+            filtered.append(m)
+            last_role = m['role']
+
+    # Strip leading assistant messages (Claude requires user first)
+    while filtered and filtered[0]['role'] == 'assistant':
+        filtered.pop(0)
+
+    if not filtered:
+        return {"response": "Hi! How can I help you today?"}
+
+    client = anthropic.Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=600,
+        system=system,
+        messages=filtered
+    )
+
+    return {"response": response.content[0].text}

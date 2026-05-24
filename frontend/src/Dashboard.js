@@ -103,26 +103,32 @@ PSYCHOLOGIST LINKED: ${psychologistId ? 'Yes — Dr. Priya Sharma' : 'Not yet li
 
 You can: check availability, suggest slots, confirm bookings (tell user to use Appointments tab), answer questions about PsycheFlow features. You cannot: access external systems, make medical diagnoses, prescribe medications.`;
   };
-
   const send = async () => {
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
     setInput('');
-    setMsgs(m => [...m, { role: 'user', text: userMsg }]);
+    const newMsgs = [...msgs, { role: 'user', text: userMsg }];
+    setMsgs(newMsgs);
     setLoading(true);
-
     try {
-      const history = msgs.map(m => ({ role: m.role, content: m.text }));
-      const res = await axios.post(`${API}/clinical-interview`, {
-        messages: [
-          { role: 'user', content: `[SYSTEM: ${getSystemContext()}]\n\nUser: ${userMsg}` }
-        ],
-        turn: 1
+      const history = newMsgs.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text }));
+      const res = await axios.post(`${API}/chatbot`, {
+        messages: history,
+        user_id: user?.id || '',
+        context: {
+          has_psychologist: !!psychologistId,
+          psychologist_name: psychologistId ? 'Dr. Priya Sharma' : null,
+          appointments: appointments.slice(0,5).map(a => ({
+            date: new Date(a.scheduled_at).toLocaleDateString('en-IN'),
+            time: new Date(a.scheduled_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+            status: a.status
+          }))
+        }
       });
-      const reply = res.data?.response || res.data?.reply || 'I\'m having trouble responding right now.';
+      const reply = res.data?.response || 'I am having trouble responding right now.';
       setMsgs(m => [...m, { role: 'assistant', text: reply }]);
     } catch {
-      setMsgs(m => [...m, { role: 'assistant', text: 'Sorry, I\'m offline right now. Please try again in a moment.' }]);
+      setMsgs(m => [...m, { role: 'assistant', text: 'Sorry, I am offline right now. Please try again.' }]);
     }
     setLoading(false);
   };
