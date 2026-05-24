@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
+import { theme as t } from './theme';
 
 const MOODS = [
-  { id:'great',   emoji:'😄', label:'Great',   color:'#10B981', bg:'#F0FDF4', border:'#86EFAC' },
-  { id:'good',    emoji:'🙂', label:'Good',    color:'#4F46E5', bg:'#EEF2FF', border:'#C7D2FE' },
-  { id:'okay',    emoji:'😐', label:'Okay',    color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A' },
-  { id:'low',     emoji:'😔', label:'Low',     color:'#F97316', bg:'#FFF7ED', border:'#FED7AA' },
-  { id:'anxious', emoji:'😰', label:'Anxious', color:'#EF4444', bg:'#FEF2F2', border:'#FECACA' },
+  { id:'great',   label:'Great',   color:'#15803D', bg:'#F0FDF4', border:'#BBF7D0' },
+  { id:'good',    label:'Good',    color:'#1D4ED8', bg:'#EFF6FF', border:'#BFDBFE' },
+  { id:'okay',    label:'Okay',    color:'#CA8A04', bg:'#FEFCE8', border:'#FDE68A' },
+  { id:'low',     label:'Low',     color:'#EA580C', bg:'#FFF7ED', border:'#FED7AA' },
+  { id:'anxious', label:'Anxious', color:'#DC2626', bg:'#FEF2F2', border:'#FECACA' },
 ];
+
+const MoodFace = ({ id, color, size=28 }) => {
+  const c = color;
+  const s = size;
+  const faces = {
+    great: <svg width={s} height={s} viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke={c} strokeWidth="1.4"/><circle cx="12" cy="13" r="1.2" fill={c}/><circle cx="20" cy="13" r="1.2" fill={c}/><path d="M11 18C11 18 12.5 21 16 21C19.5 21 21 18 21 18" stroke={c} strokeWidth="1.4" strokeLinecap="round"/><path d="M13 11C13 11 14 10 16 10C18 10 19 11 19 11" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/></svg>,
+    good: <svg width={s} height={s} viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke={c} strokeWidth="1.4"/><circle cx="12" cy="13.5" r="1.2" fill={c}/><circle cx="20" cy="13.5" r="1.2" fill={c}/><path d="M12 18.5C12 18.5 13.5 20.5 16 20.5C18.5 20.5 20 18.5 20 18.5" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+    okay: <svg width={s} height={s} viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke={c} strokeWidth="1.4"/><circle cx="12" cy="13.5" r="1.2" fill={c}/><circle cx="20" cy="13.5" r="1.2" fill={c}/><path d="M12 19.5H20" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+    low: <svg width={s} height={s} viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke={c} strokeWidth="1.4"/><circle cx="12" cy="13.5" r="1.2" fill={c}/><circle cx="20" cy="13.5" r="1.2" fill={c}/><path d="M12 20.5C12 20.5 13.5 18 16 18C18.5 18 20 20.5 20 20.5" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+    anxious: <svg width={s} height={s} viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke={c} strokeWidth="1.4"/><path d="M10.5 11.5C11 10.5 12 10 13 10.5" stroke={c} strokeWidth="1.2" strokeLinecap="round"/><path d="M19 10.5C20 10 21 10.5 21.5 11.5" stroke={c} strokeWidth="1.2" strokeLinecap="round"/><circle cx="12" cy="13.5" r="1.2" fill={c}/><circle cx="20" cy="13.5" r="1.2" fill={c}/><path d="M12 19.5C12.8 18.5 14 19 15 18.5C16 18 17 18.5 18 18C19 17.5 20 18.5 20 19.5" stroke={c} strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  };
+  return faces[id] || null;
+};
 
 const PROMPTS = [
   "How are you feeling right now?",
@@ -17,44 +31,31 @@ const PROMPTS = [
 ];
 
 export default function MoodCheckIn({ userId, onComplete }) {
-  const [selected, setSelected]     = useState(null);
-  const [note, setNote]             = useState('');
-  const [saved, setSaved]           = useState(false);
-  const [loading, setLoading]       = useState(false);
-  const [todayMood, setTodayMood]   = useState(null);
-  const [streak, setStreak]         = useState(0);
-  const [history, setHistory]       = useState([]);
-  const [showNote, setShowNote]     = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [note, setNote] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [todayMood, setTodayMood] = useState(null);
+  const [streak, setStreak] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [showNote, setShowNote] = useState(false);
   const prompt = PROMPTS[new Date().getDay() % PROMPTS.length];
 
   useEffect(() => { fetchMoodData(); }, []);
 
   const fetchMoodData = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
-      .from('mood_checkins')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(30);
-
+    const { data } = await supabase.from('mood_checkins').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(30);
     if (!data) return;
     setHistory(data);
-
     const todayEntry = data.find(d => d.created_at?.startsWith(today));
-    if (todayEntry) {
-      setTodayMood(todayEntry);
-      setSaved(true);
-    }
-
-    // Calculate streak
+    if (todayEntry) { setTodayMood(todayEntry); setSaved(true); }
     let s = 0;
     const dates = [...new Set(data.map(d => d.created_at?.split('T')[0]))].sort().reverse();
     for (let i = 0; i < dates.length; i++) {
       const expected = new Date();
       expected.setDate(expected.getDate() - i);
-      const expectedStr = expected.toISOString().split('T')[0];
-      if (dates[i] === expectedStr) s++;
+      if (dates[i] === expected.toISOString().split('T')[0]) s++;
       else break;
     }
     setStreak(s);
@@ -63,157 +64,64 @@ export default function MoodCheckIn({ userId, onComplete }) {
   const saveMood = async () => {
     if (!selected) return;
     setLoading(true);
-    await supabase.from('mood_checkins').insert({
-      user_id:  userId,
-      mood:     selected.id,
-      emoji:    selected.emoji,
-      label:    selected.label,
-      color:    selected.color,
-      note:     note.trim() || null,
-    });
-    setTodayMood({ mood: selected.id, label: selected.label, emoji: selected.emoji });
+    await supabase.from('mood_checkins').insert({ user_id: userId, mood: selected.id, label: selected.label, color: selected.color, note: note.trim() || null });
+    setTodayMood({ mood: selected.id, label: selected.label });
     setSaved(true);
     setLoading(false);
     if (onComplete) onComplete(selected);
   };
 
-  // Already checked in today
   if (saved && todayMood) {
     const mood = MOODS.find(m => m.id === todayMood.mood) || MOODS[1];
     return (
-      <div style={{ background: mood.bg, borderRadius:20, padding:24,
-        border:`1px solid ${mood.border}`, marginBottom:16 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <span style={{ fontSize:36 }}>{todayMood.emoji}</span>
-            <div>
-              <div style={{ fontSize:15, fontWeight:600, color:'#111827' }}>
-                Feeling {todayMood.label} today
-              </div>
-              <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>
-                {streak > 1 ? `🔥 ${streak} day streak` : 'Check in daily to build your streak'}
-              </div>
-            </div>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            {/* Mini 7-day chart */}
-            <div style={{ display:'flex', gap:3, alignItems:'flex-end' }}>
-              {Array.from({length:7}).map((_, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() - (6 - i));
-                const dateStr = date.toISOString().split('T')[0];
-                const entry = history.find(h => h.created_at?.startsWith(dateStr));
-                const m = entry ? MOODS.find(m => m.id === entry.mood) : null;
-                return (
-                  <div key={i} style={{ width:6, height: m ? 20 : 8,
-                    background: m ? m.color : '#E5E7EB',
-                    borderRadius:3, opacity: m ? 1 : 0.4 }} />
-                );
-              })}
-            </div>
-            <span style={{ fontSize:11, color:'#9CA3AF' }}>7 days</span>
-          </div>
+      <div style={{ background: t.bg2, borderRadius:12, padding:16, border:`0.5px solid ${t.border}`, boxShadow: t.card, display:'flex', alignItems:'center', gap:14 }}>
+        <div style={{ width:44, height:44, borderRadius:12, background: mood.bg, border:`0.5px solid ${mood.border}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <MoodFace id={mood.id} color={mood.color} size={28}/>
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:600, color: mood.color }}>Feeling {mood.label} today</div>
+          <div style={{ fontSize:11, color: t.text3, marginTop:2 }}>{streak > 1 ? `${streak} day streak` : 'Check in daily to build your streak'}</div>
+        </div>
+        <div style={{ display:'flex', gap:3, alignItems:'flex-end' }}>
+          {Array.from({length:7}).map((_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6-i));
+            const entry = history.find(h => h.created_at?.startsWith(date.toISOString().split('T')[0]));
+            const m = entry ? MOODS.find(m => m.id === entry.mood) : null;
+            return <div key={i} style={{ width:5, height: m?18:6, background: m?m.color:t.border, borderRadius:3 }}/>;
+          })}
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ background:'#fff', borderRadius:20, padding:24,
-      border:'1px solid #F3F4F6',
-      boxShadow:'0 1px 8px rgba(0,0,0,0.06)', marginBottom:16 }}>
-
-      {/* Header */}
-      <div style={{ display:'flex', justifyContent:'space-between',
-        alignItems:'center', marginBottom:20 }}>
-        <div>
-          <p style={{ fontSize:16, fontWeight:600, color:'#111827', margin:'0 0 2px' }}>
-            {prompt}
-          </p>
-          <p style={{ fontSize:12, color:'#9CA3AF', margin:0 }}>
-            {streak > 0 ? `🔥 ${streak} day streak — keep it going` : 'Start your daily check-in streak'}
-          </p>
-        </div>
-        {streak > 0 && (
-          <div style={{ background:'#FFF7ED', borderRadius:10, padding:'6px 12px',
-            border:'1px solid #FED7AA' }}>
-            <span style={{ fontSize:18 }}>🔥</span>
-            <span style={{ fontSize:14, fontWeight:700, color:'#F97316',
-              marginLeft:4 }}>{streak}</span>
-          </div>
-        )}
+    <div style={{ background: t.bg2, borderRadius:12, padding:16, border:`0.5px solid ${t.border}`, boxShadow: t.card }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontSize:11, fontWeight:600, color: t.text3, letterSpacing:'0.04em', textTransform:'uppercase' }}>{prompt}</div>
+        {streak > 0 && <div style={{ fontSize:11, color: t.blue, fontWeight:600, display:'flex', alignItems:'center', gap:4 }}><div style={{ width:6, height:6, borderRadius:'50%', background: t.blue }}/>{streak} day streak</div>}
       </div>
-
-      {/* Mood Buttons */}
-      <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:6, marginBottom: showNote?12:0 }}>
         {MOODS.map(mood => (
-          <button key={mood.id} onClick={() => { setSelected(mood); setShowNote(true); }}
-            style={{
-              flex:1, padding:'12px 4px', borderRadius:14,
-              border: selected?.id === mood.id
-                ? `2px solid ${mood.color}`
-                : '2px solid #F3F4F6',
-              background: selected?.id === mood.id ? mood.bg : '#FAFAFA',
-              cursor:'pointer', transition:'all 0.15s',
-              transform: selected?.id === mood.id ? 'translateY(-2px)' : 'translateY(0)',
-              boxShadow: selected?.id === mood.id
-                ? `0 4px 12px ${mood.color}30` : 'none'
-            }}
-            onMouseEnter={e => {
-              if (selected?.id !== mood.id) {
-                e.currentTarget.style.background = mood.bg;
-                e.currentTarget.style.borderColor = mood.border;
-              }
-            }}
-            onMouseLeave={e => {
-              if (selected?.id !== mood.id) {
-                e.currentTarget.style.background = '#FAFAFA';
-                e.currentTarget.style.borderColor = '#F3F4F6';
-              }
-            }}>
-            <div style={{ fontSize:24, marginBottom:4 }}>{mood.emoji}</div>
-            <div style={{ fontSize:11, color: selected?.id === mood.id
-              ? mood.color : '#6B7280', fontWeight:500 }}>
-              {mood.label}
-            </div>
-          </button>
+          <div key={mood.id} onClick={() => { setSelected(mood); setShowNote(true); }}
+            style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px 4px', borderRadius:10, border:`0.5px solid ${selected?.id===mood.id ? mood.color : t.border}`, background: selected?.id===mood.id ? mood.bg : t.bg2, cursor:'pointer', transition:'all 0.15s' }}>
+            <MoodFace id={mood.id} color={selected?.id===mood.id ? mood.color : t.text3} size={26}/>
+            <span style={{ fontSize:9, fontWeight:500, color: selected?.id===mood.id ? mood.color : t.text3 }}>{mood.label}</span>
+          </div>
         ))}
       </div>
-
-      {/* Optional Note */}
       {showNote && selected && (
-        <div style={{ marginBottom:16 }}>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
+        <div style={{ marginTop:12 }}>
+          <textarea value={note} onChange={e => setNote(e.target.value)}
             placeholder={`What's making you feel ${selected.label.toLowerCase()}? (optional)`}
-            style={{
-              width:'100%', padding:'10px 14px', borderRadius:10,
-              border:'1.5px solid #E5E7EB', fontSize:13,
-              fontFamily:'-apple-system,sans-serif', resize:'none',
-              outline:'none', boxSizing:'border-box', minHeight:72,
-              color:'#374151', lineHeight:1.6,
-              transition:'border-color 0.15s'
-            }}
-            onFocus={e => e.target.style.borderColor = selected.color}
-            onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+            rows={2} style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:`0.5px solid ${t.border}`, fontSize:12, fontFamily: t.font, resize:'none', outline:'none', boxSizing:'border-box', color: t.text, lineHeight:1.6, background: t.bg }}
+            onFocus={e => e.target.style.borderColor=t.blue} onBlur={e => e.target.style.borderColor=t.border}
           />
+          <button onClick={saveMood} disabled={loading}
+            style={{ width:'100%', marginTop:8, padding:'10px', background: loading?t.text3:selected.color, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily: t.font }}>
+            {loading ? 'Saving...' : `Log ${selected.label} mood`}
+          </button>
         </div>
-      )}
-
-      {/* Save Button */}
-      {selected && (
-        <button onClick={saveMood} disabled={loading}
-          style={{
-            width:'100%', padding:'12px',
-            background: loading ? '#9CA3AF' : selected.color,
-            color:'#fff', border:'none', borderRadius:10,
-            fontSize:14, fontWeight:600, cursor:'pointer',
-            transition:'all 0.15s',
-            boxShadow: `0 4px 12px ${selected.color}40`
-          }}>
-          {loading ? 'Saving...' : `Log ${selected.emoji} ${selected.label} mood`}
-        </button>
       )}
     </div>
   );
