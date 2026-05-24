@@ -236,28 +236,51 @@ export default function App() {
   );
 
   if (screen === 'questionnaire') return (
-    <div style={{ fontFamily:'sans-serif', minHeight:'100vh', background:'linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%)', padding:40 }}>
-      <div style={{ maxWidth:680, margin:'0 auto' }}>
-        <div style={{ display:'flex', alignItems:'center', marginBottom:32 }}>
-          <span style={{ fontSize:24, marginRight:10 }}>🧠</span>
-          <h2 style={{ color:'#6366f1', margin:0 }}>PsycheFlow</h2>
-          <button onClick={() => { setScreen('home'); setAssessMode(null); }} style={{ marginLeft:'auto', padding:'6px 14px', background:'transparent', border:'1px solid #e2e8f0', borderRadius:8, color:'#94a3b8', cursor:'pointer', fontSize:12 }}>← Back</button>
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'#F8FAFF', padding:'40px 24px' }}>
+      <div style={{ maxWidth:580, margin:'0 auto' }}>
+        <div style={{ display:'flex', alignItems:'center', marginBottom:40 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:30, height:30, borderRadius:8, background:'#1D4ED8', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
+            </div>
+            <span style={{ fontWeight:700, fontSize:15, letterSpacing:'-0.02em', color:'#0C1A2E' }}>PsycheFlow</span>
+          </div>
+          <button onClick={() => { setScreen('home'); setAssessMode(null); }} style={{ marginLeft:'auto', padding:'8px 16px', background:'#fff', border:'0.5px solid #E2EBF6', borderRadius:8, color:'#3B5998', cursor:'pointer', fontSize:13, fontFamily:'inherit' }}>← Back</button>
         </div>
         {!assessMode ? (
-          <div style={{ background:'#fff', borderRadius:20, padding:36, border:'1px solid #e2e8f0', boxShadow:'0 4px 24px rgba(99,102,241,0.08)' }}>
-            <h3 style={{ color:'#1e293b', margin:'0 0 8px' }}>Choose Assessment Mode</h3>
-            <p style={{ color:'#64748b', fontSize:14, marginBottom:28 }}>How would you like to be assessed today?</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-              <div onClick={() => setAssessMode('interview')} style={{ padding:24, borderRadius:16, border:'2px solid #e2e8f0', cursor:'pointer', transition:'all 0.2s' }} onMouseEnter={e=>e.currentTarget.style.borderColor='#6366f1'} onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}>
-                <div style={{ fontSize:28, marginBottom:8 }}>💬</div>
-                <h4 style={{ color:'#6366f1', margin:'0 0 6px' }}>Conversational Interview</h4>
-                <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Talk to Dr. PsycheFlow like a real psychologist. Natural conversation, adaptive follow-up questions. Takes 10-15 minutes. Most accurate.</p>
-                <div style={{ marginTop:10, fontSize:12, color:'#6366f1', fontWeight:'bold' }}>⭐ Recommended</div>
+          <div>
+            <div style={{ marginBottom:28 }}>
+              <div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:'#EFF6FF', color:'#1D4ED8', fontSize:11, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:12 }}>Assessment</div>
+              <h2 style={{ fontSize:26, fontWeight:700, letterSpacing:'-0.02em', color:'#0C1A2E', margin:'0 0 8px' }}>How would you like to be assessed?</h2>
+              <p style={{ fontSize:14, color:'#3B5998', margin:0, lineHeight:1.6 }}>Both methods use clinically validated instruments. Choose what feels right for you.</p>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              <div onClick={() => setAssessMode('interview')}
+                style={{ background:'#fff', borderRadius:14, border:'0.5px solid #E2EBF6', padding:24, cursor:'pointer', transition:'all 0.2s', position:'relative' }}
+                onMouseEnter={e=>{ e.currentTarget.style.borderColor='#1D4ED8'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(29,78,216,0.08)'; }}
+                onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E2EBF6'; e.currentTarget.style.boxShadow='none'; }}>
+                <div style={{ position:'absolute', top:16, right:16, padding:'3px 10px', borderRadius:100, background:'#EFF6FF', color:'#1D4ED8', fontSize:10, fontWeight:600 }}>Recommended</div>
+                <div style={{ marginBottom:12 }}>
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="6" width="24" height="18" rx="5" stroke="#1D4ED8" strokeWidth="1.4"/><path d="M8 14H20M8 18H15" stroke="#1D4ED8" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                </div>
+                <h3 style={{ fontSize:16, fontWeight:700, color:'#0C1A2E', margin:'0 0 6px', letterSpacing:'-0.01em' }}>AI Clinical Interview</h3>
+                <p style={{ fontSize:13, color:'#3B5998', margin:'0 0 12px', lineHeight:1.6 }}>Talk to Dr. PsycheFlow naturally. 15 turns covering 14 clinical domains. Most accurate and personalised.</p>
+                <div style={{ fontSize:11, color:'#3B5998', display:'flex', gap:12 }}>
+                  <span>10-15 minutes</span><span>·</span><span>Most accurate</span><span>·</span><span>14 domains</span>
+                </div>
               </div>
-              <div onClick={() => setAssessMode('questionnaire')} style={{ padding:24, borderRadius:16, border:'2px solid #e2e8f0', cursor:'pointer', transition:'all 0.2s' }} onMouseEnter={e=>e.currentTarget.style.borderColor='#6366f1'} onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}>
-                <div style={{ fontSize:28, marginBottom:8 }}>📋</div>
-                <h4 style={{ color:'#6366f1', margin:'0 0 6px' }}>Structured Questionnaire</h4>
-                <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Validated clinical questionnaires (PHQ-9, GAD-7, Big Five, and more). Adaptive — adjusts based on your answers. Takes 10-20 minutes.</p>
+              <div onClick={() => setAssessMode('questionnaire')}
+                style={{ background:'#fff', borderRadius:14, border:'0.5px solid #E2EBF6', padding:24, cursor:'pointer', transition:'all 0.2s' }}
+                onMouseEnter={e=>{ e.currentTarget.style.borderColor='#1D4ED8'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(29,78,216,0.08)'; }}
+                onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E2EBF6'; e.currentTarget.style.boxShadow='none'; }}>
+                <div style={{ marginBottom:12 }}>
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="2" width="20" height="24" rx="4" stroke="#1D4ED8" strokeWidth="1.4"/><path d="M9 9H19M9 13H17M9 17H13" stroke="#1D4ED8" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                </div>
+                <h3 style={{ fontSize:16, fontWeight:700, color:'#0C1A2E', margin:'0 0 6px', letterSpacing:'-0.01em' }}>Structured Questionnaire</h3>
+                <p style={{ fontSize:13, color:'#3B5998', margin:'0 0 12px', lineHeight:1.6 }}>PHQ-9, GAD-7, Big Five, Dark Triad, OCD, PTSD, ADHD, Burnout. 14 validated instruments, adaptive.</p>
+                <div style={{ fontSize:11, color:'#3B5998', display:'flex', gap:12 }}>
+                  <span>10-20 minutes</span><span>·</span><span>14 instruments</span><span>·</span><span>Detailed report</span>
+                </div>
               </div>
             </div>
           </div>
