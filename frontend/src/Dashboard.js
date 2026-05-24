@@ -5,7 +5,7 @@ import Messages from './Messages';
 import MoodCheckIn from './MoodCheckIn';
 import axios from 'axios';
 
-const API = 'http://127.0.0.1:8000';
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
 const bigFive = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
 const colorMap = { High:'#ef4444', Medium:'#f59e0b', Low:'#22c55e' };

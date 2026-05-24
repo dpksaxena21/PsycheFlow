@@ -34,7 +34,13 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-ALLOWED_ORIGINS = ["http://localhost:3000", "https://psycheflow.in"]
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://psycheflow.in",
+    "https://www.psycheflow.in",
+    os.getenv("FRONTEND_URL", "http://localhost:3000"),
+]
 
 app.add_middleware(
     CORSMiddleware,
