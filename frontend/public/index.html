@@ -62,7 +62,12 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--teal-400); border-radius: 3px; }
   </style>
-</head>
+    <style>
+      @keyframes orbFloat1{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,20px)}}
+      @keyframes orbFloat2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-30px)}}
+      @keyframes orbFloat3{0%,100%{transform:translate(0,0)}33%{transform:translate(30px,20px)}66%{transform:translate(-20px,30px)}}
+    </style>
+  </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>

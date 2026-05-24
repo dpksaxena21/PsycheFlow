@@ -177,7 +177,7 @@ export default function App() {
     setReportLoading(false);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async () => { setShowLanding(true);
     logAction(user?.id, ACTIONS.LOGOUT, 'auth');
     await supabase.auth.signOut();
     setUser(null); setScreen('home'); setResults(null); setFullReport(null);
@@ -231,7 +231,7 @@ export default function App() {
   if (screen === 'home') return (
     <Dashboard user={user} profile={profile}
       onStartAssessment={() => { setAssessMode(null); setScreen('questionnaire'); }}
-      onLogout={handleLogout} onPsychologistMode={() => setIsPsychologist(true)}
+      onLogout={handleLogout} onPsychologistMode={() => { useAuthStore.getState().setIsPsychologist(true); }}
       onACTEngine={() => setShowACT(true)} onCrisis={() => setShowCrisis(true)} />
   );
 

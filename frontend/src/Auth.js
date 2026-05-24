@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { supabase } from './supabase';
 import Logo from './Logo';
 
@@ -37,18 +37,10 @@ export default function Auth({ onLogin }) {
       background:'#F7F6F3'
     }}>
       {/* Left Panel */}
-      <div style={{
-        width:'50%', minHeight:'100vh',
-        background:'linear-gradient(145deg, #0F0B2D 0%, #1a1654 50%, #0a2818 100%)',
-        padding:'52px', display:'flex', flexDirection:'column',
-        justifyContent:'space-between', position:'relative', overflow:'hidden'
-      }}>
-        <div style={{ position:'absolute', top:'-120px', right:'-120px',
-          width:'400px', height:'400px', borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(79,70,229,0.25) 0%, transparent 70%)' }}/>
-        <div style={{ position:'absolute', bottom:'-60px', left:'-60px',
-          width:'320px', height:'320px', borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }}/>
+      <div onMouseMove={(e) => { const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-0.5,y=(e.clientY-r.top)/r.height-0.5; e.currentTarget.style.setProperty('--ox',x); e.currentTarget.style.setProperty('--oy',y); }} style={{ width:'50%', minHeight:'100vh', background:'linear-gradient(145deg, #0C1A2E 0%, #0F2444 50%, #0C2340 100%)', padding:'52px', display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
+        <div className="orb1" style={{ position:'absolute', top:'-120px', right:'-120px', width:'400px', height:'400px', borderRadius:'50%', background:'radial-gradient(circle, rgba(29,78,216,0.3) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat1 8s ease-in-out infinite' }}/>
+        <div className="orb2" style={{ position:'absolute', bottom:'-60px', left:'-60px', width:'320px', height:'320px', borderRadius:'50%', background:'radial-gradient(circle, rgba(8,145,178,0.2) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat2 10s ease-in-out infinite' }}/>
+        <div className="orb3" style={{ position:'absolute', top:'40%', left:'30%', width:'200px', height:'200px', borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat3 12s ease-in-out infinite' }}/>
 
         <Logo size="md" dark={true} />
 
@@ -59,7 +51,7 @@ export default function Auth({ onLogin }) {
             lineHeight:1.12, margin:'0 0 20px', letterSpacing:'-0.02em'
           }}>
             Your mind,<br/>
-            <span style={{ color:'#10B981' }}>understood.</span>
+            <span style={{ color:'#3B82F6' }}>understood.</span>
           </h1>
           <p style={{
             fontSize:'16px', color:'rgba(255,255,255,0.55)',
@@ -67,17 +59,17 @@ export default function Auth({ onLogin }) {
           }}>
             AI-powered psychological intelligence platform for India's mental health ecosystem.
           </p>
-          <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
             {[
-              { icon:'🧠', text:'Clinically validated AI assessments' },
-              { icon:'💬', text:'Conversational therapy with Dr. PsycheFlow' },
-              { icon:'🌱', text:'ACT therapy exercises & flexibility tools' },
-              { icon:'🩺', text:'Psychologist portal with SOAP notes & RAG' },
-              { icon:'🔒', text:'Private, encrypted, Class B SaMD compliant' },
+              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="6" rx="4" ry="3" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M4 6C4 7.8 3 9 3 9C3 10.5 5.2 11.5 8 11.5C10.8 11.5 13 10.5 13 9C13 9 12 7.8 12 6" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="6.8" r="1.4" fill="rgba(255,255,255,0.7)"/></svg>, text:'Clinically validated AI assessments' },
+              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="2.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M5 8H11M5 10.5H8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'Conversational therapy with Dr. PsycheFlow' },
+              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13C8 13 3.5 10 3.5 6.5C3.5 4.5 5.5 3 8 3C10.5 3 12.5 4.5 12.5 6.5C12.5 10 8 13 8 13Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M6 6.8C6 6.8 6.7 8 8 8C9.3 8 10 6.8 10 6.8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'ACT therapy exercises and flexibility tools' },
+              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M5 6H11M5 9H9M5 12H7" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'Psychologist portal with SOAP notes and RAG' },
+              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="4" y="7" width="8" height="7" rx="1.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M6 7V5C6 3.9 6.9 3 8 3C9.1 3 10 3.9 10 5V7" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="10.5" r="1" fill="rgba(255,255,255,0.7)"/></svg>, text:'Private, encrypted, DPDP Act 2023 compliant' },
             ].map((item, i) => (
               <div key={i} style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-                <span style={{ fontSize:'16px' }}>{item.icon}</span>
-                <span style={{ fontSize:'14px', color:'rgba(255,255,255,0.65)' }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:'rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{item.svg}</div>
+                <span style={{ fontSize:'13px', color:'rgba(255,255,255,0.65)' }}>
                   {item.text}
                 </span>
               </div>
@@ -178,7 +170,7 @@ export default function Auth({ onLogin }) {
                       fontWeight: role === r ? 600 : 400,
                       fontSize:'14px', textTransform:'capitalize', transition:'all 0.15s'
                     }}>
-                    {r === 'patient' ? '🧠 Patient' : '🩺 Psychologist'}
+                    {r === 'patient' ? 'Patient' : 'Psychologist'}
                   </button>
                 ))}
               </div>

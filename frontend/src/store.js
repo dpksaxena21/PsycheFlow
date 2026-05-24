@@ -15,6 +15,10 @@ export const useAuthStore = create(
 
         setUser: (user) => set({ user }),
         setShowLanding: (v) => set({ showLanding: v }),
+        setIsPsychologist: (v) => set({ isPsychologist: v }),
+        setConsentGiven: (v) => set({ consentGiven: v }),
+        setOnboarded: (v) => set({ onboarded: v }),
+        setUser: (user) => set({ user }),
 
         checkOnboarding: async (userId) => {
           const { data } = await supabase
@@ -55,7 +59,7 @@ export const useAuthStore = create(
       }),
       {
         name: 'psycheflow-auth',
-        partialize: (state) => ({ showLanding: state.showLanding }),
+        partialize: (state) => ({ }),  // don't persist UI state
       }
     )
   )

@@ -1,285 +1,169 @@
 import React, { useState } from 'react';
 import { supabase } from './supabase';
-import Logo from './Logo';
+import { theme as t } from './theme';
 
-const CONCERNS = [
-  { id:'anxiety',     emoji:'😰', label:'Anxiety & Worry' },
-  { id:'depression',  emoji:'😔', label:'Low Mood & Depression' },
-  { id:'stress',      emoji:'😤', label:'Stress & Burnout' },
-  { id:'sleep',       emoji:'😴', label:'Sleep Problems' },
-  { id:'trauma',      emoji:'💔', label:'Trauma & PTSD' },
-  { id:'relationships',emoji:'💭', label:'Relationship Issues' },
-  { id:'self_esteem', emoji:'🪞', label:'Self-Esteem & Confidence' },
-  { id:'anger',       emoji:'😠', label:'Anger Management' },
-  { id:'grief',       emoji:'🕊️', label:'Grief & Loss' },
-  { id:'other',       emoji:'🌱', label:'General Wellbeing' },
-];
-
-const URGENCY = [
-  { id:'low',    emoji:'🌱', label:"I'm doing okay",           desc:'Just want to understand myself better' },
-  { id:'medium', emoji:'🌤️', label:'Some days are hard',       desc:'I need tools to cope better' },
-  { id:'high',   emoji:'⛈️', label:"I'm really struggling",    desc:'I need support as soon as possible' },
-  { id:'crisis', emoji:'🆘', label:'I need help right now',    desc:'I am in crisis or feel unsafe' },
-];
-
-const GOALS = [
-  { id:'understand', emoji:'🧠', label:'Understand myself better' },
-  { id:'manage',     emoji:'🛠️', label:'Manage symptoms' },
-  { id:'therapy',    emoji:'🩺', label:'Prepare for therapy' },
-  { id:'tools',      emoji:'🌱', label:'Learn coping tools' },
-  { id:'track',      emoji:'📊', label:'Track my progress' },
+const STEPS = [
+  {
+    id:'name', title:"What should we call you?", subtitle:'This is how you\'ll appear in PsycheFlow.',
+    type:'text', placeholder:'Your name or nickname', field:'display_name'
+  },
+  {
+    id:'concerns', title:'What brings you here?', subtitle:'Select all that apply. This helps us personalise your experience.',
+    type:'multi', field:'concerns',
+    options:[
+      {id:'anxiety',label:'Anxiety & worry'},{id:'depression',label:'Low mood'},
+      {id:'stress',label:'Stress & burnout'},{id:'sleep',label:'Sleep problems'},
+      {id:'relationships',label:'Relationships'},{id:'trauma',label:'Trauma & PTSD'},
+      {id:'adhd',label:'Focus & ADHD'},{id:'understand',label:'Self-understanding'},
+    ]
+  },
+  {
+    id:'urgency', title:'How are you feeling right now?', subtitle:'Be honest — this helps us route you to the right support.',
+    type:'single', field:'urgency',
+    options:[
+      {id:'stable',label:'Stable — just exploring',desc:'I\'m doing okay and want to understand myself better'},
+      {id:'struggling',label:'Struggling — need support',desc:'Things are difficult and I could use some help'},
+      {id:'high',label:'In distress — need help now',desc:'I\'m going through something serious right now'},
+      {id:'crisis',label:'Crisis — need immediate help',desc:'I need urgent mental health support'},
+    ]
+  },
+  {
+    id:'goals', title:'What are your goals?', subtitle:'Select what you\'d like to achieve.',
+    type:'multi', field:'goals',
+    options:[
+      {id:'track',label:'Track my mental health'},{id:'understand',label:'Understand myself better'},
+      {id:'therapy',label:'Access therapy tools'},{id:'connect',label:'Connect with a psychologist'},
+      {id:'manage',label:'Manage symptoms'},{id:'grow',label:'Personal growth'},
+    ]
+  },
 ];
 
 export default function Onboarding({ user, onComplete }) {
-  const [step, setStep]         = useState(0);
-  const [concerns, setConcerns] = useState([]);
-  const [urgency, setUrgency]   = useState(null);
-  const [goals, setGoals]       = useState([]);
-  const [name, setName]         = useState('');
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState({ display_name:'', concerns:[], urgency:'', goals:[] });
+  const [loading, setLoading] = useState(false);
 
-  const totalSteps = 4;
-  const progress   = ((step + 1) / totalSteps) * 100;
-
-  const toggleConcern = (id) => {
-    setConcerns(prev =>
-      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
-    );
-  };
-
-  const toggleGoal = (id) => {
-    setGoals(prev =>
-      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
-    );
-  };
-
-  const handleComplete = async () => {
-    await supabase.from('profiles').upsert({
-      id:           user.id,
-      display_name: name.trim() || null,
-      concerns,
-      urgency,
-      goals,
-      onboarded:    true,
-    });
-    onComplete({ name, concerns, urgency, goals });
-  };
+  const current = STEPS[step];
+  const isLast = step === STEPS.length - 1;
 
   const canNext = () => {
-    if (step === 0) return name.trim().length > 0;
-    if (step === 1) return concerns.length > 0;
-    if (step === 2) return urgency !== null;
-    if (step === 3) return goals.length > 0;
+    if (current.type === 'text') return data.display_name.trim().length > 0;
+    if (current.type === 'single') return data[current.field];
+    if (current.type === 'multi') return data[current.field].length > 0;
     return true;
   };
 
-  const steps = [
-    /* Step 0 — Name */
-    <div key="0">
-      <h2 style={{ fontFamily:"Georgia,serif", fontSize:28, fontWeight:400,
-        color:'#111827', margin:'0 0 8px', letterSpacing:'-0.02em' }}>
-        Welcome to PsycheFlow
-      </h2>
-      <p style={{ fontSize:15, color:'#6B7280', margin:'0 0 32px', lineHeight:1.6 }}>
-        You've taken a brave first step. Let's make this feel personal.
-      </p>
-      <label style={{ fontSize:13, fontWeight:500, color:'#374151',
-        display:'block', marginBottom:8 }}>
-        What should we call you?
-      </label>
-      <input
-        type="text"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && canNext() && setStep(1)}
-        placeholder="Your first name or nickname"
-        autoFocus
-        style={{ width:'100%', padding:'14px 16px', borderRadius:12,
-          border:'1.5px solid #E5E7EB', fontSize:16, boxSizing:'border-box',
-          outline:'none', color:'#111827', background:'#fff',
-          transition:'border-color 0.15s' }}
-        onFocus={e => e.target.style.borderColor='#4F46E5'}
-        onBlur={e  => e.target.style.borderColor='#E5E7EB'}
-      />
-      {name && (
-        <p style={{ fontSize:14, color:'#10B981', marginTop:12 }}>
-          Hi {name} 👋 It's great to meet you.
-        </p>
-      )}
-    </div>,
+  const toggleMulti = (field, id) => {
+    setData(p => ({
+      ...p,
+      [field]: p[field].includes(id) ? p[field].filter(x => x !== id) : [...p[field], id]
+    }));
+  };
 
-    /* Step 1 — Concerns */
-    <div key="1">
-      <h2 style={{ fontFamily:"Georgia,serif", fontSize:26, fontWeight:400,
-        color:'#111827', margin:'0 0 8px', letterSpacing:'-0.02em' }}>
-        What brings you here{name ? `, ${name}` : ''}?
-      </h2>
-      <p style={{ fontSize:14, color:'#6B7280', margin:'0 0 24px' }}>
-        Select everything that feels relevant. There are no wrong answers.
-      </p>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-        {CONCERNS.map(c => (
-          <button key={c.id} onClick={() => toggleConcern(c.id)}
-            style={{
-              padding:'14px 16px', borderRadius:12, border:'none',
-              cursor:'pointer', textAlign:'left', transition:'all 0.15s',
-              background: concerns.includes(c.id) ? '#EEF2FF' : '#F9FAFB',
-              outline: concerns.includes(c.id) ? '2px solid #4F46E5' : '2px solid transparent',
-              transform: concerns.includes(c.id) ? 'scale(1.02)' : 'scale(1)',
-            }}>
-            <span style={{ fontSize:20, display:'block', marginBottom:4 }}>{c.emoji}</span>
-            <span style={{ fontSize:13, fontWeight:500,
-              color: concerns.includes(c.id) ? '#4F46E5' : '#374151' }}>
-              {c.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>,
-
-    /* Step 2 — Urgency */
-    <div key="2">
-      <h2 style={{ fontFamily:"Georgia,serif", fontSize:26, fontWeight:400,
-        color:'#111827', margin:'0 0 8px', letterSpacing:'-0.02em' }}>
-        How are you doing right now?
-      </h2>
-      <p style={{ fontSize:14, color:'#6B7280', margin:'0 0 24px' }}>
-        Be honest — this helps us understand what kind of support you need.
-      </p>
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {URGENCY.map(u => (
-          <button key={u.id} onClick={() => setUrgency(u.id)}
-            style={{
-              padding:'16px 20px', borderRadius:14, border:'none',
-              cursor:'pointer', textAlign:'left', transition:'all 0.15s',
-              background: urgency === u.id ? '#EEF2FF' : '#F9FAFB',
-              outline: urgency === u.id ? '2px solid #4F46E5' : '2px solid transparent',
-              display:'flex', alignItems:'center', gap:16
-            }}>
-            <span style={{ fontSize:28 }}>{u.emoji}</span>
-            <div>
-              <div style={{ fontSize:14, fontWeight:600,
-                color: urgency === u.id ? '#4F46E5' : '#111827' }}>
-                {u.label}
-              </div>
-              <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>
-                {u.desc}
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-      {urgency === 'crisis' && (
-        <div style={{ background:'#FEF2F2', borderRadius:12, padding:16,
-          marginTop:16, border:'1px solid #FECACA' }}>
-          <p style={{ fontSize:13, color:'#DC2626', margin:'0 0 8px', fontWeight:600 }}>
-            🆘 Please reach out for immediate support
-          </p>
-          <p style={{ fontSize:13, color:'#374151', margin:0 }}>
-            iCall: <strong>9152987821</strong> · Vandrevala: <strong>1860-2662-345</strong>
-          </p>
-        </div>
-      )}
-    </div>,
-
-    /* Step 3 — Goals */
-    <div key="3">
-      <h2 style={{ fontFamily:"Georgia,serif", fontSize:26, fontWeight:400,
-        color:'#111827', margin:'0 0 8px', letterSpacing:'-0.02em' }}>
-        What would you like to achieve?
-      </h2>
-      <p style={{ fontSize:14, color:'#6B7280', margin:'0 0 24px' }}>
-        Choose your goals — we'll personalize your experience around them.
-      </p>
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {GOALS.map(g => (
-          <button key={g.id} onClick={() => toggleGoal(g.id)}
-            style={{
-              padding:'14px 20px', borderRadius:12, border:'none',
-              cursor:'pointer', textAlign:'left', transition:'all 0.15s',
-              background: goals.includes(g.id) ? '#EEF2FF' : '#F9FAFB',
-              outline: goals.includes(g.id) ? '2px solid #4F46E5' : '2px solid transparent',
-              display:'flex', alignItems:'center', gap:14
-            }}>
-            <span style={{ fontSize:22 }}>{g.emoji}</span>
-            <span style={{ fontSize:14, fontWeight:500,
-              color: goals.includes(g.id) ? '#4F46E5' : '#374151' }}>
-              {g.label}
-            </span>
-            {goals.includes(g.id) && (
-              <span style={{ marginLeft:'auto', color:'#4F46E5', fontSize:16 }}>✓</span>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>,
-  ];
+  const next = async () => {
+    if (!canNext()) return;
+    if (!isLast) { setStep(s => s + 1); return; }
+    setLoading(true);
+    await supabase.from('profiles').update({
+      display_name: data.display_name,
+      concerns: data.concerns,
+      urgency: data.urgency,
+      goals: data.goals,
+      onboarded: true,
+    }).eq('id', user.id);
+    onComplete();
+  };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F7F6F3',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      padding:24, fontFamily:"-apple-system,'DM Sans',sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:t.bg, fontFamily:t.font, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
       <div style={{ width:'100%', maxWidth:520 }}>
 
         {/* Logo */}
-        <div style={{ marginBottom:32, display:'flex', justifyContent:'center' }}>
-          <Logo size="md" />
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:32 }}>
+          <div style={{ width:30, height:30, borderRadius:8, background:t.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
+          </div>
+          <span style={{ fontWeight:700, fontSize:15, letterSpacing:'-0.02em', color:t.navy }}>PsycheFlow</span>
         </div>
 
         {/* Progress */}
-        <div style={{ marginBottom:32 }}>
-          <div style={{ display:'flex', justifyContent:'space-between',
-            fontSize:12, color:'#9CA3AF', marginBottom:8 }}>
-            <span>Step {step + 1} of {totalSteps}</span>
-            <span>{Math.round(progress)}% complete</span>
-          </div>
-          <div style={{ background:'#E5E7EB', borderRadius:6, height:4 }}>
-            <div style={{ width:`${progress}%`, background:'#4F46E5',
-              height:4, borderRadius:6, transition:'width 0.4s ease' }} />
-          </div>
+        <div style={{ display:'flex', gap:6, marginBottom:32 }}>
+          {STEPS.map((_, i) => (
+            <div key={i} style={{ flex:1, height:3, borderRadius:100, background: i <= step ? t.blue : t.border, transition:'background 0.3s' }}/>
+          ))}
         </div>
 
-        {/* Card */}
-        <div style={{ background:'#fff', borderRadius:20, padding:36,
-          boxShadow:'0 4px 24px rgba(0,0,0,0.06)',
-          border:'1px solid #F3F4F6', marginBottom:20 }}>
-          {steps[step]}
+        {/* Step counter */}
+        <div style={{ fontSize:11, fontWeight:600, color:t.text3, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:8 }}>
+          Step {step+1} of {STEPS.length}
         </div>
+
+        <h1 style={{ fontSize:26, fontWeight:700, letterSpacing:'-0.02em', color:t.navy, margin:'0 0 8px', lineHeight:1.2 }}>{current.title}</h1>
+        <p style={{ fontSize:14, color:t.text2, lineHeight:1.6, margin:'0 0 24px' }}>{current.subtitle}</p>
+
+        {/* Text input */}
+        {current.type === 'text' && (
+          <input
+            value={data.display_name}
+            onChange={e => setData(p => ({...p, display_name: e.target.value}))}
+            placeholder={current.placeholder}
+            autoFocus
+            onKeyDown={e => e.key === 'Enter' && canNext() && next()}
+            style={{ width:'100%', padding:'14px 16px', borderRadius:10, border:`0.5px solid ${t.border}`, fontSize:15, fontFamily:t.font, color:t.navy, background:t.white, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' }}
+            onFocus={e => e.target.style.borderColor=t.blue}
+            onBlur={e => e.target.style.borderColor=t.border}
+          />
+        )}
+
+        {/* Single select */}
+        {current.type === 'single' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {current.options.map(o => (
+              <div key={o.id} onClick={() => setData(p=>({...p,[current.field]:o.id}))}
+                style={{ padding:'14px 16px', borderRadius:10, border:`0.5px solid ${data[current.field]===o.id?t.blue:t.border}`, background: data[current.field]===o.id?t.blue2:t.white, cursor:'pointer', transition:'all 0.15s', boxShadow: data[current.field]===o.id?'0 0 0 3px rgba(29,78,216,0.08)':'none' }}>
+                <div style={{ fontSize:13, fontWeight:600, color: data[current.field]===o.id?t.blue:t.navy }}>{o.label}</div>
+                {o.desc && <div style={{ fontSize:12, color:t.text2, marginTop:3 }}>{o.desc}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Multi select */}
+        {current.type === 'multi' && (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            {current.options.map(o => {
+              const sel = data[current.field].includes(o.id);
+              return (
+                <div key={o.id} onClick={() => toggleMulti(current.field, o.id)}
+                  style={{ padding:'12px 14px', borderRadius:10, border:`0.5px solid ${sel?t.blue:t.border}`, background:sel?t.blue2:t.white, cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:16, height:16, borderRadius:5, border:`1.5px solid ${sel?t.blue:t.border}`, background:sel?t.blue:t.white, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.15s' }}>
+                    {sel && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  </div>
+                  <span style={{ fontSize:13, fontWeight:sel?600:400, color:sel?t.blue:t.navy }}>{o.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Navigation */}
-        <div style={{ display:'flex', gap:12 }}>
+        <div style={{ display:'flex', gap:10, marginTop:24, alignItems:'center' }}>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)}
-              style={{ flex:1, padding:'13px', background:'#fff',
-                color:'#6B7280', border:'1.5px solid #E5E7EB',
-                borderRadius:12, fontSize:15, cursor:'pointer',
-                fontWeight:500 }}>
-              ← Back
-            </button>
+            <button onClick={() => setStep(s=>s-1)} style={{ ...t.btnOutline, padding:'11px 20px' }}>Back</button>
           )}
-          <button
-            onClick={() => step < totalSteps - 1 ? setStep(step + 1) : handleComplete()}
-            disabled={!canNext()}
-            style={{
-              flex: step > 0 ? 2 : 1,
-              padding:'13px',
-              background: canNext() ? '#4F46E5' : '#E5E7EB',
-              color: canNext() ? '#fff' : '#9CA3AF',
-              border:'none', borderRadius:12, fontSize:15,
-              cursor: canNext() ? 'pointer' : 'not-allowed',
-              fontWeight:600, transition:'all 0.15s'
-            }}>
-            {step === totalSteps - 1 ? "Let's Begin →" : 'Continue →'}
+          <button onClick={next} disabled={!canNext()||loading}
+            style={{ ...t.btn, flex:1, opacity:canNext()?1:0.4, fontSize:15, padding:'13px 24px', borderRadius:10 }}>
+            {loading ? 'Setting up...' : isLast ? 'Complete setup' : 'Continue'}
           </button>
         </div>
 
-        {/* Skip */}
-        <p style={{ textAlign:'center', marginTop:16, fontSize:12, color:'#9CA3AF' }}>
-          <span style={{ cursor:'pointer', textDecoration:'underline' }}
-            onClick={handleComplete}>
-            Skip for now
-          </span>
-          {' · '}You can always update this in settings
-        </p>
+        {/* Crisis redirect */}
+        {data.urgency === 'crisis' && (
+          <div style={{ marginTop:16, padding:'12px 16px', background:t.dangerBg, borderRadius:10, border:`0.5px solid ${t.danger}` }}>
+            <div style={{ fontSize:13, fontWeight:600, color:t.danger, marginBottom:4 }}>You\'re not alone</div>
+            <div style={{ fontSize:12, color:'#991B1B', lineHeight:1.6 }}>iCall: 9152987821 · Vandrevala: 1860-2662-345 · NIMHANS: 080-46110007</div>
+          </div>
+        )}
       </div>
     </div>
   );

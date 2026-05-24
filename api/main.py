@@ -349,7 +349,7 @@ If ANY suicidal ideation is expressed — immediately acknowledge, assess severi
         model="claude-haiku-4-5-20251001",
         max_tokens=1000,
         system=system_prompt,
-        messages=claude_messages[1:]  # skip the initial assistant message
+        messages=claude_messages[1:] if len(claude_messages) > 1 else [{'role':'user','content':'Hello'}]  # skip the initial assistant message
     )
 
     reply = response.content[0].text.strip()

@@ -1,344 +1,112 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { theme as t } from './theme';
 
-const CRISIS_RESOURCES = [
-  { name:'iCall', number:'9152987821', desc:'India\'s premier mental health helpline', available:'Mon-Sat 8AM-10PM' },
-  { name:'Vandrevala Foundation', number:'1860-2662-345', desc:'24/7 mental health support', available:'24/7' },
-  { name:'NIMHANS', number:'080-46110007', desc:'National Institute of Mental Health', available:'Mon-Fri 9AM-5PM' },
-  { name:'Snehi', number:'044-24640050', desc:'Emotional support helpline', available:'24/7' },
-  { name:'Emergency', number:'112', desc:'National emergency number', available:'24/7' },
+const HELPLINES = [
+  { name:'iCall', number:'9152987821', desc:'Mon-Sat, 8AM-10PM', tag:'Recommended' },
+  { name:'Vandrevala Foundation', number:'1860-2662-345', desc:'24/7 helpline', tag:'24/7' },
+  { name:'NIMHANS', number:'080-46110007', desc:'National Institute of Mental Health', tag:'Government' },
+  { name:'Snehi', number:'044-24640050', desc:'Emotional support helpline', tag:'Support' },
+  { name:'Aasra', number:'9820466627', desc:'Crisis intervention, 24/7', tag:'24/7' },
 ];
 
-const SAFETY_PLAN_STEPS = [
-  { id:1, icon:'⚠️', title:'Warning Signs',       desc:'What thoughts, images, moods or situations tell me a crisis may be developing?' },
-  { id:2, icon:'🧘', title:'Internal Coping',      desc:'Things I can do to take my mind off my problems without contacting another person' },
-  { id:3, icon:'👥', title:'Social Distractions',  desc:'People and social settings that provide distraction' },
-  { id:4, icon:'💙', title:'People I Can Ask',     desc:'People I can ask for help if a crisis develops' },
-  { id:5, icon:'🏥', title:'Professionals',        desc:'Professionals or agencies I can contact during a crisis' },
-  { id:6, icon:'🔒', title:'Safe Environment',     desc:'Making my environment safe — removing access to means' },
+const TECHNIQUES = [
+  { title:'5-4-3-2-1 Grounding', desc:'Name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste.', duration:'3 min' },
+  { title:'Box breathing', desc:'Breathe in 4 counts, hold 4, out 4, hold 4. Repeat 4 times.', duration:'2 min' },
+  { title:'Cold water technique', desc:'Splash cold water on your face or hold an ice cube to activate the dive reflex.', duration:'1 min' },
+  { title:'Safe place visualisation', desc:'Close your eyes and imagine a place where you feel completely safe and calm.', duration:'5 min' },
 ];
 
-export default function CrisisManagement({ user, onBack }) {
-  const [activeTab, setActiveTab]   = useState('immediate');
-  const [safetyPlan, setSafetyPlan] = useState({
-    warning_signs: '',
-    internal_coping: '',
-    social_distractions: '',
-    people_to_ask: '',
-    professionals: '',
-    safe_environment: ''
-  });
-  const [saved, setSaved]           = useState(false);
-  const [riskLevel, setRiskLevel]   = useState(null);
-  const [assessment, setAssessment] = useState({
-    thoughts: 0,
-    plan: 0,
-    intent: 0,
-    means: 0
-  });
-
-  const computeRisk = () => {
-    const score = assessment.thoughts + assessment.plan + assessment.intent + assessment.means;
-    if (score >= 6) return { level:'HIGH',   color:'#ef4444', action:'Call emergency services or go to nearest hospital immediately' };
-    if (score >= 3) return { level:'MEDIUM', color:'#f59e0b', action:'Contact a mental health professional today' };
-    return                { level:'LOW',    color:'#22c55e', action:'Use coping strategies and monitor symptoms' };
-  };
-
-  const tabStyle = (tab) => ({
-    padding:'10px 20px', border:'none', borderRadius:8, cursor:'pointer',
-    fontSize:14, marginRight:8,
-    background: activeTab === tab ? '#ef4444' : '#fff',
-    color: activeTab === tab ? '#fff' : '#64748b',
-    fontWeight: activeTab === tab ? 'bold' : 'normal'
-  });
+export default function CrisisManagement({ onBack }) {
+  const [activeTab, setActiveTab] = useState('help');
 
   return (
-    <div style={{ fontFamily:'sans-serif', maxWidth:720, margin:'0 auto', padding:24 }}>
+    <div style={{ minHeight:'100vh', background:t.bg, fontFamily:t.font }}>
+
       {/* Header */}
-      <div style={{ background:'linear-gradient(135deg, #fef2f2, #fff1f2)',
-        borderRadius:16, padding:24, marginBottom:24,
-        border:'2px solid #fecaca' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div>
-            <h2 style={{ color:'#dc2626', margin:'0 0 4px' }}>
-              🚨 Crisis Support Center
-            </h2>
-            <p style={{ color:'#64748b', fontSize:13, margin:0 }}>
-              You are not alone. Help is available right now.
-            </p>
-          </div>
-          {onBack && (
-            <button onClick={onBack}
-              style={{ padding:'6px 14px', background:'transparent',
-                border:'1px solid #e2e8f0', borderRadius:8,
-                cursor:'pointer', fontSize:13, color:'#64748b' }}>
-              ← Back
+      <div style={{ background:t.danger, padding:'16px 24px', display:'flex', alignItems:'center', gap:12 }}>
+        <button onClick={onBack} style={{ background:'rgba(255,255,255,0.2)', border:'none', color:'#fff', width:32, height:32, borderRadius:8, cursor:'pointer', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center' }}>←</button>
+        <div>
+          <div style={{ fontSize:16, fontWeight:700, color:'#fff' }}>Crisis Support</div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.7)' }}>You are not alone. Help is available right now.</div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:600, margin:'0 auto', padding:24 }}>
+
+        {/* Emergency banner */}
+        <div style={{ background:t.dangerBg, borderRadius:12, padding:16, border:`0.5px solid ${t.danger}`, marginBottom:20, textAlign:'center' }}>
+          <div style={{ fontSize:13, fontWeight:600, color:t.danger, marginBottom:4 }}>If you are in immediate danger</div>
+          <div style={{ fontSize:24, fontWeight:700, color:t.danger }}>Call 112</div>
+          <div style={{ fontSize:12, color:'#991B1B', marginTop:4 }}>National Emergency Number — Police, Ambulance, Fire</div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display:'flex', gap:8, marginBottom:20 }}>
+          {[{id:'help',label:'Helplines'},{id:'techniques',label:'Coping techniques'},{id:'safety',label:'Safety plan'}].map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex:1, padding:'9px', borderRadius:8, border:`0.5px solid ${activeTab===tab.id?t.blue:t.border}`, background:activeTab===tab.id?t.blue2:t.white, color:activeTab===tab.id?t.blue:t.text2, fontSize:12, fontWeight:activeTab===tab.id?600:400, cursor:'pointer', fontFamily:t.font }}>
+              {tab.label}
             </button>
-          )}
-        </div>
-
-        {/* Emergency Banner */}
-        <div style={{ background:'#dc2626', borderRadius:12, padding:16,
-          marginTop:16, display:'flex', justifyContent:'space-between',
-          alignItems:'center' }}>
-          <div>
-            <div style={{ color:'#fff', fontWeight:'bold', fontSize:16 }}>
-              🆘 If you are in immediate danger
-            </div>
-            <div style={{ color:'rgba(255,255,255,0.8)', fontSize:13 }}>
-              Call emergency services immediately
-            </div>
-          </div>
-          <a href="tel:112"
-            style={{ background:'#fff', color:'#dc2626', padding:'10px 20px',
-              borderRadius:8, fontWeight:'bold', fontSize:16, textDecoration:'none' }}>
-            📞 112
-          </a>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ marginBottom:24 }}>
-        <button style={tabStyle('immediate')}  onClick={() => setActiveTab('immediate')}>
-          🆘 Immediate Help
-        </button>
-        <button style={tabStyle('assessment')} onClick={() => setActiveTab('assessment')}>
-          📊 Risk Assessment
-        </button>
-        <button style={tabStyle('safety')}     onClick={() => setActiveTab('safety')}>
-          📋 Safety Plan
-        </button>
-        <button style={tabStyle('coping')}     onClick={() => setActiveTab('coping')}>
-          🧘 Coping Tools
-        </button>
-      </div>
-
-      {/* IMMEDIATE HELP */}
-      {activeTab === 'immediate' && (
-        <div>
-          <h3 style={{ color:'#1e293b', margin:'0 0 16px' }}>
-            Crisis Helplines — India
-          </h3>
-          <div style={{ display:'grid', gap:12 }}>
-            {CRISIS_RESOURCES.map((r, i) => (
-              <div key={i} style={{ background:'#fff', borderRadius:16, padding:20,
-                border:'1px solid #e2e8f0',
-                display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div>
-                  <div style={{ fontWeight:'bold', color:'#1e293b', fontSize:15 }}>
-                    {r.name}
-                  </div>
-                  <div style={{ fontSize:13, color:'#64748b', marginTop:2 }}>
-                    {r.desc}
-                  </div>
-                  <div style={{ fontSize:12, color:'#94a3b8', marginTop:2 }}>
-                    Available: {r.available}
-                  </div>
-                </div>
-                <a href={`tel:${r.number}`}
-                  style={{ background:'#6366f1', color:'#fff', padding:'10px 16px',
-                    borderRadius:8, textDecoration:'none', fontWeight:'bold',
-                    fontSize:14, whiteSpace:'nowrap' }}>
-                  📞 {r.number}
-                </a>
-              </div>
-            ))}
-          </div>
-
-          {/* Grounding Exercise */}
-          <div style={{ background:'#f0fdf4', borderRadius:16, padding:24,
-            border:'1px solid #86efac', marginTop:20 }}>
-            <h3 style={{ color:'#16a34a', margin:'0 0 12px' }}>
-              🌿 Immediate Grounding — Do This Now
-            </h3>
-            <div style={{ display:'grid', gap:8 }}>
-              {[
-                '👁️ Name 5 things you can SEE right now',
-                '✋ Touch 4 things and notice their texture',
-                '👂 Listen for 3 sounds around you',
-                '👃 Find 2 things you can SMELL',
-                '👅 Notice 1 thing you can TASTE',
-                '💨 Take 3 slow, deep breaths',
-              ].map((step, i) => (
-                <div key={i} style={{ background:'#fff', borderRadius:8,
-                  padding:'10px 14px', fontSize:14, color:'#374151' }}>
-                  {step}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* RISK ASSESSMENT */}
-      {activeTab === 'assessment' && (
-        <div>
-          <div style={{ background:'#fff7ed', borderRadius:12, padding:16,
-            marginBottom:20, fontSize:13, color:'#92400e',
-            border:'1px solid #fed7aa' }}>
-            ⚠️ This is a screening tool only. If you are in crisis, call iCall: 9152987821
-          </div>
-
-          <h3 style={{ color:'#1e293b', margin:'0 0 20px' }}>
-            Columbia Suicide Severity Rating Scale (C-SSRS) — Screening
-          </h3>
-
-          {[
-            { key:'thoughts', label:'Have you had thoughts of killing yourself?',
-              options:['No thoughts','Passive (wish to be dead)','Active ideation (no plan)'] },
-            { key:'plan', label:'Have you thought about how you would do this?',
-              options:['No plan','Vague plan','Specific plan'] },
-            { key:'intent', label:'Do you have any intention of acting on these thoughts?',
-              options:['No intention','Unsure','Yes, some intention'] },
-            { key:'means', label:'Do you have access to means (medications, weapons, etc.)?',
-              options:['No access','Limited access','Easy access'] },
-          ].map((q, i) => (
-            <div key={i} style={{ background:'#fff', borderRadius:16, padding:20,
-              border:'1px solid #e2e8f0', marginBottom:12 }}>
-              <p style={{ fontSize:15, color:'#1e293b', margin:'0 0 12px',
-                fontWeight:500 }}>{q.label}</p>
-              <div style={{ display:'flex', gap:8 }}>
-                {q.options.map((opt, j) => (
-                  <button key={j}
-                    onClick={() => setAssessment({...assessment, [q.key]: j})}
-                    style={{ flex:1, padding:'8px 12px', borderRadius:8, border:'none',
-                      cursor:'pointer', fontSize:12,
-                      background: assessment[q.key] === j
-                        ? j === 0 ? '#22c55e' : j === 1 ? '#f59e0b' : '#ef4444'
-                        : '#f1f5f9',
-                      color: assessment[q.key] === j ? '#fff' : '#64748b' }}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
           ))}
-
-          <button onClick={() => setRiskLevel(computeRisk())}
-            style={{ width:'100%', padding:'14px', background:'#6366f1', color:'#fff',
-              border:'none', borderRadius:10, cursor:'pointer',
-              fontSize:15, fontWeight:'bold', marginBottom:16 }}>
-            Assess Risk Level
-          </button>
-
-          {riskLevel && (
-            <div style={{ background: riskLevel.color + '15', borderRadius:16,
-              padding:24, border:`2px solid ${riskLevel.color}` }}>
-              <div style={{ fontSize:24, fontWeight:'bold', color:riskLevel.color,
-                marginBottom:8 }}>
-                {riskLevel.level} RISK
-              </div>
-              <p style={{ fontSize:14, color:'#374151', margin:'0 0 16px' }}>
-                {riskLevel.action}
-              </p>
-              {riskLevel.level === 'HIGH' && (
-                <a href="tel:9152987821"
-                  style={{ display:'block', background:'#dc2626', color:'#fff',
-                    padding:'12px 24px', borderRadius:8, textDecoration:'none',
-                    fontWeight:'bold', fontSize:15, textAlign:'center' }}>
-                  📞 Call iCall Now: 9152987821
-                </a>
-              )}
-            </div>
-          )}
         </div>
-      )}
 
-      {/* SAFETY PLAN */}
-      {activeTab === 'safety' && (
-        <div>
-          <p style={{ color:'#64748b', fontSize:13, marginBottom:20 }}>
-            A safety plan is a personalized list of coping strategies and resources.
-            Fill it out when you are feeling okay — use it when you are in crisis.
-          </p>
-
-          {SAFETY_PLAN_STEPS.map((step, i) => {
-            const keys = ['warning_signs','internal_coping','social_distractions',
-                         'people_to_ask','professionals','safe_environment'];
-            return (
-              <div key={i} style={{ background:'#fff', borderRadius:16, padding:20,
-                border:'1px solid #e2e8f0', marginBottom:12 }}>
-                <div style={{ display:'flex', gap:12, alignItems:'flex-start',
-                  marginBottom:10 }}>
-                  <span style={{ fontSize:24 }}>{step.icon}</span>
-                  <div>
-                    <div style={{ fontWeight:'bold', color:'#1e293b' }}>
-                      Step {step.id}: {step.title}
-                    </div>
-                    <div style={{ fontSize:13, color:'#64748b', marginTop:2 }}>
-                      {step.desc}
-                    </div>
+        {/* Helplines */}
+        {activeTab === 'help' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {HELPLINES.map((h, i) => (
+              <div key={i} style={{ background:t.white, borderRadius:12, border:`0.5px solid ${t.border}`, padding:16, display:'flex', alignItems:'center', gap:12 }}>
+                <div style={{ width:40, height:40, borderRadius:10, background:t.blue2, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3C3 3 5 2 6.5 4L7.5 6C7.5 6 8 7 7 7.5C6 8 5.5 8.5 6 9.5C6.5 10.5 8.5 12.5 9.5 13C10.5 13.5 11 13 11.5 12C12 11 13 11.5 13 11.5L15 12.5C17 14 16 16 16 16C16 16 14 18 10 15C6 12 2 8 3 3Z" stroke={t.blue} strokeWidth="1.3" strokeLinejoin="round"/></svg>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:t.navy }}>{h.name}</span>
+                    <span style={{ fontSize:9, fontWeight:600, padding:'2px 7px', borderRadius:100, background:t.blue2, color:t.blue }}>{h.tag}</span>
                   </div>
+                  <div style={{ fontSize:11, color:t.text3 }}>{h.desc}</div>
                 </div>
-                <textarea
-                  value={safetyPlan[keys[i]]}
-                  onChange={e => setSafetyPlan({...safetyPlan, [keys[i]]: e.target.value})}
-                  placeholder="Write your response here..."
-                  style={{ width:'100%', padding:'10px 14px', borderRadius:8,
-                    border:'1px solid #e2e8f0', fontSize:13, minHeight:80,
-                    boxSizing:'border-box', fontFamily:'sans-serif',
-                    resize:'vertical' }} />
+                <a href={`tel:${h.number}`} style={{ background:t.blue, color:'#fff', borderRadius:8, padding:'8px 14px', fontSize:13, fontWeight:600, textDecoration:'none', flexShrink:0 }}>{h.number}</a>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        )}
 
-          {saved ? (
-            <div style={{ background:'#f0fdf4', borderRadius:10, padding:16,
-              fontSize:14, color:'#16a34a', textAlign:'center' }}>
-              ✅ Safety plan saved. Keep it somewhere accessible.
-            </div>
-          ) : (
-            <button onClick={() => setSaved(true)}
-              style={{ width:'100%', padding:'14px', background:'#6366f1', color:'#fff',
-                border:'none', borderRadius:10, cursor:'pointer',
-                fontSize:15, fontWeight:'bold' }}>
-              Save My Safety Plan
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* COPING TOOLS */}
-      {activeTab === 'coping' && (
-        <div>
-          <h3 style={{ color:'#1e293b', margin:'0 0 16px' }}>
-            Immediate Coping Strategies
-          </h3>
-          <div style={{ display:'grid', gap:12 }}>
-            {[
-              { icon:'💨', title:'Box Breathing',
-                steps:['Inhale for 4 counts','Hold for 4 counts','Exhale for 4 counts','Hold for 4 counts','Repeat 4 times'] },
-              { icon:'🧊', title:'Cold Water Grounding',
-                steps:['Splash cold water on your face','Hold ice cube in your hand','Take a cold shower','Focus on the physical sensation','This activates your dive reflex and calms the nervous system'] },
-              { icon:'🚶', title:'Physical Movement',
-                steps:['Stand up and shake your hands','Walk briskly for 5 minutes','Do 10 jumping jacks','Stretch your arms above your head','Movement releases endorphins'] },
-              { icon:'✍️', title:'Write It Out',
-                steps:['Grab a pen and paper','Write exactly what you are feeling','Don\'t edit or censor','Write what triggered this','Then write 3 things you are grateful for'] },
-              { icon:'📞', title:'Reach Out',
-                steps:['Text or call one safe person','You don\'t have to explain everything','Just say: I\'m having a hard time','Ask them to stay on the line with you','Connection is the antidote to pain'] },
-            ].map((tool, i) => (
-              <div key={i} style={{ background:'#fff', borderRadius:16, padding:20,
-                border:'1px solid #e2e8f0' }}>
-                <div style={{ display:'flex', gap:12, alignItems:'center',
-                  marginBottom:12 }}>
-                  <span style={{ fontSize:28 }}>{tool.icon}</span>
-                  <h4 style={{ margin:0, color:'#1e293b' }}>{tool.title}</h4>
+        {/* Techniques */}
+        {activeTab === 'techniques' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {TECHNIQUES.map((t2, i) => (
+              <div key={i} style={{ background:t.white, borderRadius:12, border:`0.5px solid ${t.border}`, padding:16 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                  <div style={{ fontSize:13, fontWeight:600, color:t.navy }}>{t2.title}</div>
+                  <div style={{ fontSize:11, color:t.text3 }}>{t2.duration}</div>
                 </div>
-                <div style={{ display:'grid', gap:6 }}>
-                  {tool.steps.map((step, j) => (
-                    <div key={j} style={{ display:'flex', gap:8, fontSize:13,
-                      color:'#374151' }}>
-                      <span style={{ color:'#6366f1', fontWeight:'bold',
-                        minWidth:16 }}>{j+1}.</span>
-                      {step}
-                    </div>
-                  ))}
+                <div style={{ fontSize:12, color:t.text2, lineHeight:1.7 }}>{t2.desc}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Safety plan */}
+        {activeTab === 'safety' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {[
+              { step:'1', title:'Warning signs', desc:'Notice when you start feeling overwhelmed — irritability, isolation, hopelessness.' },
+              { step:'2', title:'Internal coping', desc:'Things I can do alone: deep breathing, walking, journaling, listening to music.' },
+              { step:'3', title:'People to contact', desc:'Call someone you trust before reaching a crisis point.' },
+              { step:'4', title:'Professional support', desc:'Contact your psychologist, therapist, or a helpline above.' },
+              { step:'5', title:'Safe environment', desc:'Remove or secure anything that could be used for self-harm.' },
+            ].map((s, i) => (
+              <div key={i} style={{ background:t.white, borderRadius:12, border:`0.5px solid ${t.border}`, padding:16, display:'flex', gap:14 }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:t.blue2, color:t.blue, fontSize:13, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{s.step}</div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:t.navy, marginBottom:4 }}>{s.title}</div>
+                  <div style={{ fontSize:12, color:t.text2, lineHeight:1.6 }}>{s.desc}</div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }
