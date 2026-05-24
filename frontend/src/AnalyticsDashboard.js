@@ -32,7 +32,7 @@ export default function AnalyticsDashboard({ patients, alerts }) {
   const riskPie = [
     { name: 'High Risk', value: stats.high, color: '#ef4444' },
     { name: 'Medium Risk', value: stats.medium, color: '#f59e0b' },
-    { name: 'Low Risk', value: stats.low, color: '#10B981' },
+    { name: 'Low Risk', value: stats.low, color: '#0891B2' },
   ].filter(d => d.value > 0);
 
   const sessionBar = useMemo(() => {
@@ -76,7 +76,7 @@ export default function AnalyticsDashboard({ patients, alerts }) {
                 <Tooltip />
                 <Legend />
                 <Line type="monotone" dataKey="PHQ9" stroke="#4F46E5" strokeWidth={2} dot={{ r:4 }} />
-                <Line type="monotone" dataKey="GAD7" stroke="#10B981" strokeWidth={2} dot={{ r:4 }} />
+                <Line type="monotone" dataKey="GAD7" stroke="#0891B2" strokeWidth={2} dot={{ r:4 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
