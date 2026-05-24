@@ -17,58 +17,60 @@ const riskColor = (r) => r === 'high' ? '#ef4444'
   : r === 'medium' ? '#f59e0b' : '#22c55e';
 
 // ── SIDEBAR ───────────────────────────────────────────────
+const PORTAL_ICONS = {
+  roster: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="7" cy="5" r="3" stroke={c} strokeWidth="1.4"/><path d="M1 15C1 12.2 3.7 10 7 10" stroke={c} strokeWidth="1.4" strokeLinecap="round"/><circle cx="13" cy="7" r="2.5" stroke={c} strokeWidth="1.4"/><path d="M10 15C10 13 11.3 12 13 12C14.7 12 16 13 16 15" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  link: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="14" cy="4" r="2" stroke={c} strokeWidth="1.4"/><circle cx="4" cy="9" r="2" stroke={c} strokeWidth="1.4"/><circle cx="14" cy="14" r="2" stroke={c} strokeWidth="1.4"/><path d="M6 8L12 5M6 10L12 13" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  invite: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2.5" stroke={c} strokeWidth="1.4"/><path d="M5 8H13M5 11H9" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  analytics: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2.5" stroke={c} strokeWidth="1.4"/><path d="M5 12V9M8 12V7M11 12V10M14 12V8" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  alerts: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L11 7H16L12.5 10L14 15L9 12L4 15L5.5 10L2 7H7L9 2Z" stroke={c} strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+  appointments: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="12" rx="2" stroke={c} strokeWidth="1.4"/><path d="M6 2V5M12 2V5M2 8H16" stroke={c} strokeWidth="1.4" strokeLinecap="round"/><rect x="6" y="10" width="6" height="3" rx="1" fill={c} opacity="0.4"/></svg>,
+  messages: (c) => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="5" width="14" height="10" rx="3" stroke={c} strokeWidth="1.4"/><path d="M5 9H13M5 12H9" stroke={c} strokeWidth="1.4" strokeLinecap="round"/></svg>,
+};
+
 function Sidebar({ activeTab, setActiveTab, user, onLogout, patientCount, alertCount }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const [pinned, setPinned] = React.useState(false);
   const items = [
-    { id:'roster',    icon:'👥', label:'Patient Roster',   badge: patientCount },
-    { id:'link',      icon:'🔗', label:'Link Patient' },
-    { id:'invite', icon:'msg', label:'Invite Patient' },
-    { id:'analytics', icon:'📊', label:'Practice Analytics' },
-    { id:'alerts',    icon:'🚨', label:'Crisis Alerts',    badge: alertCount, badgeColor:'#ef4444' },
-    { id:'appointments', icon:'📅', label:'Appointments' },
-    { id:'messages', icon:'msg', label:'Messages' },
+    { id:'roster', label:'Patient Roster', badge: patientCount },
+    { id:'link', label:'Link Patient' },
+    { id:'invite', label:'Invite Patient' },
+    { id:'analytics', label:'Practice Analytics' },
+    { id:'alerts', label:'Crisis Alerts', badge: alertCount, badgeRed: true },
+    { id:'appointments', label:'Appointments' },
+    { id:'messages', label:'Messages' },
   ];
-
+  const exp = expanded || pinned;
   return (
-    <div style={{ width:240, background:'#0f0e2e', padding:24,
-      display:'flex', flexDirection:'column', gap:4, minHeight:'100vh' }}>
-      <div style={{ marginBottom:32 }}>
-        <div style={{ fontSize:22, color:'#fff', fontWeight:'bold' }}>🧠 PsycheFlow</div>
-        <div style={{ fontSize:11, color:'#a5b4fc', marginTop:2 }}>Clinician Portal</div>
-        <div style={{ fontSize:11, color:'#6366f1', marginTop:8,
-          background:'rgba(99,102,241,0.1)', padding:'4px 8px', borderRadius:6 }}>
-          {user.email}
+    <div onMouseEnter={() => setExpanded(true)} onMouseLeave={() => { if(!pinned) setExpanded(false); }}
+      style={{ width: exp?220:64, background:'#0C1A2E', display:'flex', flexDirection:'column', alignItems: exp?'flex-start':'center', padding:'16px 0', gap:4, minHeight:'100vh', transition:'width 0.2s ease', overflow:'hidden', flexShrink:0 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20, padding: exp?'0 16px':'0', width:'100%' }}>
+        <div style={{ width:34, height:34, borderRadius:9, background:'#1D4ED8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, cursor:'pointer' }} onClick={() => setPinned(p=>!p)}>
+          <svg width="19" height="19" viewBox="0 0 20 20" fill="none"><path d="M10 2C10 2 5 5.5 5 10.5C5 13.2 7.2 15.5 10 15.5C12.8 15.5 15 13.2 15 10.5C15 5.5 10 2 10 2Z" fill="white" opacity="0.9"/><circle cx="10" cy="10.5" r="2.5" fill="#0C1A2E"/></svg>
         </div>
+        {exp && <div><div style={{ fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.01em', whiteSpace:'nowrap' }}>PsycheFlow</div><div style={{ fontSize:10, color:'#3B82F6' }}>Clinician Portal</div></div>}
       </div>
-
-      {items.map(item => (
-        <button key={item.id} onClick={() => setActiveTab(item.id)}
-          style={{ padding:'10px 14px', borderRadius:10, border:'none',
-            cursor:'pointer', textAlign:'left', fontSize:13,
-            background: activeTab === item.id ? 'rgba(99,102,241,0.3)' : 'transparent',
-            color: activeTab === item.id ? '#fff' : '#a5b4fc',
-            display:'flex', alignItems:'center', gap:10, position:'relative' }}>
-          <span>{item.icon}</span>
-          {item.label}
-          {item.badge > 0 && (
-            <span style={{ marginLeft:'auto', background: item.badgeColor || '#6366f1',
-              color:'#fff', borderRadius:10, padding:'2px 8px', fontSize:11 }}>
-              {item.badge}
-            </span>
-          )}
-        </button>
-      ))}
-
-      <div style={{ marginTop:'auto' }}>
-        <button onClick={onLogout}
-          style={{ width:'100%', padding:'8px 14px', borderRadius:8, border:'none',
-            cursor:'pointer', background:'rgba(255,255,255,0.05)',
-            color:'#a5b4fc', fontSize:12 }}>
-          Sign Out
-        </button>
+      {items.map(item => {
+        const active = activeTab === item.id;
+        const ic = PORTAL_ICONS[item.id];
+        return (
+          <div key={item.id} onClick={() => setActiveTab(item.id)} title={item.label}
+            style={{ width: exp?'calc(100% - 16px)':'40px', height:40, borderRadius:10, display:'flex', alignItems:'center', gap:10, padding: exp?'0 12px':'0', justifyContent: exp?'flex-start':'center', cursor:'pointer', background: active?'rgba(29,78,216,0.3)':'transparent', transition:'all 0.15s', margin: exp?'0 8px':'0' }}>
+            <div style={{ flexShrink:0 }}>{ic ? ic(active?'#93C5FD':'#3B5998') : null}</div>
+            {exp && <span style={{ fontSize:13, fontWeight:active?600:400, color:active?'#fff':'#7BA3CC', whiteSpace:'nowrap' }}>{item.label}</span>}
+            {exp && item.badge > 0 && <span style={{ marginLeft:'auto', background:item.badgeRed?'#DC2626':'#1D4ED8', color:'#fff', borderRadius:100, padding:'1px 7px', fontSize:10, fontWeight:600 }}>{item.badge}</span>}
+          </div>
+        );
+      })}
+      <div style={{ marginTop:'auto', padding: exp?'0 8px':'0', width: exp?'calc(100% - 16px)':'40px' }}>
+        <div style={{ height:0.5, background:'rgba(255,255,255,0.08)', margin:'8px 0' }}/>
+        <div onClick={onLogout} title="Sign out"
+          style={{ height:40, borderRadius:10, display:'flex', alignItems:'center', gap:10, padding: exp?'0 12px':'0', justifyContent: exp?'flex-start':'center', cursor:'pointer' }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 9H3M3 9L6 6M3 9L6 12M9 5V3H15V15H9V13" stroke="#3B5998" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {exp && <span style={{ fontSize:13, color:'#7BA3CC', whiteSpace:'nowrap' }}>Sign out</span>}
+        </div>
       </div>
     </div>
   );
-}
 
 // ── PATIENT CARD ──────────────────────────────────────────
 function PatientCard({ patient, onClick }) {
@@ -80,12 +82,12 @@ function PatientCard({ patient, onClick }) {
       style={{ background:'#fff', borderRadius:16, padding:20,
         border:`2px solid ${risk === 'high' ? '#fecaca' : '#e2e8f0'}`,
         cursor:'pointer', transition:'all 0.2s' }}
-      onMouseEnter={e => e.currentTarget.style.borderColor='#6366f1'}
+      onMouseEnter={e => e.currentTarget.style.borderColor='#1D4ED8'}
       onMouseLeave={e => e.currentTarget.style.borderColor = risk === 'high' ? '#fecaca' : '#e2e8f0'}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           <div style={{ width:44, height:44, borderRadius:'50%',
-            background: risk === 'high' ? '#fef2f2' : '#eef2ff',
+            background: risk === 'high' ? '#fef2f2' : '#EFF6FF',
             display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>
             {risk === 'high' ? '⚠️' : '👤'}
           </div>
@@ -232,10 +234,10 @@ function CognitivePatternDetector({ journals }) {
         <div>
           {patterns.dominant_patterns && (
             <div style={{ marginBottom:16 }}>
-              <strong style={{ fontSize:13, color:'#6366f1' }}>Dominant Thought Patterns:</strong>
+              <strong style={{ fontSize:13, color:'#1D4ED8' }}>Dominant Thought Patterns:</strong>
               <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:8 }}>
                 {patterns.dominant_patterns.map((p, i) => (
-                  <span key={i} style={{ background:'#eef2ff', color:'#6366f1',
+                  <span key={i} style={{ background:'#EFF6FF', color:'#1D4ED8',
                     padding:'4px 12px', borderRadius:20, fontSize:12 }}>
                     {p}
                   </span>
@@ -259,7 +261,7 @@ function CognitivePatternDetector({ journals }) {
           )}
         </div>
       ) : (
-        <button onClick={detect} style={{ padding:'8px 16px', background:'#6366f1',
+        <button onClick={detect} style={{ padding:'8px 16px', background:'#1D4ED8',
           color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
           Detect Patterns
         </button>
@@ -311,7 +313,7 @@ function TreatmentPlanBuilder({ patient, userId }) {
             <button key={a} onClick={() => setPlan({...plan, approach:a})}
               style={{ padding:'6px 14px', borderRadius:20, border:'none',
                 cursor:'pointer', fontSize:13,
-                background: plan.approach === a ? '#6366f1' : '#f1f5f9',
+                background: plan.approach === a ? '#1D4ED8' : '#F8FAFF',
                 color: plan.approach === a ? '#fff' : '#64748b' }}>
               {a}
             </button>
@@ -346,7 +348,7 @@ function TreatmentPlanBuilder({ patient, userId }) {
             <button key={f} onClick={() => setPlan({...plan, frequency:f.toLowerCase()})}
               style={{ padding:'6px 14px', borderRadius:20, border:'none',
                 cursor:'pointer', fontSize:13,
-                background: plan.frequency === f.toLowerCase() ? '#6366f1' : '#f1f5f9',
+                background: plan.frequency === f.toLowerCase() ? '#1D4ED8' : '#F8FAFF',
                 color: plan.frequency === f.toLowerCase() ? '#fff' : '#64748b' }}>
               {f}
             </button>
@@ -363,7 +365,7 @@ function TreatmentPlanBuilder({ patient, userId }) {
           placeholder="e.g. Complete thought diary daily, practice 5-min breathing exercise..."
           style={{ width:'100%', padding:'10px 14px', borderRadius:8,
             border:'1px solid #e2e8f0', fontSize:13, marginTop:8,
-            minHeight:80, boxSizing:'border-box', fontFamily:'sans-serif' }} />
+            minHeight:80, boxSizing:'border-box', fontFamily:"'Satoshi',-apple-system,sans-serif" }} />
       </div>
 
       {saved ? (
@@ -373,7 +375,7 @@ function TreatmentPlanBuilder({ patient, userId }) {
         </div>
       ) : (
         <button onClick={save} disabled={loading}
-          style={{ padding:'10px 24px', background:'#6366f1', color:'#fff',
+          style={{ padding:'10px 24px', background:'#1D4ED8', color:'#fff',
             border:'none', borderRadius:8, cursor:'pointer', fontSize:14 }}>
           {loading ? 'Saving...' : 'Save Treatment Plan'}
         </button>
@@ -469,7 +471,7 @@ function LongitudinalNarrative({ patient, sessions, journals }) {
         alignItems:'center', marginBottom:16 }}>
         <h3 style={{ margin:0, color:'#1e293b' }}>📖 Living Case Formulation</h3>
         <button onClick={generate} disabled={loading}
-          style={{ padding:'8px 16px', background:'#6366f1', color:'#fff',
+          style={{ padding:'8px 16px', background:'#1D4ED8', color:'#fff',
             border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
           {loading ? 'Generating...' : narrative ? 'Update' : 'Generate'}
         </button>
@@ -629,7 +631,7 @@ export default function PsychologistPortal({ user, onLogout }) {
     <button key={id} onClick={() => setPatientTab(id)}
       style={{ padding:'8px 16px', border:'none', borderRadius:8,
         cursor:'pointer', fontSize:13, marginRight:8,
-        background: active === id ? '#6366f1' : '#fff',
+        background: active === id ? '#1D4ED8' : '#fff',
         color: active === id ? '#fff' : '#64748b',
         fontWeight: active === id ? 'bold' : 'normal' }}>
       {label}
@@ -638,7 +640,7 @@ export default function PsychologistPortal({ user, onLogout }) {
 
   return (
     <div style={{ display:'flex', minHeight:'100vh',
-      fontFamily:'sans-serif', background:'#f1f5f9' }}>
+      fontFamily:"'Satoshi',-apple-system,sans-serif", background:'#F8FAFF' }}>
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -657,7 +659,7 @@ export default function PsychologistPortal({ user, onLogout }) {
               alignItems:'center', marginBottom:24 }}>
               <h2 style={{ margin:0, color:'#1e293b' }}>Patient Roster</h2>
               <button onClick={() => setActiveTab('link')}
-                style={{ padding:'10px 20px', background:'#6366f1', color:'#fff',
+                style={{ padding:'10px 20px', background:'#1D4ED8', color:'#fff',
                   border:'none', borderRadius:8, cursor:'pointer', fontSize:14 }}>
                 + Link Patient
               </button>
@@ -674,7 +676,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                   Ask patients to generate a Share Code from their dashboard.
                 </p>
                 <button onClick={() => setActiveTab('link')}
-                  style={{ padding:'10px 24px', background:'#6366f1', color:'#fff',
+                  style={{ padding:'10px 24px', background:'#1D4ED8', color:'#fff',
                     border:'none', borderRadius:8, cursor:'pointer' }}>
                   Link Patient →
                 </button>
@@ -703,7 +705,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                   borderRadius:8, cursor:'pointer', fontSize:13, color:'#64748b' }}>
                 ← Roster
               </button>
-              <button onClick={() => exportPatientReport({ name: selected.email }, sessions, journals)} style={{ padding:'6px 14px', background:'#4F46E5', border:'none', borderRadius:8, cursor:'pointer', fontSize:13, color:'#fff' }}>Export PDF</button>
+              <button onClick={() => exportPatientReport({ name: selected.email }, sessions, journals)} style={{ padding:'6px 14px', background:'#1D4ED8', border:'none', borderRadius:8, cursor:'pointer', fontSize:13, color:'#fff' }}>Export PDF</button>
               <div>
                 <h2 style={{ margin:0, color:'#1e293b', fontSize:18 }}>
                   Patient: {selected.email}
@@ -752,8 +754,8 @@ export default function PsychologistPortal({ user, onLogout }) {
                       {[
                         { label:'PHQ-9',    value:sessions[0]?.phq_score, level:phqLevel(sessions[0]?.phq_score||0) },
                         { label:'GAD-7',    value:sessions[0]?.gad_score, level:phqLevel(sessions[0]?.gad_score||0) },
-                        { label:'Sessions', value:sessions.length,        level:{color:'#6366f1'} },
-                        { label:'Journals', value:journals.length,        level:{color:'#6366f1'} },
+                        { label:'Sessions', value:sessions.length,        level:{color:'#1D4ED8'} },
+                        { label:'Journals', value:journals.length,        level:{color:'#1D4ED8'} },
                       ].map((c, i) => (
                         <div key={i} style={{ background:'#fff', borderRadius:12,
                           padding:16, textAlign:'center', border:'1px solid #e2e8f0' }}>
@@ -866,7 +868,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                       </div>
                     )}
                     <button onClick={() => { generateSOAP(s); setPatientTab('soap'); }}
-                      style={{ padding:'6px 16px', background:'#6366f1', color:'#fff',
+                      style={{ padding:'6px 16px', background:'#1D4ED8', color:'#fff',
                         border:'none', borderRadius:8, cursor:'pointer', fontSize:12 }}>
                       Generate SOAP Note
                     </button>
@@ -885,7 +887,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                     padding:20, border:'1px solid #e2e8f0', marginBottom:12 }}>
                     <div style={{ display:'flex', justifyContent:'space-between',
                       marginBottom:8 }}>
-                      <strong style={{ color:'#6366f1', textTransform:'capitalize' }}>
+                      <strong style={{ color:'#1D4ED8', textTransform:'capitalize' }}>
                         {j.analysis?.emotions?.primary || 'Entry'} —{' '}
                         {j.analysis?.emotions?.intensity || ''}
                       </strong>
@@ -896,7 +898,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                     <p style={{ fontSize:13, color:'#475569', fontStyle:'italic',
                       margin:'0 0 8px' }}>"{j.text?.slice(0,200)}..."</p>
                     {j.analysis?.condition_detection && (
-                      <div style={{ fontSize:12, color:'#6366f1', marginBottom:6 }}>
+                      <div style={{ fontSize:12, color:'#1D4ED8', marginBottom:6 }}>
                         Condition: <strong>
                           {j.analysis.condition_detection.primary_condition}
                         </strong> ({j.analysis.condition_detection.confidence}%)
@@ -931,14 +933,14 @@ export default function PsychologistPortal({ user, onLogout }) {
                 {generating ? (
                   <div style={{ background:'#fff', borderRadius:16, padding:32,
                     textAlign:'center' }}>
-                    <p style={{ color:'#6366f1' }}>⚙️ Generating SOAP note...</p>
+                    <p style={{ color:'#1D4ED8' }}>⚙️ Generating SOAP note...</p>
                   </div>
                 ) : soapNote ? (
                   <div style={{ background:'#fff', borderRadius:16, padding:24,
                     border:'1px solid #e2e8f0' }}>
-                    <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>📋 SOAP Note</h3>
+                    <h3 style={{ margin:'0 0 16px', color:'#1D4ED8' }}>📋 SOAP Note</h3>
                     <pre style={{ fontSize:13, color:'#374151', lineHeight:1.8,
-                      whiteSpace:'pre-wrap', fontFamily:'sans-serif' }}>
+                      whiteSpace:'pre-wrap', fontFamily:"'Satoshi',-apple-system,sans-serif" }}>
                       {soapNote}
                     </pre>
                   </div>
@@ -995,7 +997,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                 </p>
               )}
               <button onClick={linkPatient}
-                style={{ width:'100%', padding:'12px', background:'#6366f1',
+                style={{ width:'100%', padding:'12px', background:'#1D4ED8',
                   color:'#fff', border:'none', borderRadius:10,
                   cursor:'pointer', fontSize:15, fontWeight:'bold' }}>
                 Link Patient
