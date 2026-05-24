@@ -795,18 +795,42 @@ def chatbot(data: ChatbotInput):
 
     # Build user context
     ctx = data.context
+    name = ctx.get('user_name', 'User')
     phq = ctx.get('phq_score', None)
     gad = ctx.get('gad_score', None)
     has_psychologist = ctx.get('has_psychologist', False)
     psychologist_name = ctx.get('psychologist_name', 'your linked psychologist')
     appointments = ctx.get('appointments', [])
+    concerns = ctx.get('user_concerns', [])
+    goals = ctx.get('user_goals', [])
+    urgency = ctx.get('user_urgency', 'stable')
+    total_sessions = ctx.get('total_sessions', 0)
+    last_session = ctx.get('last_session_date', None)
+    personality = ctx.get('personality', None)
+    total_journals = ctx.get('total_journals', 0)
+    latest_mood = ctx.get('latest_mood', None)
 
     apt_text = 'No appointments scheduled.'
     if appointments:
         apt_lines = []
         for a in appointments[:5]:
-            apt_lines.append(f"- {a.get('date','?')} at {a.get('time','?')} ({a.get('status','?')})")
+            apt_lines.append(f"- {a.get('date','?')} at {a.get('time','?')} ({a.get('status','?')}){' — Notes: ' + a.get('notes') if a.get('notes') else ''}")
         apt_text = '\n'.join(apt_lines)
+
+    # PHQ severity
+    def phq_severity(s):
+        if s is None: return 'Not assessed'
+        if s <= 4: return f'{s} — Minimal'
+        if s <= 9: return f'{s} — Mild'
+        if s <= 14: return f'{s} — Moderate'
+        return f'{s} — Severe'
+
+    def gad_severity(s):
+        if s is None: return 'Not assessed'
+        if s <= 4: return f'{s} — Minimal'
+        if s <= 9: return f'{s} — Mild'
+        if s <= 14: return f'{s} — Moderate'
+        return f'{s} — Severe'
 
     # Get RAG context from last user message
     last_user_msg = ''
@@ -836,9 +860,18 @@ STRICT RULES — NEVER VIOLATE:
 7. If confidence is low: say so explicitly
 
 USER PROFILE:
-- PHQ-9 Depression Score: {phq if phq is not None else 'Not assessed yet'}
-- GAD-7 Anxiety Score: {gad if gad is not None else 'Not assessed yet'}
-- Linked psychologist: {psychologist_name if has_psychologist else 'Not linked yet'}
+- Name: {name}
+- PHQ-9 Depression: {phq_severity(phq)}
+- GAD-7 Anxiety: {gad_severity(gad)}
+- Total sessions completed: {total_sessions}
+- Last session: {last_session or 'Never'}
+- Personality traits: {personality or 'Not assessed yet'}
+- Concerns: {', '.join(concerns) if concerns else 'Not specified'}
+- Goals: {', '.join(goals) if goals else 'Not specified'}
+- Urgency level: {urgency}
+- Journal entries: {total_journals}
+- Latest mood: {latest_mood or 'Not recorded'}
+- Linked psychologist: {psychologist_name if has_psychologist else 'Not linked yet — suggest generating a share code'}
 
 USER'S APPOINTMENTS:
 {apt_text}

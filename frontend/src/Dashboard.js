@@ -65,7 +65,7 @@ const Icons = {
 };
 
 // AI Chatbot with anti-hallucination
-function Chatbot({ user, psychologistId, t, appointments, dark }) {
+function Chatbot({ user, psychologistId, t, appointments, dark, sessions, journals, profile }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState([
     { role: 'assistant', text: 'Hi! I\'m your PsycheFlow assistant. I can help you schedule appointments, check availability, and answer questions about your care. How can I help?' }
@@ -116,13 +116,37 @@ You can: check availability, suggest slots, confirm bookings (tell user to use A
         messages: history,
         user_id: user?.id || '',
         context: {
+          // User identity
+          user_name: profile?.display_name || user?.email?.split('@')[0] || 'User',
+          user_email: user?.email || '',
+          user_concerns: profile?.concerns || [],
+          user_goals: profile?.goals || [],
+          user_urgency: profile?.urgency || 'stable',
+
+          // Assessment scores from latest session
+          phq_score: sessions?.[0]?.phq_score ?? null,
+          gad_score: sessions?.[0]?.gad_score ?? null,
+          total_sessions: sessions?.length || 0,
+          last_session_date: sessions?.[0]?.created_at ? new Date(sessions[0].created_at).toLocaleDateString('en-IN') : null,
+          personality: sessions?.[0]?.predictions ? Object.entries(sessions[0].predictions).slice(0,5).map(([k,v]) => `${k}: ${v.label}`).join(', ') : null,
+
+          // Psychologist info
           has_psychologist: !!psychologistId,
           psychologist_name: psychologistId ? 'Dr. Priya Sharma' : null,
+          psychologist_id: psychologistId || null,
+
+          // Appointments
           appointments: appointments.slice(0,5).map(a => ({
             date: new Date(a.scheduled_at).toLocaleDateString('en-IN'),
             time: new Date(a.scheduled_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
-            status: a.status
-          }))
+            status: a.status,
+            notes: a.notes || null
+          })),
+
+          // Journal
+          total_journals: journals?.length || 0,
+          latest_mood: journals?.[0]?.analysis?.emotions?.primary || null,
+          latest_journal_date: journals?.[0]?.created_at ? new Date(journals[0].created_at).toLocaleDateString('en-IN') : null,
         }
       });
       const reply = res.data?.response || 'I am having trouble responding right now.';
@@ -638,7 +662,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       </button>
 
       {/* Chatbot */}
-      <Chatbot user={user} psychologistId={psychologistId} t={t} appointments={appointments} dark={dark} />
+      <Chatbot user={user} psychologistId={psychologistId} t={t} appointments={appointments} dark={dark} sessions={sessions} journals={journals} profile={profile} />
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
