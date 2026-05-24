@@ -71,6 +71,7 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, patientCount, alertC
       </div>
     </div>
   );
+}
 
 // ── PATIENT CARD ──────────────────────────────────────────
 function PatientCard({ patient, onClick }) {
