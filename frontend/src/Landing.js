@@ -98,10 +98,7 @@ export default function Landing({ onGetStarted }) {
       {/* HERO */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', minHeight:520 }}>
         <div style={{ padding:'80px 48px 80px 48px', display:'flex', flexDirection:'column', justifyContent:'center', borderRight:`0.5px solid ${S.border}` }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:100, border:`0.5px solid #93C5FD`, background:S.lightBlue, fontSize:11, fontWeight:600, color:S.blue, marginBottom:20, width:'fit-content' }}>
-            <div style={{ width:6, height:6, borderRadius:'50%', background:S.blue, animation:'pulse 2s infinite' }}/>
-            AI-powered psychology platform for India
-          </div>
+
           <h1 style={{ fontSize:52, fontWeight:700, letterSpacing:'-0.03em', lineHeight:1.06, marginBottom:16, color:S.navy }}>
             Your mind,<br/>
             <span style={{ background:`linear-gradient(90deg,${S.blue},${S.cyan})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>understood</span><br/>
