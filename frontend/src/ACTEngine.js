@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+
 const processInfo = {
   defusion:         { icon:'🧠', label:'Cognitive Defusion',    color:'#6366f1', desc:'See thoughts as thoughts, not facts' },
   acceptance:       { icon:'🌊', label:'Acceptance',             color:'#0ea5e9', desc:'Make room for difficult feelings' },
@@ -66,7 +69,7 @@ function ExercisePlayer({ exercise, onComplete, onBack }) {
 
   const submitFeedback = async (helpful) => {
     setFeedback(helpful);
-    await axios.post('http://127.0.0.1:8000/act/feedback', {
+    await axios.post(API + '/act/feedback', {
       exercise_id: exercise.id,
       helpful
     });
@@ -182,7 +185,7 @@ function AAQAssessment({ onComplete }) {
 
   const submit = async () => {
     setLoading(true);
-    const res = await axios.post('http://127.0.0.1:8000/act/aaq-score', { answers });
+    const res = await axios.post(API + '/act/aaq-score', { answers });
     setResult(res.data);
     setLoading(false);
   };
@@ -280,8 +283,8 @@ export default function ACTEngine({ user, phqScore, gadScore, condition }) {
     setLoading(true);
     try {
       const [exRes, recRes] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/act/exercises'),
-        axios.post('http://127.0.0.1:8000/act/recommend', {
+        axios.get(API + '/act/exercises'),
+        axios.post(API + '/act/recommend', {
           condition:       condition || 'normal',
           phq_score:       phqScore || 0,
           gad_score:       gadScore || 0,

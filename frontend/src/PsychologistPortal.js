@@ -7,6 +7,9 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 import InvitePatient from './InvitePatient';
 import axios from 'axios';
 
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+
 // ── UTILITIES ─────────────────────────────────────────────
 const phqLevel = (s) => s <= 4  ? {label:'Minimal',  color:'#22c55e'}
   : s <= 9  ? {label:'Mild',     color:'#f59e0b'}
@@ -142,7 +145,7 @@ function PreSessionBrief({ patient, sessions, journals }) {
       const prev    = sessions[1];
       const recentJ = journals.slice(0,3).map(j => j.text).join('\n---\n');
 
-      const res = await axios.post('http://127.0.0.1:8000/pre-session-brief', {
+      const res = await axios.post(API + '/pre-session-brief', {
         patient_email:    patient.email,
         sessions_count:   sessions.length,
         latest_phq:       latest?.phq_score || 0,
@@ -195,7 +198,7 @@ function CognitivePatternDetector({ journals }) {
     if (journals.length < 2) return;
     setLoading(true);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/detect-patterns', {
+      const res = await axios.post(API + '/detect-patterns', {
         journals: journals.map(j => ({
           text: j.text,
           date: j.created_at,
@@ -443,7 +446,7 @@ function LongitudinalNarrative({ patient, sessions, journals }) {
   const generate = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/longitudinal-narrative', {
+      const res = await axios.post(API + '/longitudinal-narrative', {
         patient_email:   patient.email,
         sessions:        sessions.slice(0,5).map(s => ({
           date:     s.created_at,
@@ -507,7 +510,7 @@ export default function PsychologistPortal({ user, onLogout }) {
 
   const fetchCrisisAlerts = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/crisis-alerts/${user.id}`);
+      const res = await axios.get(`${API}/crisis-alerts/${user.id}`);
       if (res.data.alerts && res.data.alerts.length > 0) {
         setCrisisAlerts(res.data.alerts);
       }
@@ -616,7 +619,7 @@ export default function PsychologistPortal({ user, onLogout }) {
     setGenerating(true);
     setSoapNote('');
     try {
-      const res = await axios.post('http://127.0.0.1:8000/generate-soap', {
+      const res = await axios.post(API + '/generate-soap', {
         session_data:         session,
         patient_concern:      session.answers?.concern || '',
         interview_assessment: session.answers?.interview_assessment || ''

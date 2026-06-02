@@ -15,6 +15,9 @@ import CrisisManagement from './CrisisManagement';
 import Consent from './Consent';
 import Onboarding from './Onboarding';
 
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
 const darkTriad = ['Machiavellianism','Narcissism','Psychopathy'];
 const colorMap  = { High:'#ef4444', Medium:'#f59e0b', Low:'#22c55e' };
@@ -29,7 +32,7 @@ function JournalSection({ userId }) {
     if (text.trim().length < 20) return;
     setLoading(true);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/analyze-journal', { text });
+      const res = await axios.post(API + '/analyze-journal', { text });
       setAnalysis(res.data);
       await supabase.from('journal_entries').insert({ user_id: userId, text, analysis: res.data });
     } catch { alert('Journal analysis failed'); }
@@ -159,10 +162,10 @@ export default function App() {
     const burnout    = ['BRN1','BRN2','BRN3','BRN4','BRN5'].reduce((s,id)=>s+(answers[id]||0),0);
     const selfEsteem = ['RSE1','RSE2','RSE3','RSE4'].reduce((s,id)=>s+(answers[id]||0),0);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/predict', payload);
+      const res = await axios.post(API + '/predict', payload);
       const predictions = res.data.predictions;
       if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
-      if (user) { try { await axios.post('http://127.0.0.1:8000/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers }); } catch(e) { console.log('Crisis check error:', e); } }
+      if (user) { try { await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers }); } catch(e) { console.log('Crisis check error:', e); } }
       setResults({ predictions, phq, gad, age, gender, occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
     } catch { alert('API error — is FastAPI running?'); setScreen('home'); }
@@ -171,7 +174,7 @@ export default function App() {
   const handleGenerateReport = async () => {
     setReportLoading(true);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/generate-report', { predictions: results.predictions, phq_score: results.phq, gad_score: results.gad, age: results.age || 25, gender: results.gender || 1 });
+      const res = await axios.post(API + '/generate-report', { predictions: results.predictions, phq_score: results.phq, gad_score: results.gad, age: results.age || 25, gender: results.gender || 1 });
       setFullReport(res.data);
     } catch { alert('Report generation failed'); }
     setReportLoading(false);

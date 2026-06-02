@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+
 function generateToken() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
@@ -41,7 +44,7 @@ export default function InvitePatient({ user }) {
     } else {
       // Send email via backend
       try {
-        const res = await fetch('http://127.0.0.1:8000/send-invite', {
+        const res = await fetch(API + '/send-invite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

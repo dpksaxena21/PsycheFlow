@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+
 export default function ClinicalInterview({ onComplete, user }) {
   const [messages, setMessages] = useState([
     {
@@ -38,7 +41,7 @@ I'll ask you some questions, just like a real psychologist would in a first sess
     setTurnCount(newTurn);
 
     try {
-      const res = await axios.post('http://127.0.0.1:8000/clinical-interview', {
+      const res = await axios.post(API + '/clinical-interview', {
         messages: updated,
         turn: newTurn
       });
