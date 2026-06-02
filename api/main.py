@@ -39,7 +39,7 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://psycheflow.in",
     "https://www.psycheflow.in",
-    os.getenv("FRONTEND_URL", "http://localhost:3000"),
+    _os.getenv("FRONTEND_URL", "http://localhost:3000"),
 ]
 
 app.add_middleware(
