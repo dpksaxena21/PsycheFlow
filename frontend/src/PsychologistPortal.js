@@ -507,7 +507,7 @@ export default function PsychologistPortal({ user, onLogout }) {
 
   const fetchCrisisAlerts = async () => {
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/crisis-alerts/${user.id}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/crisis-alerts/${user.id}`);
       if (res.data.alerts && res.data.alerts.length > 0) {
         setCrisisAlerts(res.data.alerts);
       }
