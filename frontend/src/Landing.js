@@ -54,7 +54,7 @@ const FEATURES = [
 ];
 
 const WHO = [
-  { title:'Hospitals & clinics', desc:'Scale mental healthcare without scaling headcount.', pts:['Reduce intake time by 70%','Population health monitoring','DPDP Act 2023 compliant'] },
+  { title:'Hospitals & clinics', desc:'Scale mental healthcare without scaling headcount.', pts:['Faster intake, less paperwork','Population health monitoring','DPDP Act 2023 compliant'] },
   { title:'Psychologists', desc:'Spend more time with patients, less on paperwork.', pts:['AI pre-session briefs','One-click SOAP notes','Crisis alerts in real-time'] },
   { title:'Patients', desc:'Professional mental health support, always available.', pts:['Assessment in 15 minutes','Personalized therapy tools','Secure messaging'] },
 ];
@@ -187,8 +187,8 @@ export default function Landing({ onGetStarted }) {
 
       {/* WHO */}
       <div style={{ padding:'80px 48px', background:S.white }}>
-        <Anim><div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:S.lightBlue, color:S.blue, border:`0.5px solid #93C5FD`, fontSize:10, fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:10 }}>Who it's for</div></Anim>
-        <Anim><h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, maxWidth:360, lineHeight:1.15, marginTop:8, marginBottom:28 }}>Built for every stakeholder.</h2></Anim>
+        <Anim></Anim>
+        <Anim><h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, maxWidth:360, lineHeight:1.15, marginTop:8, marginBottom:28 }}>Built for the people on both sides of care.</h2></Anim>
         <Anim>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
             {WHO.map((w,i) => (
@@ -214,7 +214,7 @@ export default function Landing({ onGetStarted }) {
 
       {/* COMPLIANCE */}
       <div style={{ padding:'80px 48px', background:S.white, borderTop:`0.5px solid ${S.border}` }}>
-        <Anim><div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:S.lightBlue, color:S.blue, border:`0.5px solid #93C5FD`, fontSize:10, fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:10 }}>Compliance</div></Anim>
+        <Anim></Anim>
         <Anim>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:16, marginTop:8, marginBottom:24 }}>
             <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, maxWidth:340, lineHeight:1.15 }}>Built for Indian healthcare compliance.</h2>
@@ -246,7 +246,7 @@ export default function Landing({ onGetStarted }) {
       <div style={{ padding:'80px 48px', background:S.white, borderTop:`0.5px solid ${S.border}` }}>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:64, alignItems:'flex-start' }}>
           <Anim>
-            <div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:S.lightBlue, color:S.blue, border:`0.5px solid #93C5FD`, fontSize:10, fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:10 }}>FAQ</div>
+            
             <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, lineHeight:1.15, marginTop:8, marginBottom:16 }}>Frequently asked<br/>questions.</h2>
             <p style={{ fontSize:13, color:S.textMuted, lineHeight:1.7, marginBottom:20 }}>Find answers about PsycheFlow's platform, compliance, and clinical capabilities.</p>
             <BtnPrimary onClick={onGetStarted}>Ask us anything →</BtnPrimary>
@@ -267,7 +267,7 @@ export default function Landing({ onGetStarted }) {
 
       {/* CTA */}
       <div style={{ margin:'0 48px 48px', background:`linear-gradient(135deg,${S.navy},#1a3a6b)`, borderRadius:20, padding:'64px 48px', textAlign:'center' }}>
-        <h2 style={{ fontSize:34, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.1 }}>The future of mental<br/>healthcare is here.</h2>
+        <h2 style={{ fontSize:34, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.1 }}>Mental health support that actually fits<br/>how clinicians work.</h2>
         <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', marginBottom:28, lineHeight:1.6 }}>Join hospitals and psychologists transforming<br/>mental health outcomes across India.</p>
         <BtnPrimary onClick={onGetStarted} style={{ fontSize:14, padding:'12px 28px' }}>Get started free →</BtnPrimary>
         <button onClick={onGetStarted} style={{ background:'transparent', color:'#93C5FD', border:'0.5px solid #93C5FD', padding:'11px 22px', borderRadius:100, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginLeft:10 }}>Book a demo</button>
