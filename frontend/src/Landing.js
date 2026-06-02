@@ -100,7 +100,7 @@ export default function Landing({ onGetStarted }) {
         <div style={{ padding:'80px 48px 80px 48px', display:'flex', flexDirection:'column', justifyContent:'center', borderRight:`0.5px solid ${S.border}` }}>
           <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:100, border:`0.5px solid #93C5FD`, background:S.lightBlue, fontSize:11, fontWeight:600, color:S.blue, marginBottom:20, width:'fit-content' }}>
             <div style={{ width:6, height:6, borderRadius:'50%', background:S.blue, animation:'pulse 2s infinite' }}/>
-            India's first AI clinical psychology platform
+            AI-powered psychology platform for India
           </div>
           <h1 style={{ fontSize:52, fontWeight:700, letterSpacing:'-0.03em', lineHeight:1.06, marginBottom:16, color:S.navy }}>
             Your mind,<br/>
@@ -281,7 +281,7 @@ export default function Landing({ onGetStarted }) {
       <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr 1fr 1fr', gap:32, padding:'40px 48px', borderTop:`0.5px solid ${S.border}` }}>
         <div>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}><LogoMark size={28}/><span style={{ fontWeight:700, fontSize:14 }}>PsycheFlow</span></div>
-          <p style={{ fontSize:12, color:S.textMuted, lineHeight:1.7 }}>India's first AI clinical psychology platform.</p>
+          <p style={{ fontSize:12, color:S.textMuted, lineHeight:1.7 }}>AI-powered psychology platform for India.</p>
           <p style={{ fontSize:12, color:S.textMuted, marginTop:10, lineHeight:1.8 }}>Crisis: iCall 9152987821<br/>Vandrevala: 1860-2662-345<br/>NIMHANS: 080-46110007</p>
         </div>
         {[['Platform',['Features','For hospitals','For psychologists','Pricing','API docs']],['Company',['About us','Blog','Careers','Press','Contact']],['Legal',['Privacy policy','Terms of service','DPDP compliance','Cookie policy','Refund policy']]].map(([h,links]) => (
