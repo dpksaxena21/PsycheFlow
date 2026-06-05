@@ -149,7 +149,6 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
   const [age, setAge]               = useState('');
   const [gender, setGender]         = useState('');
   const [occupation, setOccupation] = useState('');
-  const [activeHint, setActiveHint] = useState(null);
 
   const totalSections = FLOW.length;
   const progress      = Math.round(((sectionIdx) / totalSections) * 100);
@@ -225,12 +224,9 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
     const scale = SCALE[q.type] || SCALE.frequency4;
     return (
       <div key={q.id} style={{ marginBottom:20, animation:'fadeIn 0.3s ease' }}>
-        <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:10, cursor:'pointer' }} onClick={() => setActiveHint(activeHint === q.id ? null : q.id)}>
-          <p style={{ fontSize:15, color:S.navy, margin:0, fontWeight:500, lineHeight:1.6, flex:1 }}>{q.text}</p>
-          {q.hint && <span style={{ fontSize:11, color:S.blue, fontWeight:600, marginTop:3, flexShrink:0, opacity:0.7 }}>why?</span>}
-        </div>
-        {q.hint && activeHint === q.id && (
-          <div style={{ background:S.lightBlue, border:'0.5px solid '+S.border, borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:13, color:S.muted, lineHeight:1.6, animation:'fadeIn 0.2s ease' }}>
+        <p style={{ fontSize:15, color:S.navy, margin:'0 0 6px', fontWeight:500, lineHeight:1.6 }}>{q.text}</p>
+        {q.hint && (
+          <div style={{ fontSize:12, color:S.muted, lineHeight:1.6, marginBottom:12, paddingLeft:2, animation:'fadeIn 0.4s ease', opacity:0.85 }}>
             {q.hint}
           </div>
         )}
