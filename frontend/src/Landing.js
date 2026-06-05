@@ -67,7 +67,7 @@ const FAQS = [
   { q:'What does the free plan include?', a:'Free patients get full AI assessment, journal, mood tracking, and ACT exercises. Psychologists get a 14-day free trial with all features.' },
 ];
 
-export default function Landing({ onGetStarted, onLegal }) {
+export default function Landing({ onGetStarted, onLegal, onPsychLanding }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeWho, setActiveWho] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
@@ -89,7 +89,7 @@ export default function Landing({ onGetStarted, onLegal }) {
         </div>
         <div style={{ display:'flex', gap:28, alignItems:'center' }}>
           {['Features','For Hospitals','Psychologists','Pricing'].map(l => (
-            <span key={l} style={{ fontSize:13, color:S.textMuted, cursor:'pointer' }}>{l}</span>
+            <span key={l} onClick={l==='Psychologists' && onPsychLanding ? onPsychLanding : undefined} style={{ fontSize:13, color: l==='Psychologists' ? S.blue : S.textMuted, cursor:'pointer', fontWeight: l==='Psychologists' ? 600 : 400 }}>{l}</span>
           ))}
           <BtnPrimary onClick={onGetStarted} style={{ padding:'8px 18px', fontSize:13 }}>Get Started</BtnPrimary>
         </div>
