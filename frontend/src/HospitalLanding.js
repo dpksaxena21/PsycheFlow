@@ -111,7 +111,7 @@ export default function HospitalLanding({ onBack, onContact }) {
             {[
               { n:'01', title:'Intake bottleneck', desc:'OPD psychiatry queues average 2-3 hours. Consultations are 10 minutes. Doctors walk in knowing nothing about the patient. PsycheFlow completes a full 14-instrument digital assessment before the patient sits down.' },
               { n:'02', title:'Documentation burden', desc:'Psychologists spend 30-40% of their time on paperwork — session notes, care plans, referral letters. For NABH accreditation, this documentation must be structured and auditable. PsycheFlow automates it.' },
-              { n:'03', title:'No population visibility', desc:'Hospitals cannot answer: what percentage of our depression patients improved in 6 months? Which wards have the highest anxiety burden? PsycheFlow's population analytics answer these questions with real data.' },
+              { n:'03', title:'No population visibility', desc:'Hospitals cannot answer: what percentage of our depression patients improved in 6 months? Which wards have the highest anxiety burden? PsycheFlow’s population analytics answer these questions with real data.' },
             ].map((p,i) => (
               <div key={i} style={{ padding:28, borderRadius:12, border:'0.5px solid '+S.border, background:S.card, boxShadow:'0 1px 4px rgba(29,78,216,0.06)' }}>
                 <div style={{ fontSize:28, fontWeight:700, color:S.border, marginBottom:16, letterSpacing:'-0.02em' }}>{p.n}</div>
@@ -131,10 +131,10 @@ export default function HospitalLanding({ onBack, onContact }) {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
             <Feature tag="Intake" title="Digital pre-consultation assessment" desc="Patients complete PHQ-9, GAD-7, Big Five, PTSD, OCD, ADHD, and 8 other validated instruments on their phone before entering the consultation room. The consulting psychiatrist receives a structured report before the session begins. Average intake time reduction: 35-40%." />
             <Feature tag="Documentation" title="AI-generated SOAP notes" desc="Describe what happened in a session in plain language. PsycheFlow structures it into a clinical SOAP note compliant with standard medical documentation formats. Notes are stored, searchable, and exportable. Reduces documentation time by an estimated 60%." />
-            <Feature tag="Safety" title="Automated crisis escalation" desc="When PHQ-9 exceeds 20, GAD-7 exceeds 15, or C-SSRS suicide risk language is detected, the responsible clinician receives an instant alert with the patient's current scores and trigger type. Acknowledgment and response are logged for audit purposes." />
+            <Feature tag="Safety" title="Automated crisis escalation" desc="When PHQ-9 exceeds 20, GAD-7 exceeds 15, or C-SSRS suicide risk language is detected, the responsible clinician receives an instant alert with the patient’s current scores and trigger type. Acknowledgment and response are logged for audit purposes." />
             <Feature tag="Analytics" title="Population health dashboard" desc="Department-level dashboards showing risk distribution across your patient population, PHQ-9 and GAD-7 trend cohorts, session adherence rates, and longitudinal outcome data. Exportable quarterly reports for hospital leadership and board presentations." />
             <Feature tag="Training" title="Supervisor-trainee oversight" desc="Supervisors can review the cases handled by interns and residents, flag clinical reasoning gaps, and generate case summaries for supervision sessions. Designed for teaching hospitals and departments running internship programs." />
-            <Feature tag="Referral" title="Cross-department referral system" desc="Any department can flag a patient for psychiatric evaluation using a structured referral form. The referral appears in the psychiatry department's queue with the referring doctor's notes. Closes the loop with an automated update when the patient is seen." />
+            <Feature tag="Referral" title="Cross-department referral system" desc="Any department can flag a patient for psychiatric evaluation using a structured referral form. The referral appears in the psychiatry department’s queue with the referring doctor’s notes. Closes the loop with an automated update when the patient is seen." />
           </div>
         </div>
       </div>
@@ -146,10 +146,10 @@ export default function HospitalLanding({ onBack, onContact }) {
           <h2 style={{ fontSize:32, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 8px', lineHeight:1.2 }}>Built around NABH standards.</h2>
           <p style={{ fontSize:14, color:S.muted, marginBottom:36, lineHeight:1.7 }}>PsycheFlow is designed to directly support hospitals pursuing or maintaining NABH accreditation under the Mental Health chapter of the NABH standards.</p>
           <div style={{ background:S.card, borderRadius:12, border:'0.5px solid '+S.border, padding:'0 28px', boxShadow:'0 1px 4px rgba(29,78,216,0.06)' }}>
-            <NABHItem code="MHC 1" title="Assessment of patients with mental health needs" desc="PsycheFlow's 14-instrument digital assessment provides standardized, documented intake evaluation. Results are stored with timestamps and are auditable — directly supporting NABH's requirement for systematic mental health assessment." />
-            <NABHItem code="MHC 2" title="Care planning for mental health patients" desc="AI-generated care summaries and SOAP notes provide the structured documentation NABH requires for care planning. Each plan is linked to the patient's assessment scores and updated automatically as scores change." />
+            <NABHItem code="MHC 1" title="Assessment of patients with mental health needs" desc="PsycheFlow’s 14-instrument digital assessment provides standardized, documented intake evaluation. Results are stored with timestamps and are auditable — directly supporting NABH's requirement for systematic mental health assessment." />
+            <NABHItem code="MHC 2" title="Care planning for mental health patients" desc="AI-generated care summaries and SOAP notes provide the structured documentation NABH requires for care planning. Each plan is linked to the patient’s assessment scores and updated automatically as scores change." />
             <NABHItem code="MHC 3" title="High-risk patient identification and management" desc="Automated crisis detection with C-SSRS screening, PHQ-9 and GAD-7 threshold alerts, and real-time escalation to responsible clinicians. All alerts are logged with response timestamps for NABH audit purposes." />
-            <NABHItem code="MHC 4" title="Patient rights and informed consent" desc="PsycheFlow's consent module is built around DPDP Act 2023. Patients provide explicit informed consent before any assessment. Consent records are stored with timestamps and are exportable for NABH documentation." />
+            <NABHItem code="MHC 4" title="Patient rights and informed consent" desc="PsycheFlow’s consent module is built around DPDP Act 2023. Patients provide explicit informed consent before any assessment. Consent records are stored with timestamps and are exportable for NABH documentation." />
             <NABHItem code="QPS 1" title="Quality monitoring and outcome measurement" desc="Population health dashboards provide the outcome data NABH requires for quality monitoring — PHQ-9 improvement rates, risk level distribution, session adherence, and longitudinal trajectories. Exportable as quarterly reports." />
             <NABHItem code="HIC 1" title="Hospital infection control and data security" desc="All patient data encrypted at rest (AES-256) and in transit (TLS). Row-level security ensures clinicians can only access their own patients' data. Full audit logs maintained for all data access and modifications." />
           </div>
@@ -162,7 +162,7 @@ export default function HospitalLanding({ onBack, onContact }) {
         <div style={{ maxWidth:600, margin:'0 auto' }}>
           <div style={{ fontSize:11, fontWeight:600, color:S.blue, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:12 }}>Get in touch</div>
           <h2 style={{ fontSize:32, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 8px' }}>Request a demo.</h2>
-          <p style={{ fontSize:14, color:S.muted, marginBottom:36 }}>We'll reach out within 24 hours to schedule a walkthrough tailored to your department's workflow.</p>
+          <p style={{ fontSize:14, color:S.muted, marginBottom:36 }}>We'll reach out within 24 hours to schedule a walkthrough tailored to your department’s workflow.</p>
           {submitted ? (
             <div style={{ background:S.lightBlue, border:'0.5px solid '+S.border, borderRadius:12, padding:32, textAlign:'center' }}>
               <div style={{ fontSize:18, fontWeight:700, color:S.navy, marginBottom:8 }}>Thank you</div>
