@@ -67,7 +67,7 @@ const FAQS = [
   { q:'What does the free plan include?', a:'Free patients get full AI assessment, journal, mood tracking, and ACT exercises. Psychologists get a 14-day free trial with all features.' },
 ];
 
-export default function Landing({ onGetStarted }) {
+export default function Landing({ onGetStarted, onLegal }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeWho, setActiveWho] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
@@ -284,7 +284,11 @@ export default function Landing({ onGetStarted }) {
         {[['Platform',['Features','For hospitals','For psychologists','Pricing','API docs']],['Company',['About us','Blog','Careers','Press','Contact']],['Legal',['Privacy policy','Terms of service','DPDP compliance','Cookie policy','Refund policy']]].map(([h,links]) => (
           <div key={h}>
             <div style={{ fontSize:11, fontWeight:700, marginBottom:12, color:S.navy, letterSpacing:'0.02em', textTransform:'uppercase' }}>{h}</div>
-            {links.map(l => <span key={l} style={{ fontSize:12, color:S.textMuted, display:'block', marginBottom:8, cursor:'pointer' }}>{l}</span>)}
+            {links.map(l => {
+              const legalMap = {'Privacy policy':'privacy','Terms of service':'terms','DPDP compliance':'dpdp'};
+              const page = legalMap[l];
+              return <span key={l} onClick={page && onLegal ? () => onLegal(page) : undefined} style={{ fontSize:12, color: page ? S.blue : S.textMuted, display:'block', marginBottom:8, cursor: page ? 'pointer' : 'default', fontWeight: page ? 500 : 400 }}>{l}</span>;
+            })}
           </div>
         ))}
       </div>

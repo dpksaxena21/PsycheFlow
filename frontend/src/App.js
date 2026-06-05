@@ -14,6 +14,9 @@ import ACTEngine from './ACTEngine';
 import CrisisManagement from './CrisisManagement';
 import Consent from './Consent';
 import Onboarding from './Onboarding';
+import Privacy from './Privacy';
+import Terms from './Terms';
+import DPDP from './DPDP';
 
 const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
@@ -205,7 +208,10 @@ export default function App() {
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
   // Route guards
-  if (showLanding && !user) return <Landing onGetStarted={() => setShowLanding(false)} />;
+  if (legalPage === 'privacy') return <Privacy onBack={() => setLegalPage(null)} />;
+  if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
+  if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
+  if (showLanding && !user) return <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} />;
   if (!user) return <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
