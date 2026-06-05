@@ -165,7 +165,12 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
 
   const handleAnswer = (id, val) => setAnswers(prev => ({ ...prev, [id]: val }));
 
+
+
+  const topRef = React.useRef(null);
+
   const handleNext = () => {
+    if (topRef.current) topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (sectionIdx < totalSections - 1) setSectionIdx(s => s + 1);
     else {
       onComplete({
@@ -176,51 +181,62 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
     }
   };
 
+  const S = { blue:'#1D4ED8', navy:'#0C1A2E', bg:'#F8FAFF', card:'#FFFFFF', border:'#E2EBF6', muted:'#3B5998', hint:'#94a3b8', lightBlue:'#EFF6FF' };
+
   const renderQuestion = (q) => {
     if (q.id === 'AGE') return (
-      <input key={q.id} type="number" value={age} onChange={e => setAge(e.target.value)}
-        placeholder="Your age" min="10" max="100"
-        style={{ width:'100%', padding:'12px 16px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:16, boxSizing:'border-box', outline:'none' }}
-        onFocus={e=>e.target.style.borderColor='#4F46E5'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}
-      />
+      <div key={q.id} style={{ marginBottom:24 }}>
+        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500, lineHeight:1.5 }}>How old are you?</p>
+        <input type="number" value={age} onChange={e => setAge(e.target.value)}
+          placeholder="Enter your age" min="10" max="100"
+          style={{ width:'100%', padding:'12px 16px', borderRadius:10, border:'0.5px solid '+S.border, fontSize:16, boxSizing:'border-box', outline:'none', fontFamily:"'Satoshi',-apple-system,sans-serif", color:S.navy, background:S.bg }}
+          onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}
+        />
+      </div>
     );
     if (q.id === 'GENDER') return (
-      <div key={q.id} style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-        {['Male','Female','Non-binary','Prefer not to say'].map(opt => (
-          <button key={opt} onClick={() => setGender(opt)}
-            style={{ padding:'10px 16px', borderRadius:10, border:'none', cursor:'pointer', fontSize:13, fontWeight:500, background: gender===opt ? '#4F46E5' : '#F3F4F6', color: gender===opt ? '#fff' : '#374151', transition:'all 0.15s' }}>
-            {opt}
-          </button>
-        ))}
+      <div key={q.id} style={{ marginBottom:24 }}>
+        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500 }}>What is your gender?</p>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          {['Male','Female','Non-binary','Prefer not to say'].map(opt => (
+            <button key={opt} onClick={() => setGender(opt)}
+              style={{ padding:'10px 18px', borderRadius:10, border:'0.5px solid '+(gender===opt ? S.blue : S.border), cursor:'pointer', fontSize:13, fontWeight:600, background: gender===opt ? S.blue : S.card, color: gender===opt ? '#fff' : S.navy, transition:'all 0.2s' }}>
+              {opt}
+            </button>
+          ))}
+        </div>
       </div>
     );
     if (q.id === 'OCC') return (
-      <div key={q.id} style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-        {['Student','Employed','Self-employed','Unemployed','Retired','Other'].map(opt => (
-          <button key={opt} onClick={() => setOccupation(opt)}
-            style={{ padding:'10px 16px', borderRadius:10, border:'none', cursor:'pointer', fontSize:13, fontWeight:500, background: occupation===opt ? '#4F46E5' : '#F3F4F6', color: occupation===opt ? '#fff' : '#374151', transition:'all 0.15s' }}>
-            {opt}
-          </button>
-        ))}
+      <div key={q.id} style={{ marginBottom:24 }}>
+        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500 }}>What is your occupation?</p>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          {['Student','Employed','Self-employed','Unemployed','Retired','Other'].map(opt => (
+            <button key={opt} onClick={() => setOccupation(opt)}
+              style={{ padding:'10px 18px', borderRadius:10, border:'0.5px solid '+(occupation===opt ? S.blue : S.border), cursor:'pointer', fontSize:13, fontWeight:600, background: occupation===opt ? S.blue : S.card, color: occupation===opt ? '#fff' : S.navy, transition:'all 0.2s' }}>
+              {opt}
+            </button>
+          ))}
+        </div>
       </div>
     );
 
     const scale = SCALE[q.type] || SCALE.frequency4;
     return (
-      <div key={q.id} style={{ marginBottom:24 }}>
-        <p style={{ fontSize:15, color:'#111827', margin:'0 0 12px', fontWeight:500, lineHeight:1.5 }}>{q.text}</p>
+      <div key={q.id} style={{ marginBottom:20, animation:'fadeIn 0.3s ease' }}>
+        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500, lineHeight:1.6 }}>{q.text}</p>
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
           {scale.map((label, i) => (
             <button key={i} onClick={() => handleAnswer(q.id, i)}
               style={{
-                padding:'11px 16px', borderRadius:10, border:'none', cursor:'pointer',
+                padding:'11px 16px', borderRadius:10, cursor:'pointer',
                 textAlign:'left', fontSize:13, fontWeight: answers[q.id]===i ? 600 : 400,
-                transition:'all 0.15s',
-                background: answers[q.id]===i ? '#4F46E5' : '#F9FAFB',
-                color: answers[q.id]===i ? '#fff' : '#374151',
-                outline: answers[q.id]===i ? 'none' : '1px solid #F3F4F6'
+                transition:'all 0.2s',
+                background: answers[q.id]===i ? S.blue : S.lightBlue,
+                color: answers[q.id]===i ? '#fff' : S.navy,
+                border: answers[q.id]===i ? 'none' : '0.5px solid '+S.border,
               }}>
-              <span style={{ marginRight:8, opacity:0.6 }}>{i}</span> {label}
+              {label}
             </button>
           ))}
         </div>
@@ -229,38 +245,38 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
   };
 
   return (
-    <div style={{ fontFamily:"-apple-system,'DM Sans',sans-serif" }}>
+    <div ref={topRef} style={{ fontFamily:"'Satoshi',-apple-system,sans-serif" }}>
       {/* Progress */}
       <div style={{ marginBottom:24 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#9CA3AF', marginBottom:6 }}>
-          <span>{section}</span>
-          <span>{progress}% complete</span>
+        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:S.muted, marginBottom:8, fontWeight:500 }}>
+          <span style={{ color:S.blue, fontWeight:600 }}>{section}</span>
+          <span>{sectionIdx+1} of {totalSections}</span>
         </div>
-        <div style={{ background:'#E5E7EB', borderRadius:6, height:4 }}>
-          <div style={{ width:`${progress}%`, background:'#4F46E5', height:4, borderRadius:6, transition:'width 0.4s ease' }} />
+        <div style={{ background:S.border, borderRadius:6, height:3 }}>
+          <div style={{ width:`${progress}%`, background:S.blue, height:3, borderRadius:6, transition:'width 0.5s ease' }} />
         </div>
-        <div style={{ fontSize:11, color:'#9CA3AF', marginTop:4 }}>
-          Section {sectionIdx+1} of {totalSections}
+        <div style={{ fontSize:11, color:S.hint, marginTop:6 }}>
+          {progress}% complete
         </div>
       </div>
 
       {/* Questions */}
-      <div style={{ background:'#fff', borderRadius:16, padding:28, border:'1px solid #F3F4F6', marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
-        <h3 style={{ margin:'0 0 20px', color:'#4F46E5', fontSize:14, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>{section}</h3>
+      <div style={{ background:S.card, borderRadius:12, padding:28, border:'0.5px solid '+S.border, marginBottom:16, boxShadow:'0 1px 4px rgba(29,78,216,0.06)', animation:'slideIn 0.3s ease' }}>
+        <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:20, paddingBottom:12, borderBottom:'0.5px solid '+S.border }}>{section}</div>
         {currentQs.map(q => renderQuestion(q))}
       </div>
 
       {/* Navigation */}
-      <div style={{ display:'flex', gap:12 }}>
+      <div style={{ display:'flex', gap:10 }}>
         {sectionIdx > 0 && (
-          <button onClick={() => setSectionIdx(s => s-1)}
-            style={{ flex:1, padding:'13px', background:'#fff', color:'#6B7280', border:'1.5px solid #E5E7EB', borderRadius:12, fontSize:15, cursor:'pointer', fontWeight:500 }}>
-            ← Back
+          <button onClick={() => { setSectionIdx(s => s-1); if(topRef.current) topRef.current.scrollIntoView({behavior:'smooth'}); }}
+            style={{ flex:1, padding:'13px', background:S.card, color:S.navy, border:'0.5px solid '+S.border, borderRadius:10, fontSize:14, cursor:'pointer', fontWeight:600 }}>
+            Back
           </button>
         )}
         <button onClick={handleNext} disabled={!allAnswered}
-          style={{ flex:2, padding:'13px', background: allAnswered ? '#4F46E5' : '#E5E7EB', color: allAnswered ? '#fff' : '#9CA3AF', border:'none', borderRadius:12, fontSize:15, cursor: allAnswered ? 'pointer' : 'not-allowed', fontWeight:600, transition:'all 0.15s' }}>
-          {sectionIdx === totalSections-1 ? 'Complete Assessment →' : 'Next Section →'}
+          style={{ flex:2, padding:'13px', background: allAnswered ? S.blue : S.border, color: allAnswered ? '#fff' : S.hint, border:'none', borderRadius:10, fontSize:14, cursor: allAnswered ? 'pointer' : 'not-allowed', fontWeight:600, transition:'all 0.2s' }}>
+          {sectionIdx === totalSections-1 ? 'Complete Assessment' : 'Next'}
         </button>
       </div>
     </div>
