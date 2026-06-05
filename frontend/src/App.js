@@ -106,7 +106,7 @@ function JournalSection({ userId }) {
 
 export default function App() {
   // Zustand stores
-  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding,
+  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding, legalPage, setLegalPage,
           consentGiven, setConsentGiven, onboarded, setOnboarded, login, logout, checkOnboarding } = useAuthStore();
   const { screen, setScreen, results, setResults, fullReport, setFullReport } = useAssessmentStore();
 

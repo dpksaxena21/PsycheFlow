@@ -12,9 +12,11 @@ export const useAuthStore = create(
         consentGiven: null,
         onboarded: null,
         showLanding: true,
+        legalPage: null,
 
         setUser: (user) => set({ user }),
         setShowLanding: (v) => set({ showLanding: v }),
+        setLegalPage: (v) => set({ legalPage: v }),
         setIsPsychologist: (v) => set({ isPsychologist: v }),
         setConsentGiven: (v) => set({ consentGiven: v }),
         setOnboarded: (v) => set({ onboarded: v }),
@@ -51,6 +53,7 @@ export const useAuthStore = create(
             consentGiven: null,
             onboarded: null,
             showLanding: true,
+        legalPage: null,
           });
         },
 
