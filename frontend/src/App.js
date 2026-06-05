@@ -16,6 +16,7 @@ import Consent from './Consent';
 import Onboarding from './Onboarding';
 import Privacy from './Privacy';
 import PsychologistLanding from './PsychologistLanding';
+import PsychologistAuth from './PsychologistAuth';
 import Terms from './Terms';
 import DPDP from './DPDP';
 
@@ -107,7 +108,7 @@ function JournalSection({ userId }) {
 
 export default function App() {
   // Zustand stores
-  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding, legalPage, setLegalPage, showPsychLanding, setShowPsychLanding,
+  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding, legalPage, setLegalPage, showPsychLanding, setShowPsychLanding, showPsychAuth, setShowPsychAuth,
           consentGiven, setConsentGiven, onboarded, setOnboarded, login, logout, checkOnboarding } = useAuthStore();
   const { screen, setScreen, results, setResults, fullReport, setFullReport } = useAssessmentStore();
 
@@ -209,7 +210,8 @@ export default function App() {
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
   // Route guards
-  if (showPsychLanding) return <PsychologistLanding onBack={() => setShowPsychLanding(false)} onGetStarted={() => { setShowPsychLanding(false); setShowLanding(false); }} />;
+  if (showPsychLanding) return <PsychologistLanding onBack={() => setShowPsychLanding(false)} onGetStarted={() => { setShowPsychLanding(false); setShowPsychAuth(true); }} />;
+  if (showPsychAuth) return <PsychologistAuth onBack={() => { setShowPsychAuth(false); setShowPsychLanding(true); }} onLogin={(u) => { setShowPsychAuth(false); setUser(u); checkOnboarding(u.id); }} />;
   if (legalPage === 'privacy') return <Privacy onBack={() => setLegalPage(null)} />;
   if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
   if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
