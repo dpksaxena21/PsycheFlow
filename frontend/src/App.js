@@ -41,12 +41,12 @@ function JournalSection({ userId }) {
 
   return (
     <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginTop:20 }}>
-      <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>📝 Journal Analysis</h3>
+      <h3 style={{ margin:'0 0 8px', color:'#1D4ED8' }}>📝 Journal Analysis</h3>
       <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>Write freely about how you feel. Our AI will analyze it clinically.</p>
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="What's on your mind today? Write freely..."
-        style={{ width:'100%', minHeight:120, padding:12, borderRadius:8, border:'1px solid #e2e8f0', fontSize:14, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }} />
+        style={{ width:'100%', minHeight:120, padding:12, borderRadius:8, border:'1px solid #e2e8f0', fontSize:14, fontFamily:"'Satoshi',-apple-system,sans-serif", resize:'vertical', boxSizing:'border-box', outline:'none' }} />
       <button onClick={analyze} disabled={loading || text.trim().length < 20}
-        style={{ marginTop:12, padding:'10px 24px', background:'#6366f1', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:14 }}>
+        style={{ marginTop:12, padding:'10px 24px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:14 }}>
         {loading ? 'Analyzing...' : '🔍 Analyze Journal'}
       </button>
       {analysis && (
@@ -69,7 +69,7 @@ function JournalSection({ userId }) {
             </div>
           )}
           <div style={{ background:'#f8fafc', borderRadius:12, padding:16, marginBottom:12 }}>
-            <strong>Primary Emotion:</strong> <span style={{ color:'#6366f1', textTransform:'capitalize' }}>{analysis.emotions.primary}</span> — Intensity: <strong>{analysis.emotions.intensity}</strong><br/>
+            <strong>Primary Emotion:</strong> <span style={{ color:'#1D4ED8', textTransform:'capitalize' }}>{analysis.emotions.primary}</span> — Intensity: <strong>{analysis.emotions.intensity}</strong><br/>
             <span style={{ fontSize:13, color:'#64748b' }}>Also detected: {analysis.emotions.secondary.join(', ')}</span>
           </div>
           <div style={{ background:'#fff7ed', borderRadius:12, padding:16, marginBottom:12 }}>
@@ -93,7 +93,7 @@ function JournalSection({ userId }) {
           <div style={{ background:'#f0fdf4', borderRadius:12, padding:16 }}>
             <strong>Clinical Summary</strong>
             <p style={{ fontSize:13, color:'#374151', margin:'8px 0' }}>{analysis.clinical_summary}</p>
-            <strong style={{ fontSize:13 }}>Recommended Focus: </strong><span style={{ fontSize:13, color:'#6366f1' }}>{analysis.recommended_focus}</span>
+            <strong style={{ fontSize:13 }}>Recommended Focus: </strong><span style={{ fontSize:13, color:'#1D4ED8' }}>{analysis.recommended_focus}</span>
           </div>
         </div>
       )}
@@ -212,10 +212,10 @@ export default function App() {
   if (isPsychologist) return <PsychologistPortal user={user} onLogout={handleLogout} />;
 
   if (showACT) return (
-    <div style={{ fontFamily:'sans-serif', minHeight:'100vh', background:'linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%)', padding:40 }}>
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'linear-gradient(135deg, #EFF6FF 0%, #fdf4ff 100%)', padding:40 }}>
       <div style={{ maxWidth:720, margin:'0 auto' }}>
         <div style={{ display:'flex', alignItems:'center', marginBottom:24 }}>
-          <h2 style={{ color:'#6366f1', margin:0 }}>🧠 PsycheFlow</h2>
+          <h2 style={{ color:'#1D4ED8', margin:0 }}>PsycheFlow</h2>
           <button onClick={() => setShowACT(false)} style={{ marginLeft:'auto', padding:'6px 14px', background:'transparent', border:'1px solid #e2e8f0', borderRadius:8, color:'#94a3b8', cursor:'pointer', fontSize:12 }}>← Dashboard</button>
         </div>
         <ACTEngine user={user} phqScore={0} gadScore={0} condition="normal" />
@@ -224,7 +224,7 @@ export default function App() {
   );
 
   if (showCrisis) return (
-    <div style={{ fontFamily:'sans-serif', minHeight:'100vh', background:'#f1f5f9', padding:40 }}>
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'#f1f5f9', padding:40 }}>
       <div style={{ maxWidth:720, margin:'0 auto' }}>
         <CrisisManagement user={user} onBack={() => setShowCrisis(false)} />
       </div>
@@ -300,10 +300,10 @@ export default function App() {
   );
 
   if (screen === 'loading') return (
-    <div style={{ fontFamily:'sans-serif', minHeight:'100vh', background:'linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'linear-gradient(135deg, #EFF6FF 0%, #fdf4ff 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:48, marginBottom:16 }}>⚙️</div>
-        <h3 style={{ color:'#6366f1' }}>Analyzing your profile...</h3>
+        <h3 style={{ color:'#1D4ED8' }}>Analyzing your profile...</h3>
         <p style={{ color:'#94a3b8' }}>Running 13 psychological models</p>
       </div>
     </div>
@@ -313,13 +313,13 @@ export default function App() {
     const phq = phqLevel(results.phq);
     const gad = gadLevel(results.gad);
     return (
-      <div style={{ fontFamily:'sans-serif', background:'#f1f5f9', minHeight:'100vh', padding:32 }}>
+      <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:'#f1f5f9', minHeight:'100vh', padding:32 }}>
         <div style={{ maxWidth:680, margin:'0 auto' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-            <h2 style={{ color:'#6366f1', margin:0 }}>🧠 Your Psychological Report</h2>
+            <h2 style={{ color:'#1D4ED8', margin:0 }}>Your Psychological Report</h2>
             <div>
-              <button onClick={() => setScreen('home')} style={{ padding:'8px 16px', background:'#6366f1', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:13, marginRight:8 }}>Dashboard</button>
-              <button onClick={() => { setScreen('questionnaire'); setResults(null); setFullReport(null); setAssessMode(null); }} style={{ padding:'8px 16px', background:'#fff', color:'#6366f1', border:'1px solid #6366f1', borderRadius:8, cursor:'pointer', fontSize:13 }}>Retake</button>
+              <button onClick={() => setScreen('home')} style={{ padding:'8px 16px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:13, marginRight:8 }}>Dashboard</button>
+              <button onClick={() => { setScreen('questionnaire'); setResults(null); setFullReport(null); setAssessMode(null); }} style={{ padding:'8px 16px', background:'#fff', color:'#1D4ED8', border:'1px solid #1D4ED8', borderRadius:8, cursor:'pointer', fontSize:13 }}>Retake</button>
             </div>
           </div>
           <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
@@ -346,7 +346,7 @@ export default function App() {
             </div>
           )}
           <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#6366f1' }}>Personality — Big Five (OCEAN)</h3>
+            <h3 style={{ margin:'0 0 16px', color:'#1D4ED8' }}>Personality — Big Five (OCEAN)</h3>
             {bigFive.map(t=>(<TraitBar key={t} name={t} data={results.predictions[t]} colorFn={(l)=>colorMap[l]} />))}
           </div>
           <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
@@ -355,17 +355,17 @@ export default function App() {
             {darkTriad.map(t=>(<TraitBar key={t} name={t} data={results.predictions[t]} colorFn={(l)=>dtColor[l]} />))}
           </div>
           <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>✨ Full Psychological Report</h3>
+            <h3 style={{ margin:'0 0 8px', color:'#1D4ED8' }}>Full Psychological Report</h3>
             <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>A comprehensive 2000+ word psychological profile written by our AI psychologist.</p>
             {!fullReport ? (
-              <button onClick={handleGenerateReport} disabled={reportLoading} style={{ padding:'12px 32px', background:'linear-gradient(135deg, #6366f1, #8b5cf6)', color:'#fff', border:'none', borderRadius:10, cursor:'pointer', fontSize:15, fontWeight:'bold', boxShadow:'0 4px 20px rgba(99,102,241,0.3)' }}>
-                {reportLoading ? '⏳ Generating your report (~1 min)...' : '✨ Generate My Full Report'}
+              <button onClick={handleGenerateReport} disabled={reportLoading} style={{ padding:'12px 32px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:10, cursor:'pointer', fontSize:15, fontWeight:'bold', boxShadow:'0 4px 20px rgba(29,78,216,0.15)' }}>
+                {reportLoading ? 'Generating your report (~1 min)...' : 'Generate My Full Report'}
               </button>
             ) : (
               <div>
                 {Object.entries(fullReport.sections).map(([title,content])=>(content&&(
                   <div key={title} style={{ marginBottom:24 }}>
-                    <h4 style={{ color:'#6366f1', fontSize:13, fontWeight:'bold', textTransform:'uppercase', letterSpacing:'0.5px', borderBottom:'2px solid #eef2ff', paddingBottom:8, marginBottom:12 }}>{title}</h4>
+                    <h4 style={{ color:'#1D4ED8', fontSize:13, fontWeight:'bold', textTransform:'uppercase', letterSpacing:'0.5px', borderBottom:'2px solid #EFF6FF', paddingBottom:8, marginBottom:12 }}>{title}</h4>
                     <p style={{ fontSize:14, color:'#374151', lineHeight:1.8, margin:0, whiteSpace:'pre-wrap' }}>{content}</p>
                   </div>
                 )))}
