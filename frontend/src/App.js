@@ -16,6 +16,7 @@ import Consent from './Consent';
 import Onboarding from './Onboarding';
 import Privacy from './Privacy';
 import PsychologistLanding from './PsychologistLanding';
+import HospitalLanding from './HospitalLanding';
 import PsychologistAuth from './PsychologistAuth';
 import Terms from './Terms';
 import DPDP from './DPDP';
@@ -108,7 +109,7 @@ function JournalSection({ userId }) {
 
 export default function App() {
   // Zustand stores
-  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding, legalPage, setLegalPage, showPsychLanding, setShowPsychLanding, showPsychAuth, setShowPsychAuth,
+  const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding, legalPage, setLegalPage, showPsychLanding, setShowPsychLanding, showPsychAuth, setShowPsychAuth, showHospitalLanding, setShowHospitalLanding,
           consentGiven, setConsentGiven, onboarded, setOnboarded, login, logout, checkOnboarding } = useAuthStore();
   const { screen, setScreen, results, setResults, fullReport, setFullReport } = useAssessmentStore();
 
@@ -210,12 +211,13 @@ export default function App() {
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
   // Route guards
+  if (showHospitalLanding) return <HospitalLanding onBack={() => setShowHospitalLanding(false)} onContact={() => setShowHospitalLanding(false)} />;
   if (showPsychLanding) return <PsychologistLanding onBack={() => setShowPsychLanding(false)} onGetStarted={() => { setShowPsychLanding(false); setShowPsychAuth(true); }} />;
   if (showPsychAuth) return <PsychologistAuth onBack={() => { setShowPsychAuth(false); setShowPsychLanding(true); }} onLogin={(u) => { setShowPsychAuth(false); setUser(u); checkOnboarding(u.id); }} />;
   if (legalPage === 'privacy') return <Privacy onBack={() => setLegalPage(null)} />;
   if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
   if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
-  if (showLanding && !user) return <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} />;
+  if (showLanding && !user) return <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} />;
   if (!user) return <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;

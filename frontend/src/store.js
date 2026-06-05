@@ -15,12 +15,14 @@ export const useAuthStore = create(
         legalPage: null,
         showPsychLanding: false,
         showPsychAuth: false,
+        showHospitalLanding: false,
 
         setUser: (user) => set({ user }),
         setShowLanding: (v) => set({ showLanding: v }),
         setLegalPage: (v) => set({ legalPage: v }),
         setShowPsychLanding: (v) => set({ showPsychLanding: v }),
         setShowPsychAuth: (v) => set({ showPsychAuth: v }),
+        setShowHospitalLanding: (v) => set({ showHospitalLanding: v }),
         setIsPsychologist: (v) => set({ isPsychologist: v }),
         setConsentGiven: (v) => set({ consentGiven: v }),
         setOnboarded: (v) => set({ onboarded: v }),
@@ -60,6 +62,7 @@ export const useAuthStore = create(
         legalPage: null,
         showPsychLanding: false,
         showPsychAuth: false,
+        showHospitalLanding: false,
           });
         },
 
