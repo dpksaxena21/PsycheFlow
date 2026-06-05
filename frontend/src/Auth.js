@@ -5,6 +5,8 @@ import Logo from './Logo';
 export default function Auth({ onLogin }) {
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
+  const [birthYear, setBirthYear] = useState('');
+  const [ageBlocked, setAgeBlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [role, setRole]         = useState('patient');
   const [rciNumber, setRciNumber]   = useState('');
@@ -20,6 +22,14 @@ export default function Auth({ onLogin }) {
       if (err) setError(err.message);
       else onLogin(data.user);
     } else {
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - parseInt(birthYear);
+      if (!birthYear || isNaN(age) || age < 18) {
+        setAgeBlocked(true);
+        setLoading(false);
+        return;
+      }
+      setAgeBlocked(false);
       const { data, error: err } = await supabase.auth.signUp({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
       if (data?.user) {
@@ -156,6 +166,16 @@ export default function Auth({ onLogin }) {
             onFocus={e => e.target.style.borderColor='#4F46E5'}
             onBlur={e  => e.target.style.borderColor='#E5E7EB'}
           />
+          {mode === 'signup' && (
+            <div style={{ marginBottom:'24px' }}>
+              <label style={{ fontSize:'13px', color:'#6B7280', display:'block', marginBottom:'6px', fontWeight:500 }}>Year of Birth</label>
+              <input type="number" value={birthYear} onChange={e => { setBirthYear(e.target.value); setAgeBlocked(false); }}
+                placeholder="e.g. 1998" min="1900" max={new Date().getFullYear()}
+                style={{ width:'100%', padding:'12px 16px', borderRadius:'10px', border: ageBlocked ? '1.5px solid #DC2626' : '1.5px solid #E5E7EB', fontSize:'15px', boxSizing:'border-box', outline:'none' }}
+              />
+              {ageBlocked && <p style={{ fontSize:'12px', color:'#DC2626', marginTop:6 }}>You must be 18 or older to use PsycheFlow.</p>}
+            </div>
+          )}
           {mode === 'signup' && (
             <div style={{ marginBottom:'24px' }}>
               <p style={{ fontSize:'13px', color:'#6B7280', marginBottom:'10px', fontWeight:500 }}>I am a:</p>
