@@ -67,8 +67,21 @@ const FAQS = [
   { q:'What does the free plan include?', a:'Free patients get full AI assessment, journal, mood tracking, and ACT exercises. Psychologists get a 14-day free trial with all features.' },
 ];
 
+const useIsMobile = () => {
+  const [mobile, setMobile] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const handler = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return mobile;
+};
+
 export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospitalLanding }) {
   const [scrolled, setScrolled] = useState(false);
+  const isMobile = useIsMobile();
+  const px = isMobile ? '20px' : '48px';
+  const py = isMobile ? '48px' : '80px';
   const [activeWho, setActiveWho] = useState(0);
   const [activeFeature, setActiveFeature] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
@@ -83,12 +96,12 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
     <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:S.white, color:S.textPrimary, overflowX:'hidden' }}>
 
       {/* NAV */}
-      <nav style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 48px', background: scrolled?'rgba(255,255,255,0.96)':'#fff', borderBottom:`0.5px solid ${S.border}`, backdropFilter: scrolled?'blur(12px)':'none', transition:'all 0.3s' }}>
+      <nav style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:`14px ${px}`, background: scrolled?'rgba(255,255,255,0.96)':'#fff', borderBottom:`0.5px solid ${S.border}`, backdropFilter: scrolled?'blur(12px)':'none', transition:'all 0.3s' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <LogoMark size={30}/>
           <span style={{ fontWeight:700, fontSize:15, letterSpacing:'-0.02em' }}>PsycheFlow</span>
         </div>
-        <div style={{ display:'flex', gap:28, alignItems:'center' }}>
+        <div style={{ display: isMobile ? 'none' : 'flex', gap:28, alignItems:'center' }}>
           {['Features','For Hospitals','Psychologists','Pricing'].map(l => (
             <span key={l} onClick={l==='Psychologists' ? onPsychLanding : l==='For Hospitals' ? onHospitalLanding : undefined} style={{ fontSize:13, color: (l==='Psychologists'||l==='For Hospitals') ? S.blue : S.textMuted, cursor:'pointer', fontWeight: (l==='Psychologists'||l==='For Hospitals') ? 600 : 400 }}>{l}</span>
           ))}
@@ -97,10 +110,10 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </nav>
 
       {/* HERO */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', minHeight:520 }}>
-        <div style={{ padding:'80px 48px 80px 48px', display:'flex', flexDirection:'column', justifyContent:'center', borderRight:`0.5px solid ${S.border}` }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', minHeight: isMobile ? 'auto' : 520 }}>
+        <div style={{ padding: isMobile ? '48px 20px' : '80px 48px', display:'flex', flexDirection:'column', justifyContent:'center', borderRight: isMobile ? 'none' : `0.5px solid ${S.border}` }}>
 
-          <h1 style={{ fontSize:52, fontWeight:700, letterSpacing:'-0.03em', lineHeight:1.06, marginBottom:16, color:S.navy }}>
+          <h1 style={{ fontSize: isMobile ? 36 : 52, fontWeight:700, letterSpacing:'-0.03em', lineHeight:1.06, marginBottom:16, color:S.navy }}>
             Your mind,<br/>
             <span style={{ background:`linear-gradient(90deg,${S.blue},${S.cyan})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>understood</span><br/>
             at scale.
@@ -149,7 +162,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* STATS */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', borderTop:`0.5px solid ${S.border}`, borderBottom:`0.5px solid ${S.border}` }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', borderTop:`0.5px solid ${S.border}`, borderBottom:`0.5px solid ${S.border}` }}>
         {[['197M','Indians need mental health support'],['4,309','Registered psychologists in India'],['94%','Suicide risk detection accuracy'],['19','Validated ML models']].map(([v,l],i) => (
           <div key={i} style={{ padding:'22px 0', textAlign:'center', borderRight: i<3?`0.5px solid ${S.border}`:'none' }}>
             <div style={{ fontSize:24, fontWeight:700, color:S.blue, letterSpacing:'-0.02em' }}>{v}</div>
@@ -159,7 +172,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* FEATURES */}
-      <div style={{ background:S.navy, padding:'80px 48px' }}>
+      <div style={{ background:S.navy, padding:`${py} ${px}` }}>
         <Anim><div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:'rgba(147,197,253,0.15)', color:'#93C5FD', fontSize:10, fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:10 }}>Platform</div></Anim>
         <Anim>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:16, marginTop:8, marginBottom:32 }}>
@@ -168,7 +181,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
           </div>
         </Anim>
         <Anim>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:1, background:'rgba(255,255,255,0.04)', borderRadius:16, overflow:'hidden', border:'0.5px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:1, background:'rgba(255,255,255,0.04)', borderRadius:16, overflow:'hidden', border:'0.5px solid rgba(255,255,255,0.06)' }}>
             {FEATURES.map((f,i) => (
               <div key={i}
                 onClick={() => setActiveFeature(activeFeature === i ? null : i)}
@@ -194,11 +207,11 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* WHO */}
-      <div style={{ padding:'80px 48px', background:S.white }}>
+      <div style={{ padding:`${py} ${px}`, background:S.white }}>
         <Anim></Anim>
         <Anim><h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, maxWidth:360, lineHeight:1.15, marginTop:8, marginBottom:28 }}>Built for the people on both sides of care.</h2></Anim>
         <Anim>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:14 }}>
             {WHO.map((w,i) => (
               <div key={i} onClick={() => setActiveWho(i)}
                 style={{ padding:26, borderRadius:16, border:`0.5px solid ${activeWho===i?S.blue:S.border}`, background: activeWho===i?S.lightBlue:S.white, cursor:'pointer', transition:'all 0.2s' }}>
@@ -221,7 +234,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* COMPLIANCE */}
-      <div style={{ padding:'80px 48px', background:S.white, borderTop:`0.5px solid ${S.border}` }}>
+      <div style={{ padding:`${py} ${px}`, background:S.white, borderTop:`0.5px solid ${S.border}` }}>
         <Anim></Anim>
         <Anim>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:16, marginTop:8, marginBottom:24 }}>
@@ -230,7 +243,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
           </div>
         </Anim>
         <Anim>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:12 }}>
             {[
               { title:'DPDP Act 2023', sub:'Full data protection', icon:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill={S.lightBlue}/><path d="M16 6L20 9H26V18C26 22.4 21.5 25.8 16 26C10.5 25.8 6 22.4 6 18V9H12L16 6Z" stroke={S.blue} strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 17L15 20L20 14" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg> },
               { title:'RCI verified', sub:'Psychologist credentials', icon:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill={S.lightBlue}/><rect x="8" y="6" width="16" height="20" rx="3" stroke={S.blue} strokeWidth="1.6"/><path d="M12 13H20M12 17H18M12 21H15" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round"/><circle cx="22" cy="22" r="5" fill={S.blue}/><path d="M20 22L21.5 23.5L24 21" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg> },
@@ -251,8 +264,8 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* FAQ */}
-      <div style={{ padding:'80px 48px', background:S.white, borderTop:`0.5px solid ${S.border}` }}>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:64, alignItems:'flex-start' }}>
+      <div style={{ padding:`${py} ${px}`, background:S.white, borderTop:`0.5px solid ${S.border}` }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 64, alignItems:'flex-start' }}>
           <Anim>
             
             <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, lineHeight:1.15, marginTop:8, marginBottom:16 }}>Frequently asked<br/>questions.</h2>

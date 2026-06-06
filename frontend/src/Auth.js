@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+const useIsMobile = () => { const [m, setM] = React.useState(window.innerWidth < 768); useEffect(() => { const h = () => setM(window.innerWidth < 768); window.addEventListener('resize', h); return () => window.removeEventListener('resize', h); }, []); return m; };
 import { supabase } from './supabase';
 import Logo from './Logo';
 
 export default function Auth({ onLogin }) {
+  const isMobile = useIsMobile();
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
   const [birthYear, setBirthYear] = useState('');

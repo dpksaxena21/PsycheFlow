@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+const useIsMobile = () => { const [m, setM] = React.useState(window.innerWidth < 768); useEffect(() => { const h = () => setM(window.innerWidth < 768); window.addEventListener('resize', h); return () => window.removeEventListener('resize', h); }, []); return m; };
 import { logAction, ACTIONS } from './audit';
 import { useAuthStore, useAssessmentStore } from './store';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
@@ -114,6 +115,7 @@ export default function App() {
   const { user, setUser, profile, isPsychologist, setIsPsychologist, showLanding, setShowLanding, legalPage, setLegalPage, showPsychLanding, setShowPsychLanding, showPsychAuth, setShowPsychAuth, showHospitalLanding, setShowHospitalLanding, showHospitalAuth, setShowHospitalAuth, hospitalUser, setHospitalUser,
           consentGiven, setConsentGiven, onboarded, setOnboarded, login, logout, checkOnboarding } = useAuthStore();
   const { screen, setScreen, results, setResults, fullReport, setFullReport } = useAssessmentStore();
+  const isMobile = useIsMobile();
 
   // Local UI state
   const [reportLoading, setReportLoading]     = useState(false);
@@ -355,7 +357,7 @@ export default function App() {
           </div>
           <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
             <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Mental Health Screening</h3>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:12 }}>
               {[{label:'Depression (PHQ-9)',score:results.phq,level:phq},{label:'Anxiety (GAD-7)',score:results.gad,level:gad}].map((item,i)=>(
                 <div key={i} style={{ background:'#f8fafc', borderRadius:12, padding:16, textAlign:'center' }}>
                   <div style={{ fontSize:12, color:'#64748b', marginBottom:4 }}>{item.label}</div>
@@ -368,7 +370,7 @@ export default function App() {
           {(results.bipolar>0||results.ptsd>0||results.ocd>0||results.adhd>0||results.burnout>0) && (
             <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
               <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Additional Screening Results</h3>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+              <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap:10 }}>
                 {[{label:'Bipolar (MDQ)',score:results.bipolar,max:20},{label:'PTSD (PCL-5)',score:results.ptsd,max:20},{label:'OCD (OCI-R)',score:results.ocd,max:20},{label:'ADHD (ASRS)',score:results.adhd,max:20},{label:'Burnout (MBI)',score:results.burnout,max:20},{label:'Self-Esteem',score:results.selfEsteem,max:12}].filter(item=>item.score>0).map((item,i)=>{
                   const lv=scoreLevel(item.score,item.max);
                   return (<div key={i} style={{ background:'#f8fafc', borderRadius:10, padding:12, textAlign:'center' }}><div style={{ fontSize:11, color:'#64748b', marginBottom:4 }}>{item.label}</div><div style={{ fontSize:22, fontWeight:'bold', color:lv.color }}>{item.score}</div><div style={{ fontSize:11, color:lv.color, fontWeight:'bold' }}>{lv.label}</div></div>);
