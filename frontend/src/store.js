@@ -16,6 +16,8 @@ export const useAuthStore = create(
         showPsychLanding: false,
         showPsychAuth: false,
         showHospitalLanding: false,
+        showHospitalAuth: false,
+        hospitalUser: null,
 
         setUser: (user) => set({ user }),
         setShowLanding: (v) => set({ showLanding: v }),
@@ -23,6 +25,8 @@ export const useAuthStore = create(
         setShowPsychLanding: (v) => set({ showPsychLanding: v }),
         setShowPsychAuth: (v) => set({ showPsychAuth: v }),
         setShowHospitalLanding: (v) => set({ showHospitalLanding: v }),
+        setShowHospitalAuth: (v) => set({ showHospitalAuth: v }),
+        setHospitalUser: (v) => set({ hospitalUser: v }),
         setIsPsychologist: (v) => set({ isPsychologist: v }),
         setConsentGiven: (v) => set({ consentGiven: v }),
         setOnboarded: (v) => set({ onboarded: v }),
@@ -63,6 +67,8 @@ export const useAuthStore = create(
         showPsychLanding: false,
         showPsychAuth: false,
         showHospitalLanding: false,
+        showHospitalAuth: false,
+        hospitalUser: null,
           });
         },
 

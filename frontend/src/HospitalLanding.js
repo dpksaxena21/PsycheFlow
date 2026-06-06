@@ -27,7 +27,7 @@ const NABHItem = ({ code, title, desc }) => (
   </div>
 );
 
-export default function HospitalLanding({ onBack, onContact }) {
+export default function HospitalLanding({ onBack, onContact, onGetStarted }) {
   const [formData, setFormData] = useState({ name:'', email:'', hospital:'', city:'', beds:'', psychologists:'', message:'' });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
@@ -81,8 +81,8 @@ export default function HospitalLanding({ onBack, onContact }) {
           </p>
           <div style={{ display:'flex', gap:12 }}>
             <button onClick={() => document.getElementById('contact-form').scrollIntoView({behavior:'smooth'})}
-              style={{ padding:'13px 28px', background:S.blue, color:'#fff', border:'none', borderRadius:10, fontSize:15, fontWeight:600, cursor:'pointer' }}>
-              Request a demo
+              onClick={() => onGetStarted && onGetStarted()} style={{ padding:'13px 28px', background:S.blue, color:'#fff', border:'none', borderRadius:10, fontSize:15, fontWeight:600, cursor:'pointer' }}>
+              Get Started
             </button>
             <button onClick={() => document.getElementById('nabh').scrollIntoView({behavior:'smooth'})}
               style={{ padding:'13px 28px', background:'rgba(255,255,255,0.06)', color:'#fff', border:'0.5px solid rgba(255,255,255,0.15)', borderRadius:10, fontSize:15, fontWeight:600, cursor:'pointer' }}>
@@ -205,7 +205,7 @@ export default function HospitalLanding({ onBack, onContact }) {
                 />
               </div>
               <button onClick={handleSubmit} disabled={sending || !formData.name || !formData.email || !formData.hospital}
-                style={{ width:'100%', padding:'13px', background: (!formData.name||!formData.email||!formData.hospital) ? S.border : S.blue, color: (!formData.name||!formData.email||!formData.hospital) ? S.hint : '#fff', border:'none', borderRadius:8, fontSize:15, fontWeight:600, cursor: (!formData.name||!formData.email||!formData.hospital) ? 'not-allowed' : 'pointer' }}>
+                onClick={handleSubmit} style={{ width:'100%', padding:'13px', background: (!formData.name||!formData.email||!formData.hospital) ? S.border : S.blue, color: (!formData.name||!formData.email||!formData.hospital) ? S.hint : '#fff', border:'none', borderRadius:8, fontSize:15, fontWeight:600, cursor: (!formData.name||!formData.email||!formData.hospital) ? 'not-allowed' : 'pointer' }}>
                 {sending ? 'Sending...' : 'Request demo'}
               </button>
               <p style={{ fontSize:11, color:S.hint, textAlign:'center', marginTop:12 }}>We respond within 24 hours · dpksaxena21@gmail.com</p>
