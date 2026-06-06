@@ -196,15 +196,30 @@ export default function App() {
     setShowCrisis(false); setOnboarded(null); 
   };
 
+  const [expandedTrait, setExpandedTrait] = React.useState(null);
   const TraitBar = ({ name, data, colorFn }) => (
     <div style={{ marginBottom:14 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-        <strong style={{ fontSize:14 }}>{name}</strong>
-        <span style={{ color: colorFn(data.label), fontWeight:'bold', fontSize:14 }}>{data.label} ({data.confidence}%)</span>
+      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4, cursor:'pointer' }} onClick={() => setExpandedTrait(expandedTrait===name?null:name)}>
+        <strong style={{ fontSize:14, color:'#0C1A2E' }}>{name}</strong>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ color: colorFn(data.label), fontWeight:'bold', fontSize:14 }}>{data.label} ({data.confidence}%)</span>
+          {data && data.explanation && data.explanation.length > 0 && <span style={{ fontSize:11, color:'#1D4ED8', fontWeight:600 }}>why?</span>}
+        </div>
       </div>
-      <div style={{ background:'#e2e8f0', borderRadius:6, height:10 }}>
-        <div style={{ width:`${data.confidence}%`, background: colorFn(data.label), height:10, borderRadius:6, transition:'width 0.5s ease' }} />
+      <div style={{ background:'#e2e8f0', borderRadius:6, height:8 }}>
+        <div style={{ width:`${data.confidence}%`, background: colorFn(data.label), height:8, borderRadius:6, transition:'width 0.5s ease' }} />
       </div>
+      {expandedTrait===name && data && data.explanation && data.explanation.length > 0 && (
+        <div style={{ marginTop:8, padding:'10px 12px', background:'#EFF6FF', borderRadius:8, border:'0.5px solid #E2EBF6', animation:'fadeIn 0.2s ease' }}>
+          <div style={{ fontSize:11, fontWeight:600, color:'#3B5998', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>Why this score</div>
+          {data.explanation.map((e,i) => (
+            <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:6, marginBottom:4 }}>
+              <span style={{ fontSize:12, color: e.direction==='increases'?'#059669':'#DC2626', fontWeight:700 }}>{e.direction==='increases'?'▲':'▼'}</span>
+              <span style={{ fontSize:12, color:'#0C1A2E', lineHeight:1.5 }}>{e.description}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 

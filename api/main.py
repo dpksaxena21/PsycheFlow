@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
+import shap
 import numpy as np
 from dotenv import load_dotenv
 
@@ -64,6 +65,15 @@ cond_tfidf  = joblib.load("models/condition_tfidf.pkl")
 cond_labels = joblib.load("models/condition_labels.pkl")
 
 print("✓ All models loaded")
+
+# Pre-load SHAP explainers
+explainers = {}
+for t in targets:
+    try:
+        explainers[t] = shap.TreeExplainer(models[t])
+    except Exception as e:
+        print(f"SHAP explainer failed for {t}: {e}")
+print(f"✓ Loaded {len(explainers)} SHAP explainers")
 
 label_map = {0: "Low", 1: "Medium", 2: "High"}
 
@@ -120,12 +130,50 @@ def predict(data: ProfileInput):
         X_scaled = scalers[trait].transform(X)
         pred  = models[trait].predict(X_scaled)[0]
         proba = models[trait].predict_proba(X_scaled)[0]
+        # SHAP explanation
+        shap_explanation = []
+        feature_names = ['age', 'gender'] + [t for t in targets if t != trait]
+        try:
+            if trait in explainers:
+                shap_vals = explainers[trait].shap_values(X_scaled)
+                pred_class = int(pred)
+                if len(shap_vals.shape) == 3:
+                    sv = shap_vals[0, :, pred_class]
+                else:
+                    sv = shap_vals[0]
+                top_idx = sorted(range(len(sv)), key=lambda i: abs(sv[i]), reverse=True)[:3]
+                label_names = {0:'Low', 1:'Medium', 2:'High'}
+                direction_map = {
+                    'Extraversion': {'positive': 'more outgoing', 'negative': 'more reserved'},
+                    'Neuroticism': {'positive': 'more emotionally reactive', 'negative': 'more emotionally stable'},
+                    'Agreeableness': {'positive': 'more cooperative', 'negative': 'more competitive'},
+                    'Conscientiousness': {'positive': 'more organized', 'negative': 'more flexible'},
+                    'Openness': {'positive': 'more curious', 'negative': 'more conventional'},
+                    'Machiavellianism': {'positive': 'more strategic', 'negative': 'more straightforward'},
+                    'Narcissism': {'positive': 'more self-focused', 'negative': 'more modest'},
+                    'Psychopathy': {'positive': 'more detached', 'negative': 'more empathetic'},
+                }
+                for i in top_idx:
+                    fname = feature_names[i]
+                    impact = float(sv[i])
+                    direction = 'increases' if impact > 0 else 'decreases'
+                    readable = fname if fname in ['age','gender'] else fname
+                    shap_explanation.append({
+                        'feature': readable,
+                        'impact': round(abs(impact), 3),
+                        'direction': direction,
+                        'description': f'{readable} score {direction} likelihood of {label_names[pred_class]} {trait}'
+                    })
+        except Exception as e:
+            pass
+
         results[trait] = {
             "label":      label_map[int(pred)],
             "confidence": round(float(max(proba)) * 100, 1),
             "category":   "Big Five" if trait in ['Extraversion','Neuroticism',
                           'Agreeableness','Conscientiousness','Openness']
-                          else "Dark Triad"
+                          else "Dark Triad",
+            "explanation": shap_explanation
         }
 
     return {"predictions": results, "total_models": len(targets)}
