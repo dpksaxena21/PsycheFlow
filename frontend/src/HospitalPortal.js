@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabase';
 
+const useIsMobile = () => {
+  const [m, setM] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const h = () => setM(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return m;
+};
 const S = { blue:'#1D4ED8', navy:'#0C1A2E', bg:'#F8FAFF', card:'#FFFFFF', border:'#E2EBF6', muted:'#3B5998', hint:'#94a3b8', lightBlue:'#EFF6FF', cyan:'#0891B2', danger:'#DC2626', warning:'#D97706', success:'#059669' };
 const card = { background:S.card, borderRadius:12, border:'0.5px solid '+S.border, boxShadow:'0 1px 4px rgba(29,78,216,0.06)', padding:24 };
+const cardMobile = { ...card, padding:16 };
 
 const Badge = ({ color, children }) => <span style={{ padding:'2px 10px', borderRadius:100, fontSize:11, fontWeight:600, background: color==='red'?'#FEF2F2': color==='yellow'?'#FFFBEB': color==='green'?'#ECFDF5':'#EFF6FF', color: color==='red'?S.danger: color==='yellow'?S.warning: color==='green'?S.success:S.blue }}>{children}</span>;
 
@@ -10,6 +20,7 @@ const priorityColor = p => p==='crisis'?'red': p==='urgent'?'yellow':'green';
 const statusColor = s => s==='waiting'?'yellow': s==='in_consultation'?'blue': s==='done'?'green':'red';
 
 export default function HospitalPortal({ user, onLogout }) {
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState('dashboard');
   const [hospital, setHospital] = useState(null);
   const [queue, setQueue] = useState([]);
@@ -153,8 +164,8 @@ export default function HospitalPortal({ user, onLogout }) {
   return (
     <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:S.bg, minHeight:'100vh' }}>
       {/* Header */}
-      <div style={{ background:S.card, borderBottom:'0.5px solid '+S.border, padding:'0 32px', display:'flex', alignItems:'center', gap:0 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'16px 0', marginRight:32, borderRight:'0.5px solid '+S.border, paddingRight:32 }}>
+      <div style={{ background:S.card, borderBottom:'0.5px solid '+S.border, padding: isMobile ? '0 16px' : '0 32px', display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 0', marginRight: isMobile ? 0 : 32, borderRight: isMobile ? 'none' : '0.5px solid '+S.border, paddingRight: isMobile ? 0 : 32, borderBottom: isMobile ? '0.5px solid '+S.border : 'none', justifyContent:'space-between' }}>
           <div style={{ width:28, height:28, borderRadius:7, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
             <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
           </div>
@@ -162,11 +173,12 @@ export default function HospitalPortal({ user, onLogout }) {
             <div style={{ fontSize:13, fontWeight:700, color:S.navy, letterSpacing:'-0.01em' }}>{hospital.name}</div>
             <div style={{ fontSize:10, color:S.muted }}>{hospital.city} · {hospital.hospital_code}</div>
           </div>
+          {isMobile && <button onClick={onLogout} style={{ padding:'6px 12px', background:'transparent', border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, color:S.muted, cursor:'pointer' }}>Sign out</button>}
         </div>
-        <div style={{ display:'flex', gap:4, flex:1 }}>
+        <div style={{ display:'flex', gap:4, flex:1, overflowX: isMobile ? 'auto' : 'visible', WebkitOverflowScrolling:'touch' }}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ padding:'18px 16px', border:'none', background:'transparent', fontSize:13, fontWeight: tab===t.id?700:400, color: tab===t.id?S.blue:S.muted, cursor:'pointer', borderBottom: tab===t.id?'2px solid '+S.blue:'2px solid transparent' }}>
+              style={{ padding: isMobile ? '12px 12px' : '18px 16px', border:'none', background:'transparent', fontSize: isMobile ? 12 : 13, whiteSpace:'nowrap', fontWeight: tab===t.id?700:400, color: tab===t.id?S.blue:S.muted, cursor:'pointer', borderBottom: tab===t.id?'2px solid '+S.blue:'2px solid transparent' }}>
               {t.label}
               {t.id==='queue' && waiting>0 && <span style={{ marginLeft:6, background:S.blue, color:'#fff', borderRadius:100, padding:'1px 6px', fontSize:10, fontWeight:700 }}>{waiting}</span>}
               {t.id==='beds' && crisis>0 && <span style={{ marginLeft:6, background:S.danger, color:'#fff', borderRadius:100, padding:'1px 6px', fontSize:10, fontWeight:700 }}>{crisis}</span>}
@@ -174,10 +186,10 @@ export default function HospitalPortal({ user, onLogout }) {
             </button>
           ))}
         </div>
-        <button onClick={onLogout} style={{ padding:'8px 16px', background:'transparent', border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, color:S.muted, cursor:'pointer' }}>Sign out</button>
+        {!isMobile && <button onClick={onLogout} style={{ padding:'8px 16px', background:'transparent', border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, color:S.muted, cursor:'pointer' }}>Sign out</button>}
       </div>
 
-      <div style={{ padding:'28px 32px', maxWidth:1200, margin:'0 auto' }}>
+      <div style={{ padding: isMobile ? '16px 12px' : '28px 32px', maxWidth:1200, margin:'0 auto' }}>
 
         {/* DASHBOARD */}
         {tab==='dashboard' && (
@@ -186,7 +198,7 @@ export default function HospitalPortal({ user, onLogout }) {
               <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:4 }}>Hospital Admin</div>
               <h1 style={{ fontSize:24, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:0 }}>Good {new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, {hospital.admin_name || 'Admin'}</h1>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:24 }}>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:16, marginBottom:24 }}>
               {[
                 { label:'Waiting in OPD', value:waiting, color:S.blue, action:'queue' },
                 { label:'Pending bed flags', value:beds.length, color:crisis>0?S.danger:S.muted, action:'beds' },
