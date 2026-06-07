@@ -25,6 +25,7 @@ import Terms from './Terms';
 import DPDP from './DPDP';
 
 import { IconJournal, IconAnalyze, IconAlert, IconCheck, IconWarning } from './icons';
+import LoadingScreen from './LoadingScreen';
 const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
 
@@ -334,13 +335,7 @@ export default function App() {
   );
 
   if (screen === 'loading') return (
-    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'linear-gradient(135deg, #EFF6FF 0%, #fdf4ff 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ textAlign:'center' }}>
-        <div style={{ fontSize:48, marginBottom:16 }}>⚙️</div>
-        <h3 style={{ color:'#1D4ED8' }}>Analyzing your profile...</h3>
-        <p style={{ color:'#94a3b8' }}>Running 13 psychological models</p>
-      </div>
-    </div>
+    <LoadingScreen message="Running 19 psychological models..." />
   );
 
   if (screen === 'results' && results) {
