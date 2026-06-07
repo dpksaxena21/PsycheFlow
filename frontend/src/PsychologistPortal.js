@@ -9,6 +9,15 @@ import InvitePatient from './InvitePatient';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const useIsMobile = () => {
+  const [m, setM] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const h = () => setM(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return m;
+};
 
 
 // ── UTILITIES ─────────────────────────────────────────────
@@ -44,6 +53,49 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, patientCount, alertC
     { id:'messages', label:'Messages' },
   ];
   const exp = expanded || pinned;
+  const isMobile = useIsMobile();
+  if (isMobile) return (
+    <>
+      {/* Mobile top bar */}
+      <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:50, background:'#0C1A2E', borderBottom:'0.5px solid rgba(255,255,255,0.08)', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ width:30, height:30, borderRadius:8, background:'#1D4ED8', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M10 2C10 2 5 5.5 5 10.5C5 13.2 7.2 15.5 10 15.5C12.8 15.5 15 13.2 15 10.5C15 5.5 10 2 10 2Z" fill="white" opacity="0.9"/><circle cx="10" cy="10.5" r="2.5" fill="#0C1A2E"/></svg>
+          </div>
+          <div>
+            <div style={{ fontSize:13, fontWeight:700, color:'#fff' }}>PsycheFlow</div>
+            <div style={{ fontSize:9, color:'#3B82F6', letterSpacing:'1px' }}>CLINICIAN PORTAL</div>
+          </div>
+        </div>
+        <div onClick={onLogout} style={{ padding:'6px 12px', borderRadius:7, background:'rgba(255,255,255,0.06)', cursor:'pointer' }}>
+          <span style={{ fontSize:12, color:'#7BA3CC' }}>Sign out</span>
+        </div>
+      </div>
+      {/* Mobile bottom tab bar */}
+      <div style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:50, background:'#0C1A2E', borderTop:'0.5px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'space-around', padding:'6px 0 10px', paddingBottom:'calc(6px + env(safe-area-inset-bottom))' }}>
+        {[
+          { id:'roster', label:'Patients' },
+          { id:'analytics', label:'Analytics' },
+          { id:'alerts', label:'Alerts', badgeRed: true, badge: alertCount },
+          { id:'appointments', label:'Schedule' },
+          { id:'messages', label:'Messages' },
+        ].map(item => {
+          const active = activeTab === item.id;
+          const ic = PORTAL_ICONS[item.id];
+          return (
+            <div key={item.id} onClick={() => setActiveTab(item.id)}
+              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, cursor:'pointer', minWidth:52, position:'relative' }}>
+              <div style={{ width:36, height:36, borderRadius:10, background: active?'rgba(29,78,216,0.4)':'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                {ic ? ic(active?'#93C5FD':'#3B5998') : null}
+              </div>
+              {item.badge > 0 && <div style={{ position:'absolute', top:0, right:6, width:14, height:14, borderRadius:'50%', background:item.badgeRed?'#DC2626':'#1D4ED8', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8, color:'#fff', fontWeight:700 }}>{item.badge}</div>}
+              <span style={{ fontSize:9, color: active?'#93C5FD':'#3B5998', fontWeight: active?600:400 }}>{item.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
   return (
     <div onMouseEnter={() => setExpanded(true)} onMouseLeave={() => { if(!pinned) setExpanded(false); }}
       style={{ width: exp?220:64, background:'#0C1A2E', display:'flex', flexDirection:'column', alignItems: exp?'flex-start':'center', padding:'16px 0', gap:4, minHeight:'100vh', transition:'width 0.2s ease', overflow:'hidden', flexShrink:0 }}>
@@ -643,6 +695,7 @@ export default function PsychologistPortal({ user, onLogout }) {
     </button>
   );
 
+  const isMobile = useIsMobile();
   return (
     <div style={{ display:'flex', minHeight:'100vh',
       fontFamily:"'Satoshi',-apple-system,sans-serif", background:'#F8FAFF' }}>
@@ -655,13 +708,13 @@ export default function PsychologistPortal({ user, onLogout }) {
         alertCount={alerts.length}
       />
 
-      <div style={{ flex:1, padding:32, overflowY:'auto' }}>
+      <div style={{ flex:1, padding: isMobile ? '72px 12px 80px' : '32px', overflowY:'auto' }}>
 
         {/* ── ROSTER ── */}
         {activeTab === 'roster' && !selected && (
           <div>
-            <div style={{ display:'flex', justifyContent:'space-between',
-              alignItems:'center', marginBottom:24 }}>
+            <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0, justifyContent:'space-between',
+              alignItems: isMobile ? 'flex-start' : 'center', marginBottom:24 }}>
               <h2 style={{ margin:0, color:'#1e293b' }}>Patient Roster</h2>
               <button onClick={() => setActiveTab('link')}
                 style={{ padding:'10px 20px', background:'#1D4ED8', color:'#fff',
@@ -732,7 +785,7 @@ export default function PsychologistPortal({ user, onLogout }) {
             </div>
 
             {/* Patient Tabs */}
-            <div style={{ marginBottom:24 }}>
+            <div style={{ marginBottom:24, overflowX: isMobile ? 'auto' : 'visible', whiteSpace: isMobile ? 'nowrap' : 'normal', paddingBottom: isMobile ? 4 : 0 }}>
               {tabBtn('overview',   <><IconChart size={13} style={{marginRight:4}}/> Overview</>,        patientTab)}
               {tabBtn('brief',      <><IconTarget size={13} style={{marginRight:4}}/> Pre-Session</>,      patientTab)}
               {tabBtn('patterns',   '🧩 Patterns',         patientTab)}
@@ -754,7 +807,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                 ) : (
                   <div>
                     {/* Score Cards */}
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)',
+                    <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)',
                       gap:12, marginBottom:20 }}>
                       {[
                         { label:'PHQ-9',    value:sessions[0]?.phq_score, level:phqLevel(sessions[0]?.phq_score||0) },
