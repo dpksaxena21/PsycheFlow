@@ -46,7 +46,7 @@ export default function Auth({ onLogin }) {
     <div style={{
       minHeight:'100vh', display:'flex',
       fontFamily:"-apple-system, 'DM Sans', sans-serif",
-      background:'#F7F6F3'
+      background:'#F8FAFF'
     }}>
       {/* Left Panel */}
       <div onMouseMove={(e) => { const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-0.5,y=(e.clientY-r.top)/r.height-0.5; e.currentTarget.style.setProperty('--ox',x); e.currentTarget.style.setProperty('--oy',y); }} style={{ width:'50%', minHeight:'100vh', background:'linear-gradient(145deg, #0C1A2E 0%, #0F2444 50%, #0C2340 100%)', padding:'52px', display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
@@ -114,37 +114,41 @@ export default function Auth({ onLogin }) {
       {/* Right Panel */}
       <div style={{
         width:'50%', display:'flex', alignItems:'center',
-        justifyContent:'center', padding:'60px'
+        justifyContent:'center', padding:'60px',
+        background:'#ffffff',
       }}>
-        <div style={{ width:'100%', maxWidth:'380px' }}>
-          <h2 style={{
-            fontFamily:"'DM Serif Display', Georgia, serif",
-            fontSize:'34px', fontWeight:400, color:'#111827',
-            margin:'0 0 6px', letterSpacing:'-0.02em'
-          }}>
-            {mode === 'login' ? 'Welcome back' : 'Get started'}
-          </h2>
-          <p style={{ fontSize:'15px', color:'#6B7280', margin:'0 0 32px' }}>
-            {mode === 'login'
-              ? 'Sign in to your PsycheFlow account'
-              : 'Create your account — it takes 30 seconds'}
-          </p>
+        <div style={{ width:'100%', maxWidth:'360px' }}>
+          <div style={{ marginBottom:32 }}>
+            <h2 style={{
+              fontFamily:"'Satoshi', system-ui, sans-serif",
+              fontSize:'28px', fontWeight:700, color:'#0C1A2E',
+              margin:'0 0 6px', letterSpacing:'-0.5px'
+            }}>
+              {mode === 'login' ? 'Welcome back' : 'Create account'}
+            </h2>
+            <p style={{ fontSize:'14px', color:'#94a3b8', margin:0 }}>
+              {mode === 'login'
+                ? 'Sign in to your PsycheFlow account'
+                : 'Start your mental health journey today'}
+            </p>
+          </div>
 
           {/* Toggle */}
           <div style={{
-            background:'#F3F4F6', borderRadius:'10px',
-            padding:'3px', display:'flex', marginBottom:'28px'
+            background:'#EFF6FF', borderRadius:'10px',
+            padding:'3px', display:'flex', marginBottom:'28px',
+            border:'0.5px solid #E2EBF6'
           }}>
             {['login','signup'].map(m => (
               <button key={m}
                 onClick={() => { setMode(m); setError(''); setSuccess(''); }}
                 style={{
-                  flex:1, padding:'9px', border:'none', borderRadius:'8px',
-                  cursor:'pointer', fontSize:'14px', fontWeight:500,
-                  transition:'all 0.15s',
-                  background: mode === m ? '#fff' : 'transparent',
-                  color: mode === m ? '#111827' : '#6B7280',
-                  boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
+                  flex:1, padding:'10px', border:'none', borderRadius:'8px',
+                  cursor:'pointer', fontSize:'13px', fontWeight:600,
+                  transition:'all 0.15s', fontFamily:"'Satoshi',system-ui,sans-serif",
+                  background: mode === m ? '#1D4ED8' : 'transparent',
+                  color: mode === m ? '#fff' : '#3B5998',
+                  boxShadow: mode === m ? '0 2px 8px rgba(29,78,216,0.2)' : 'none'
                 }}>
                 {m === 'login' ? 'Sign In' : 'Sign Up'}
               </button>
@@ -152,36 +156,38 @@ export default function Auth({ onLogin }) {
           </div>
 
           {/* Email */}
-          <label style={{ fontSize:'13px', fontWeight:500, color:'#374151',
-            display:'block', marginBottom:'6px' }}>Email</label>
+          <label style={{ fontSize:'12px', fontWeight:600, color:'#0C1A2E', letterSpacing:'0.02em',
+            display:'block', marginBottom:'6px', textTransform:'uppercase' }}>Email</label>
           <input type="email" value={email}
             onChange={e => setEmail(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAuth()}
             placeholder="you@example.com"
             style={{
               width:'100%', padding:'12px 16px', borderRadius:'10px',
-              border:'1.5px solid #E5E7EB', fontSize:'15px',
-              boxSizing:'border-box', outline:'none', background:'#fff',
-              color:'#111827', marginBottom:'16px', transition:'border-color 0.15s'
+              border:'1.5px solid #E2EBF6', fontSize:'14px',
+              boxSizing:'border-box', outline:'none', background:'#F8FAFF',
+              color:'#0C1A2E', marginBottom:'16px', transition:'border-color 0.15s',
+              fontFamily:"'Satoshi',system-ui,sans-serif" 
             }}
-            onFocus={e => e.target.style.borderColor='#1D4ED8'}
+            onFocus={e => { e.target.style.borderColor='#1D4ED8'; e.target.style.background='#fff'; }}
             onBlur={e  => e.target.style.borderColor='#E5E7EB'}
           />
 
           {/* Password */}
-          <label style={{ fontSize:'13px', fontWeight:500, color:'#374151',
-            display:'block', marginBottom:'6px' }}>Password</label>
+          <label style={{ fontSize:'12px', fontWeight:600, color:'#0C1A2E', letterSpacing:'0.02em',
+            display:'block', marginBottom:'6px', textTransform:'uppercase' }}>Password</label>
           <input type="password" value={password}
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAuth()}
             placeholder="••••••••"
             style={{
               width:'100%', padding:'12px 16px', borderRadius:'10px',
-              border:'1.5px solid #E5E7EB', fontSize:'15px',
-              boxSizing:'border-box', outline:'none', background:'#fff',
-              color:'#111827', marginBottom:'24px', transition:'border-color 0.15s'
+              border:'1.5px solid #E2EBF6', fontSize:'14px',
+              boxSizing:'border-box', outline:'none', background:'#F8FAFF',
+              color:'#0C1A2E', marginBottom:'24px', transition:'border-color 0.15s',
+              fontFamily:"'Satoshi',system-ui,sans-serif" 
             }}
-            onFocus={e => e.target.style.borderColor='#1D4ED8'}
+            onFocus={e => { e.target.style.borderColor='#1D4ED8'; e.target.style.background='#fff'; }}
             onBlur={e  => e.target.style.borderColor='#E5E7EB'}
           />
           {mode === 'signup' && (
@@ -215,12 +221,14 @@ export default function Auth({ onLogin }) {
 
           <button onClick={handleAuth} disabled={loading}
             style={{
-              width:'100%', padding:'13px',
+              width:'100%', padding:'14px',
               background: loading ? '#9CA3AF' : '#1D4ED8',
               color:'#fff', border:'none', borderRadius:'10px',
-              fontSize:'15px', fontWeight:600,
+              fontSize:'14px', fontWeight:700,
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition:'all 0.15s', letterSpacing:'0.01em'
+              transition:'all 0.15s', letterSpacing:'0.02em',
+              fontFamily:"'Satoshi',system-ui,sans-serif",
+              boxShadow: loading ? 'none' : '0 4px 16px rgba(29,78,216,0.25)'
             }}>
             {loading ? 'Please wait...' : mode === 'login' ? 'Sign In →' : 'Create Account →'}
           </button>
