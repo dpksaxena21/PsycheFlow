@@ -812,7 +812,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                       <div style={{ background:'#f0f9ff', borderRadius:16, padding:24,
                         border:'1px solid #bae6fd', marginBottom:20 }}>
                         <h3 style={{ margin:'0 0 12px', color:'#0369a1' }}>
-                          💬 Latest Interview Assessment
+                          <IconChat size={13} style={{marginRight:4}}/> Latest Interview Assessment
                         </h3>
                         <p style={{ fontSize:13, color:'#374151', lineHeight:1.8,
                           margin:0, whiteSpace:'pre-wrap' }}>
@@ -997,7 +997,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                   boxSizing:'border-box', marginBottom:12, textAlign:'center' }} />
               {linkMsg && (
                 <p style={{ fontSize:13, marginBottom:12,
-                  color: linkMsg.startsWith('✅') ? '#16a34a' : '#dc2626' }}>
+                  color: linkMsg.startsWith('Patient') ? '#16a34a' : '#dc2626' }}>
                   {linkMsg}
                 </p>
               )}
