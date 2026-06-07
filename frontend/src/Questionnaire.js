@@ -1,3 +1,5 @@
+import { IconBrain } from './icons';
+import { IconBrain } from './icons';
 import React, { useState } from 'react';
 
 const questions = [
@@ -65,7 +67,7 @@ export default function Questionnaire({ onComplete }) {
 
   if (!started) return (
     <div style={{ textAlign:'center', padding:40 }}>
-      <h2 style={{ color:'#6366f1' }}>🧠 PsycheFlow Assessment</h2>
+      <h2 style={{ color:'#6366f1' }}><IconBrain size={20} color='#1D4ED8' style={{marginRight:8}}/> PsycheFlow Assessment</h2>
       <p style={{ color:'#64748b', maxWidth:400, margin:'0 auto 24px' }}>
         A 30-question clinical assessment covering personality, mental health, and behavioral patterns.
         Takes about 5 minutes.

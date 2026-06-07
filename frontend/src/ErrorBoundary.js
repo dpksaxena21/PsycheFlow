@@ -1,3 +1,4 @@
+import { IconAlert } from './icons';
 import React from 'react';
 
 export default class ErrorBoundary extends React.Component {
@@ -23,7 +24,7 @@ export default class ErrorBoundary extends React.Component {
           justifyContent:'center', background:'#F0F9FF', fontFamily:"'Satoshi',-apple-system,sans-serif"
         }}>
           <div style={{ textAlign:'center', maxWidth:480, padding:40 }}>
-            <div style={{ fontSize:48, marginBottom:16 }}>⚠️</div>
+            <div style={{ fontSize:48, marginBottom:16 }}><IconAlert size={48} color='#dc2626'/></div>
             <h2 style={{ fontSize:22, fontWeight:700, color:'#0C1A2E', marginBottom:8 }}>
               Something went wrong
             </h2>

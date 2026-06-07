@@ -1,3 +1,4 @@
+import { IconAlert, IconWarning, IconTarget, IconChart, IconClipboard, IconJournal, IconHospital, IconPill, IconChat, IconUser, IconCheck, IconEEG } from './icons';
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import AppointmentsList from './AppointmentsList';
@@ -93,7 +94,7 @@ function PatientCard({ patient, onClick }) {
           <div style={{ width:44, height:44, borderRadius:'50%',
             background: risk === 'high' ? '#fef2f2' : '#EFF6FF',
             display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>
-            {risk === 'high' ? '⚠️' : '👤'}
+            {risk === 'high' ? <IconAlert size={15} color='#dc2626'/> : <IconUser size={15} color='#64748b'/>}
           </div>
           <div>
             <div style={{ fontWeight:'bold', color:'#1e293b', fontSize:14 }}>
@@ -169,7 +170,7 @@ function PreSessionBrief({ patient, sessions, journals }) {
       border:'1px solid #bae6fd', marginBottom:20 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
         marginBottom:16 }}>
-        <h3 style={{ margin:0, color:'#0369a1' }}>🎯 AI Pre-Session Brief</h3>
+        <h3 style={{ margin:0, color:'#0369a1' }}><IconTarget size={16} color='#0369a1' style={{marginRight:6}}/> AI Pre-Session Brief</h3>
         <button onClick={generate} disabled={loading}
           style={{ padding:'8px 16px', background:'#0369a1', color:'#fff',
             border:'none', borderRadius:8, cursor:'pointer', fontSize:13 }}>
@@ -306,7 +307,7 @@ function TreatmentPlanBuilder({ patient, userId }) {
   return (
     <div style={{ background:'#fff', borderRadius:16, padding:24,
       border:'1px solid #e2e8f0', marginBottom:20 }}>
-      <h3 style={{ margin:'0 0 20px', color:'#1e293b' }}>📋 Treatment Plan Builder</h3>
+      <h3 style={{ margin:'0 0 20px', color:'#1e293b' }}><IconClipboard size={16} color='#1e293b' style={{marginRight:6}}/> Treatment Plan Builder</h3>
 
       <div style={{ marginBottom:16 }}>
         <label style={{ fontSize:13, color:'#475569', fontWeight:'bold' }}>
@@ -375,7 +376,7 @@ function TreatmentPlanBuilder({ patient, userId }) {
       {saved ? (
         <div style={{ background:'#f0fdf4', borderRadius:8, padding:12,
           fontSize:13, color:'#16a34a' }}>
-          ✅ Treatment plan saved successfully.
+          <IconCheck size={15} color='#16a34a' style={{marginRight:6}}/> Treatment plan saved successfully.
         </div>
       ) : (
         <button onClick={save} disabled={loading}
@@ -610,7 +611,7 @@ export default function PsychologistPortal({ user, onLogout }) {
       setLinkMsg('❌ Failed to link: ' + updateError.message);
       return;
     }
-    setLinkMsg('✅ Patient linked successfully!');
+    setLinkMsg('Patient linked successfully!');
     setShareCode('');
     fetchPatients();
   };
@@ -732,13 +733,13 @@ export default function PsychologistPortal({ user, onLogout }) {
 
             {/* Patient Tabs */}
             <div style={{ marginBottom:24 }}>
-              {tabBtn('overview',   '📊 Overview',        patientTab)}
-              {tabBtn('brief',      '🎯 Pre-Session',      patientTab)}
+              {tabBtn('overview',   <><IconChart size={13} style={{marginRight:4}}/> Overview</>,        patientTab)}
+              {tabBtn('brief',      <><IconTarget size={13} style={{marginRight:4}}/> Pre-Session</>,      patientTab)}
               {tabBtn('patterns',   '🧩 Patterns',         patientTab)}
-              {tabBtn('sessions',   '📋 Sessions',         patientTab)}
-              {tabBtn('journals',   '📝 Journals',         patientTab)}
-              {tabBtn('soap',       '🏥 SOAP Notes',       patientTab)}
-              {tabBtn('treatment',  '💊 Treatment Plan',   patientTab)}
+              {tabBtn('sessions',   <><IconClipboard size={13} style={{marginRight:4}}/> Sessions</>,         patientTab)}
+              {tabBtn('journals',   <><IconJournal size={13} style={{marginRight:4}}/> Journals</>,         patientTab)}
+              {tabBtn('soap',       <><IconHospital size={13} style={{marginRight:4}}/> SOAP Notes</>,       patientTab)}
+              {tabBtn('treatment',  <><IconPill size={13} style={{marginRight:4}}/> Treatment Plan</>,   patientTab)}
               {tabBtn('narrative',  '📖 Case Formulation', patientTab)}
             </div>
 
@@ -868,7 +869,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                     {s.answers?.interview_assessment && (
                       <div style={{ fontSize:12, color:'#64748b', background:'#f8fafc',
                         padding:'8px 12px', borderRadius:8, marginBottom:8 }}>
-                        💬 {s.answers.interview_assessment.slice(0,150)}...
+                        <IconChat size={13} style={{marginRight:4}}/> {s.answers.interview_assessment.slice(0,150)}...
                       </div>
                     )}
                     <button onClick={() => { generateSOAP(s); setPatientTab('soap'); }}
@@ -914,7 +915,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                           (v !== 'none' && v !== 'low') && (
                             <span key={k} style={{ fontSize:11, padding:'2px 8px',
                               background:'#fef3c7', borderRadius:6, color:'#92400e' }}>
-                              ⚠️ {k.replace(/_/g,' ')}: {v}
+                              <IconWarning size={13} color='#dc2626' style={{marginRight:4}}/> {k.replace(/_/g,' ')}: {v}
                             </span>
                           )
                         )}
@@ -942,7 +943,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                 ) : soapNote ? (
                   <div style={{ background:'#fff', borderRadius:16, padding:24,
                     border:'1px solid #e2e8f0' }}>
-                    <h3 style={{ margin:'0 0 16px', color:'#1D4ED8' }}>📋 SOAP Note</h3>
+                    <h3 style={{ margin:'0 0 16px', color:'#1D4ED8' }}><IconClipboard size={16} color='#1D4ED8' style={{marginRight:6}}/> SOAP Note</h3>
                     <pre style={{ fontSize:13, color:'#374151', lineHeight:1.8,
                       whiteSpace:'pre-wrap', fontFamily:"'Satoshi',-apple-system,sans-serif" }}>
                       {soapNote}
@@ -1016,11 +1017,11 @@ export default function PsychologistPortal({ user, onLogout }) {
         )}
         {activeTab === 'alerts' && (
           <div>
-            <h2 style={{ color:'#1e293b', margin:'0 0 24px' }}>🚨 Crisis Alerts</h2>
+            <h2 style={{ color:'#1e293b', margin:'0 0 24px' }}><IconAlert size={20} color='#dc2626' style={{marginRight:8}}/> Crisis Alerts</h2>
             {alerts.length === 0 ? (
               <div style={{ background:'#f0fdf4', borderRadius:16, padding:48,
                 textAlign:'center', border:'1px solid #86efac' }}>
-                <div style={{ fontSize:48, marginBottom:16 }}>✅</div>
+                <div style={{ fontSize:48, marginBottom:16 }}><IconCheck size={48} color='#16a34a'/></div>
                 <h3 style={{ color:'#16a34a' }}>No active alerts</h3>
                 <p style={{ color:'#94a3b8' }}>All patients are in safe range.</p>
               </div>
@@ -1030,7 +1031,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                 <div style={{ display:'flex', justifyContent:'space-between',
                   alignItems:'center', marginBottom:12 }}>
                   <div>
-                    <strong style={{ color:'#dc2626' }}>⚠️ High Risk Patient</strong>
+                    <strong style={{ color:'#dc2626', display:'flex', alignItems:'center', gap:4 }}><IconAlert size={14} color='#dc2626'/> High Risk Patient</strong>
                     <div style={{ fontSize:12, color:'#94a3b8', marginTop:4 }}>
                       Patient: {p.email}
                     </div>

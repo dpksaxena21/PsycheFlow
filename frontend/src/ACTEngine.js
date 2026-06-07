@@ -1,3 +1,4 @@
+import { IconBrain, IconTarget, IconStar, IconChart, IconWarning, IconCheck, IconSparkle, IconEEG } from './icons';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -5,10 +6,10 @@ const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
 
 const processInfo = {
-  defusion:         { icon:'🧠', label:'Cognitive Defusion',    color:'#6366f1', desc:'See thoughts as thoughts, not facts' },
+  defusion:         { icon:'brain', label:'Cognitive Defusion',    color:'#6366f1', desc:'See thoughts as thoughts, not facts' },
   acceptance:       { icon:'🌊', label:'Acceptance',             color:'#0ea5e9', desc:'Make room for difficult feelings' },
-  present_moment:   { icon:'🎯', label:'Present Moment',         color:'#10b981', desc:'Anchor yourself in the now' },
-  values:           { icon:'⭐', label:'Values',                  color:'#f59e0b', desc:'Clarify what truly matters' },
+  present_moment:   { icon:'target', label:'Present Moment',         color:'#10b981', desc:'Anchor yourself in the now' },
+  values:           { icon:'star', label:'Values',                  color:'#f59e0b', desc:'Clarify what truly matters' },
   committed_action: { icon:'🚀', label:'Committed Action',       color:'#ef4444', desc:'Act on what matters despite obstacles' },
   self_as_context:  { icon:'👁️', label:'Self as Context',        color:'#8b5cf6', desc:'Connect with your observer self' },
 };
@@ -155,7 +156,7 @@ function ExercisePlayer({ exercise, onComplete, onBack }) {
         ) : (
           <div style={{ textAlign:'center' }}>
             <div style={{ fontSize:48, marginBottom:16 }}>
-              {feedback ? '🌟' : '💙'}
+              {feedback ? <IconSparkle size={16} color='#f59e0b'/> : <IconEEG size={16} color='#1D4ED8'/>}
             </div>
             <h3 style={{ color:'#1e293b', marginBottom:8 }}>
               {feedback ? 'Great work!' : 'Thank you for the feedback'}
@@ -197,7 +198,7 @@ function AAQAssessment({ onComplete }) {
     <div style={{ background:'#fff', borderRadius:16, padding:24,
       border:'1px solid #e2e8f0' }}>
       <h3 style={{ margin:'0 0 8px', color:'#6366f1' }}>
-        📊 AAQ-II: Psychological Flexibility Assessment
+        <IconChart size={16} color='#1D4ED8' style={{marginRight:6}}/> AAQ-II: Psychological Flexibility Assessment
       </h3>
       <p style={{ fontSize:13, color:'#94a3b8', marginBottom:24 }}>
         Rate each statement from 1 (Never true) to 7 (Always true)
@@ -349,8 +350,8 @@ export default function ACTEngine({ user, phqScore, gadScore, condition }) {
                   <h3 style={{ margin:'0 0 4px',
                     color: recommended.should_intervene ? '#dc2626' : '#16a34a' }}>
                     {recommended.should_intervene
-                      ? '⚠️ Intervention Recommended'
-                      : '✅ You\'re Doing Well'}
+                      ? 'Intervention Recommended'
+                      : 'You\'re Doing Well'}
                   </h3>
                   <p style={{ margin:0, fontSize:13, color:'#64748b' }}>
                     Stress Score: <strong>{recommended.stress_score}/100</strong>
@@ -371,7 +372,7 @@ export default function ACTEngine({ user, phqScore, gadScore, condition }) {
           {recommended?.exercise && (
             <div style={{ marginBottom:24 }}>
               <h3 style={{ color:'#1e293b', margin:'0 0 16px' }}>
-                🎯 Recommended for You
+                <IconTarget size={15} color='#1D4ED8' style={{marginRight:6}}/> Recommended for You
               </h3>
               <ExerciseCard
                 exercise={recommended.exercise}

@@ -24,6 +24,7 @@ import PsychologistAuth from './PsychologistAuth';
 import Terms from './Terms';
 import DPDP from './DPDP';
 
+import { IconJournal, IconAnalyze, IconAlert, IconCheck, IconWarning } from './icons';
 const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
 
@@ -50,19 +51,19 @@ function JournalSection({ userId }) {
 
   return (
     <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginTop:20 }}>
-      <h3 style={{ margin:'0 0 8px', color:'#1D4ED8' }}>📝 Journal Analysis</h3>
+      <h3 style={{ margin:'0 0 8px', color:'#1D4ED8' }}><IconJournal size={18} color='#1D4ED8' style={{marginRight:6}}/> Journal Analysis</h3>
       <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>Write freely about how you feel. Our AI will analyze it clinically.</p>
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="What's on your mind today? Write freely..."
         style={{ width:'100%', minHeight:120, padding:12, borderRadius:8, border:'1px solid #e2e8f0', fontSize:14, fontFamily:"'Satoshi',-apple-system,sans-serif", resize:'vertical', boxSizing:'border-box', outline:'none' }} />
       <button onClick={analyze} disabled={loading || text.trim().length < 20}
         style={{ marginTop:12, padding:'10px 24px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:14 }}>
-        {loading ? 'Analyzing...' : '🔍 Analyze Journal'}
+        {loading ? <><IconEEG size={15} color='white' style={{marginRight:6}}/> Analyzing...</> : <><IconAnalyze size={15} color='white' style={{marginRight:6}}/> Analyze Journal</>}
       </button>
       {analysis && (
         <div style={{ marginTop:20 }}>
           {analysis.condition_detection && (
             <div style={{ background: analysis.condition_detection.alert ? '#fef2f2' : '#f0f9ff', borderRadius:12, padding:16, marginBottom:12, border: analysis.condition_detection.alert ? '2px solid #ef4444' : '1px solid #bae6fd' }}>
-              <strong style={{ color: analysis.condition_detection.alert ? '#dc2626' : '#0369a1' }}>{analysis.condition_detection.alert ? '🚨' : '🔍'} Condition Detection</strong>
+              <strong style={{ color: analysis.condition_detection.alert ? '#dc2626' : '#0369a1' }}>{analysis.condition_detection.alert ? <IconAlert size={15} color='#dc2626'/> : <IconAnalyze size={15} color='#0369a1'/>} Condition Detection</strong>
               <div style={{ marginTop:8 }}>
                 <span style={{ fontSize:15, fontWeight:'bold', color: analysis.condition_detection.alert ? '#dc2626' : '#1e293b' }}>{analysis.condition_detection.primary_condition}</span>
                 <span style={{ fontSize:13, color:'#64748b', marginLeft:8 }}>({analysis.condition_detection.confidence}% confidence)</span>
@@ -72,7 +73,7 @@ function JournalSection({ userId }) {
               </div>
               {analysis.condition_detection.alert && (
                 <div style={{ marginTop:10, padding:'8px 12px', background:'#fee2e2', borderRadius:8, fontSize:13, color:'#dc2626' }}>
-                  ⚠️ If you are in crisis, please call iCall: <strong>9152987821</strong>
+                  <IconWarning size={14} color='#dc2626' style={{marginRight:4}}/> If you are in crisis, please call iCall: <strong>9152987821</strong>
                 </div>
               )}
             </div>
