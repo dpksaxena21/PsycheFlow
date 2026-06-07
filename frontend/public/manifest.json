@@ -1,25 +1,37 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "PsycheFlow",
+  "name": "PsycheFlow — AI Mental Health Platform India",
+  "description": "Free AI-powered mental health assessment. Connect with verified psychologists online. Depression test, anxiety screening, PHQ-9, GAD-7.",
   "icons": [
+    { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1D4ED8",
+  "background_color": "#F8FAFF",
+  "categories": ["health", "medical", "lifestyle"],
+  "lang": "en-IN",
+  "dir": "ltr",
+  "scope": "/",
+  "shortcuts": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "name": "Take Assessment",
+      "short_name": "Assessment",
+      "description": "Start your free mental health assessment",
+      "url": "/assessment",
+      "icons": [{ "src": "favicon.svg", "sizes": "any" }]
     },
     {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "name": "Find Psychologist",
+      "short_name": "Psychologist",
+      "description": "Connect with a verified psychologist",
+      "url": "/psychologist",
+      "icons": [{ "src": "favicon.svg", "sizes": "any" }]
     }
   ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "prefer_related_applications": false
 }
