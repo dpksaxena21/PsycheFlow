@@ -12,6 +12,16 @@ const colorMap = { High:'#ef4444', Medium:'#f59e0b', Low:'#22c55e' };
 
 const phqLevel = (s) => s<=4?{label:'Minimal',color:'#15803D'}:s<=9?{label:'Mild',color:'#CA8A04'}:s<=14?{label:'Moderate',color:'#EA580C'}:{label:'Severe',color:'#DC2626'};
 
+const useIsMobile = () => {
+  const [m, setM] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const h = () => setM(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return m;
+};
+
 function useTheme() {
   const [dark, setDark] = useState(() => localStorage.getItem('pf-theme') === 'dark');
   const toggle = () => setDark(d => {
@@ -272,6 +282,7 @@ const MOOD_ITEMS = [
 export default function Dashboard({ user, profile, onStartAssessment, onLogout, onPsychologistMode, onACTEngine, onCrisis }) {
   const [dark, toggleDark] = useTheme();
   const t = T(dark);
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState('overview');
   const [sessions, setSessions] = useState([]);
   const [journals, setJournals] = useState([]);
@@ -332,10 +343,10 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: "'Satoshi',-apple-system,sans-serif", display: 'grid', gridTemplateColumns: `${sideExpanded?200:64}px 1fr`, transition: 'background 0.3s' }}>
+    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: "'Satoshi',-apple-system,sans-serif", display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `${sideExpanded?200:64}px 1fr`, transition: 'background 0.3s' }}>
 
-      {/* Sidebar */}
-      <nav onMouseEnter={()=>setSideExpanded(true)} onMouseLeave={()=>{if(!sidePinned)setSideExpanded(false)}} onClick={()=>{setSidePinned(p=>!p)}} style={{ background: t.bg2, borderRight: `0.5px solid ${t.border}`, display: 'flex', flexDirection: 'column', alignItems: sideExpanded?'flex-start':'center', padding: '16px 0', gap: 4, position: 'sticky', top: 0, height: '100vh', zIndex: 10, width: sideExpanded?200:64, transition:'width 0.2s ease', overflow:'hidden' }}>
+      {/* Sidebar — hidden on mobile */}
+      {!isMobile && <nav onMouseEnter={()=>setSideExpanded(true)} onMouseLeave={()=>{if(!sidePinned)setSideExpanded(false)}} onClick={()=>{setSidePinned(p=>!p)}} style={{ background: t.bg2, borderRight: `0.5px solid ${t.border}`, display: 'flex', flexDirection: 'column', alignItems: sideExpanded?'flex-start':'center', padding: '16px 0', gap: 4, position: 'sticky', top: 0, height: '100vh', zIndex: 10, width: sideExpanded?200:64, transition:'width 0.2s ease', overflow:'hidden' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16, padding: sideExpanded?'0 12px':'0', width:'100%' }}>
           <div style={{ width:36, height:36, borderRadius:10, background:t.blue, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2C10 2 5 5.5 5 10.5C5 13.2 7.2 15.5 10 15.5C12.8 15.5 15 13.2 15 10.5C15 5.5 10 2 10 2Z" fill="white" opacity="0.9"/><circle cx="10" cy="10.5" r="2.5" fill="#0C1A2E"/></svg>
@@ -369,7 +380,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Topbar */}
-        <div style={{ background: t.bg2, borderBottom: `0.5px solid ${t.border}`, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 9 }}>
+        <div style={{ background: t.bg2, borderBottom: `0.5px solid ${t.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 9 }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: t.text }}>{greeting}, {name}</div>
             <div style={{ fontSize: 11, color: t.text3, marginTop: 1 }}>
@@ -393,13 +404,13 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: isMobile ? '16px 12px 80px' : '20px 24px', overflowY: 'auto', flex: 1 }}>
 
           {/* OVERVIEW */}
           {tab === 'overview' && (
             <div>
               {/* Health rings */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
                 {[
                   { label: 'Wellbeing', val: '75', sub: '↑ 12 this week', color: t.blue, pct: 75 },
                   { label: 'Depression', val: `PHQ ${latest?.phq_score ?? '-'}`, sub: latest ? phqLevel(latest.phq_score).label : 'No data', color: latest ? phqLevel(latest.phq_score).color : t.text3, pct: latest ? (latest.phq_score / 27) * 100 : 0 },
@@ -426,7 +437,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                 })}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
 
                 {/* Mood */}
                 <div style={{ background: t.bg2, borderRadius: 12, border: `0.5px solid ${t.border}`, padding: 16, boxShadow: t.card }}>
@@ -486,7 +497,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                     <div style={{ fontSize: 11, fontWeight: 600, color: t.text3, letterSpacing: '0.04em', textTransform: 'uppercase' }}>AI pre-session brief</div>
                     <span style={{ fontSize: 10, color: t.text3 }}>Auto-generated</span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 8, marginBottom: 10 }}>
                     {[
                       { label: 'Status', val: latest ? (latest.phq_score <= 9 ? '● Low risk' : latest.phq_score <= 14 ? '● Medium risk' : '● High risk') : 'No data', col: latest ? phqLevel(latest.phq_score).color : t.text3 },
                       { label: 'Sessions', val: `${sessions.length} completed`, col: t.text },
@@ -568,7 +579,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           {/* ASSESSMENT */}
           {tab === 'assessment' && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 {[
                   { title: 'AI Clinical Interview', desc: 'Conversational assessment with Dr. PsycheFlow. 15 turns, 14 clinical domains. Most accurate.', action: onStartAssessment, tag: 'Recommended' },
                   { title: 'Structured Assessment', desc: 'PHQ-9, GAD-7, Big Five, Dark Triad, OCD, PTSD, ADHD, Burnout. 14 validated instruments.', action: onStartAssessment, tag: '14 instruments' },
@@ -652,7 +663,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
 
       {/* Floating crisis button */}
       <button onClick={onCrisis} style={{
-        position: 'fixed', bottom: 24, right: 24, padding: '10px 18px',
+        position: 'fixed', bottom: isMobile ? 76 : 24, right: 16, padding: '10px 18px',
         borderRadius: 100, background: t.dangerBg, color: t.danger,
         border: `1px solid ${t.danger}`, fontSize: 13, fontWeight: 600,
         cursor: 'pointer', fontFamily: 'inherit', zIndex: 40,
@@ -664,10 +675,44 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       {/* Chatbot */}
       <Chatbot user={user} psychologistId={psychologistId} t={t} appointments={appointments} dark={dark} sessions={sessions} journals={journals} profile={profile} />
 
-      <style>{`
+      {/* Mobile bottom tab bar */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+          background: t.bg2, borderTop: `0.5px solid ${t.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+          padding: '8px 0 12px', paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
+        }}>
+          {NAV_ITEMS.slice(0, 5).map(item => (
+            <div key={item.id} onClick={() => setTab(item.id)}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', minWidth: 52, padding: '4px 0' }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: tab === item.id ? t.blue2 : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}>
+                {Icons[item.id] ? Icons[item.id](tab === item.id ? t.blue : t.text3) : null}
+              </div>
+              <span style={{ fontSize: 9, fontWeight: tab === item.id ? 600 : 400, color: tab === item.id ? t.blue : t.text3 }}>
+                {item.label}
+              </span>
+            </div>
+          ))}
+          <div onClick={toggleDark}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', minWidth: 52, padding: '4px 0' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {dark ? Icons.sun(t.text3) : Icons.moon(t.text3)}
+            </div>
+            <span style={{ fontSize: 9, color: t.text3 }}>{dark ? 'Light' : 'Dark'}</span>
+          </div>
+        </div>
+      )}
+
+      <style>{\`
         @keyframes spin { to { transform: rotate(360deg); } }
         * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
-      `}</style>
+      \`}</style>
     </div>
   );
 }
