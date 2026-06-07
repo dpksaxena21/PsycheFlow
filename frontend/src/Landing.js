@@ -25,12 +25,17 @@ const S = {
 };
 
 const LogoMark = ({ size=30 }) => (
-  <div style={{ width:size, height:size, borderRadius:size*0.27, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
-    <svg width={size*0.6} height={size*0.6} viewBox="0 0 18 18" fill="none">
-      <path d="M9 2C9 2 4 5.5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5.5 9 2 9 2Z" fill="white" opacity="0.9"/>
-      <circle cx="9" cy="10" r="2.2" fill={S.navy}/>
-    </svg>
-  </div>
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" rx="14" fill="#1D4ED8"/>
+    <line x1="16" y1="10" x2="16" y2="54" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
+    <path d="M 16 10 C 16 10 46 10 46 26 C 46 42 16 46 16 46" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
+    <line x1="20" y1="13" x2="20" y2="52" stroke="white" strokeWidth="7.5" strokeLinecap="round"/>
+    <path d="M 20 13 C 20 13 42 13 42 26 C 42 39 20 43 20 43" fill="none" stroke="white" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M 30 11 C 42 11 44 19 44 23" fill="none" stroke="#93C5FD" strokeWidth="7.5" strokeLinecap="round"/>
+    <circle cx="44" cy="26" r="3.5" fill="#93C5FD" opacity="0.8"/>
+    <line x1="44" y1="26" x2="50" y2="26" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" opacity="0.7"/>
+    <path d="M 50 26 L 53 18 L 56 34 L 59 26" fill="none" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+  </svg>
 );
 
 const BtnPrimary = ({ children, onClick, style={} }) => (

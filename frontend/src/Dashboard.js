@@ -709,10 +709,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
         </div>
       )}
 
-      <style>{\`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
-      \`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }`}</style>
     </div>
   );
 }
