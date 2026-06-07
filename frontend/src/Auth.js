@@ -54,7 +54,23 @@ export default function Auth({ onLogin }) {
         <div className="orb2" style={{ position:'absolute', bottom:'-60px', left:'-60px', width:'320px', height:'320px', borderRadius:'50%', background:'radial-gradient(circle, rgba(8,145,178,0.2) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat2 10s ease-in-out infinite' }}/>
         <div className="orb3" style={{ position:'absolute', top:'40%', left:'30%', width:'200px', height:'200px', borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat3 12s ease-in-out infinite' }}/>
 
-        <Logo size={36} dark={true} />
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+            <rect width="64" height="64" rx="14" fill="#1D4ED8"/>
+            <line x1="16" y1="10" x2="16" y2="54" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
+            <path d="M 16 10 C 16 10 46 10 46 26 C 46 42 16 46 16 46" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
+            <line x1="20" y1="13" x2="20" y2="52" stroke="white" strokeWidth="7.5" strokeLinecap="round"/>
+            <path d="M 20 13 C 20 13 42 13 42 26 C 42 39 20 43 20 43" fill="none" stroke="white" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M 30 11 C 42 11 44 19 44 23" fill="none" stroke="#93C5FD" strokeWidth="7.5" strokeLinecap="round"/>
+            <circle cx="44" cy="26" r="3.5" fill="#93C5FD" opacity="0.8"/>
+            <line x1="44" y1="26" x2="50" y2="26" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" opacity="0.7"/>
+            <path d="M 50 26 L 53 18 L 56 34 L 59 26" fill="none" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+          </svg>
+          <div>
+            <div style={{ fontSize:15, fontWeight:700, color:'#fff', letterSpacing:'-0.3px', lineHeight:1 }}>Psyche<span style={{ color:'#60A5FA' }}>Flow</span></div>
+            <div style={{ fontSize:9, color:'#3B5998', letterSpacing:'2px', marginTop:2 }}>MENTAL HEALTH AI</div>
+          </div>
+        </div>
 
         <div style={{ position:'relative', zIndex:1 }}>
           <h1 style={{
