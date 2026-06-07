@@ -7,9 +7,9 @@ anthropic==0.40.0
 supabase==2.9.0
 sentence-transformers==3.0.0
 numpy==1.26.4
-scikit-learn==1.8.0
+scikit-learn==1.6.1
 xgboost==2.0.3
-shap==0.51.0
+shap==0.46.0
 joblib==1.4.0
 pandas==2.2.0
 pydantic==2.8.0
@@ -19,4 +19,3 @@ python-jose[cryptography]==3.3.0
 resend==2.4.0
 torch==2.3.0+cpu
 transformers==4.44.0
-scikit-learn==1.8.0
