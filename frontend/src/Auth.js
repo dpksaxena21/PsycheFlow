@@ -54,7 +54,7 @@ export default function Auth({ onLogin }) {
         <div className="orb2" style={{ position:'absolute', bottom:'-60px', left:'-60px', width:'320px', height:'320px', borderRadius:'50%', background:'radial-gradient(circle, rgba(8,145,178,0.2) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat2 10s ease-in-out infinite' }}/>
         <div className="orb3" style={{ position:'absolute', top:'40%', left:'30%', width:'200px', height:'200px', borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat3 12s ease-in-out infinite' }}/>
 
-        <Logo size="md" dark={true} />
+        <Logo size={36} dark={true} />
 
         <div style={{ position:'relative', zIndex:1 }}>
           <h1 style={{
@@ -148,7 +148,7 @@ export default function Auth({ onLogin }) {
               boxSizing:'border-box', outline:'none', background:'#fff',
               color:'#111827', marginBottom:'16px', transition:'border-color 0.15s'
             }}
-            onFocus={e => e.target.style.borderColor='#4F46E5'}
+            onFocus={e => e.target.style.borderColor='#1D4ED8'}
             onBlur={e  => e.target.style.borderColor='#E5E7EB'}
           />
 
@@ -165,7 +165,7 @@ export default function Auth({ onLogin }) {
               boxSizing:'border-box', outline:'none', background:'#fff',
               color:'#111827', marginBottom:'24px', transition:'border-color 0.15s'
             }}
-            onFocus={e => e.target.style.borderColor='#4F46E5'}
+            onFocus={e => e.target.style.borderColor='#1D4ED8'}
             onBlur={e  => e.target.style.borderColor='#E5E7EB'}
           />
           {mode === 'signup' && (
@@ -186,9 +186,9 @@ export default function Auth({ onLogin }) {
                   <button key={r} onClick={() => setRole(r)} type='button'
                     style={{
                       flex:1, padding:'12px', borderRadius:'10px', cursor:'pointer',
-                      border: role === r ? '2px solid #4F46E5' : '1.5px solid #E5E7EB',
-                      background: role === r ? '#EEF2FF' : '#fff',
-                      color: role === r ? '#4F46E5' : '#6B7280',
+                      border: role === r ? '2px solid #1D4ED8' : '1.5px solid #E5E7EB',
+                      background: role === r ? '#EFF6FF' : '#fff',
+                      color: role === r ? '#1D4ED8' : '#6B7280',
                       fontWeight: role === r ? 600 : 400,
                       fontSize:'14px', textTransform:'capitalize', transition:'all 0.15s'
                     }}>
@@ -219,7 +219,7 @@ export default function Auth({ onLogin }) {
           <button onClick={handleAuth} disabled={loading}
             style={{
               width:'100%', padding:'13px',
-              background: loading ? '#9CA3AF' : '#4F46E5',
+              background: loading ? '#9CA3AF' : '#1D4ED8',
               color:'#fff', border:'none', borderRadius:'10px',
               fontSize:'15px', fontWeight:600,
               cursor: loading ? 'not-allowed' : 'pointer',
