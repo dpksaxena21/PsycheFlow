@@ -35,7 +35,7 @@ export default function Auth({ onLogin }) {
       const { data, error: err } = await supabase.auth.signUp({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
       if (data?.user) {
-        await supabase.from('profiles').upsert({ id: data.user.id, email, role, rci_number: rciNumber || null, verification_status: role === 'psychologist' ? 'pending' : 'verified' });
+        await supabase.from('profiles').upsert({ id: data.user.id, email, role: 'patient', verification_status: 'verified' });
       }
       setSuccess('Account created! Check your email to verify, then sign in.');
     }
@@ -194,27 +194,8 @@ export default function Auth({ onLogin }) {
               {ageBlocked && <p style={{ fontSize:'12px', color:'#DC2626', marginTop:6 }}>You must be 18 or older to use PsycheFlow.</p>}
             </div>
           )}
-          {mode === 'signup' && (
-            <div style={{ marginBottom:'24px' }}>
-              <p style={{ fontSize:'13px', color:'#6B7280', marginBottom:'10px', fontWeight:500 }}>I am a:</p>
-              <div style={{ display:'flex', gap:'12px' }}>
-                {['patient','psychologist'].map(r => (
-                  <button key={r} onClick={() => setRole(r)} type='button'
-                    style={{
-                      flex:1, padding:'12px', borderRadius:'10px', cursor:'pointer',
-                      border: role === r ? '2px solid #1D4ED8' : '1.5px solid #E5E7EB',
-                      background: role === r ? '#EFF6FF' : '#fff',
-                      color: role === r ? '#1D4ED8' : '#6B7280',
-                      fontWeight: role === r ? 600 : 400,
-                      fontSize:'14px', textTransform:'capitalize', transition:'all 0.15s'
-                    }}>
-                    {r === 'patient' ? 'Patient' : 'Psychologist'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {mode === 'signup' && role === 'psychologist' && <div style={{ marginBottom:'24px' }}><label style={{ fontSize:'13px', color:'#6B7280', display:'block', marginBottom:'6px', fontWeight:500 }}>RCI Registration Number</label><input value={rciNumber} onChange={e => setRciNumber(e.target.value)} placeholder='e.g. A12345' style={{ width:'100%', padding:'12px 16px', borderRadius:'10px', border:'1.5px solid #E5E7EB', fontSize:'15px', boxSizing:'border-box', outline:'none' }} /></div>}
+
+
 
           {error && (
             <div style={{
