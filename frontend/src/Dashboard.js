@@ -374,7 +374,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
             {sideExpanded && <span style={{fontSize:13, color:t.text2, whiteSpace:'nowrap'}}>Sign out</span>}
           </div>
         </div>
-      </nav>
+      </nav>}
 
       {/* Main */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
