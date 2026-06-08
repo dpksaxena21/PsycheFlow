@@ -167,6 +167,58 @@ You can: check availability, suggest slots, confirm bookings (tell user to use A
     setLoading(false);
   };
 
+  const buildNotifications = (sessions, appointments, journals) => {
+    const notifs = [];
+    // Latest session
+    if (sessions.length > 0) {
+      const s = sessions[0];
+      notifs.push({
+        id: 'sess_' + s.id,
+        type: s.phq_score > 14 ? 'alert' : 'info',
+        title: s.phq_score > 14 ? 'High PHQ-9 score detected' : 'Assessment completed',
+        body: `PHQ-9: ${s.phq_score} · GAD-7: ${s.gad_score}`,
+        time: s.created_at,
+      });
+    }
+    // PHQ spike between last two sessions
+    if (sessions.length >= 2) {
+      const diff = sessions[0].phq_score - sessions[1].phq_score;
+      if (Math.abs(diff) >= 5) {
+        notifs.push({
+          id: 'spike_' + sessions[0].id,
+          type: diff > 0 ? 'alert' : 'success',
+          title: diff > 0 ? `PHQ-9 spike: +${diff} points` : `PHQ-9 improved: ${diff} points`,
+          body: diff > 0 ? 'Significant worsening since last session' : 'Significant improvement since last session',
+          time: sessions[0].created_at,
+        });
+      }
+    }
+    // Upcoming appointment
+    const upcoming = appointments.filter(a => a.status === 'scheduled' && new Date(a.scheduled_at) > new Date());
+    if (upcoming.length > 0) {
+      const next = upcoming[0];
+      const d = new Date(next.scheduled_at);
+      notifs.push({
+        id: 'appt_' + next.id,
+        type: 'info',
+        title: 'Upcoming appointment',
+        body: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        time: next.scheduled_at,
+      });
+    }
+    // Latest journal
+    if (journals.length > 0) {
+      notifs.push({
+        id: 'jour_' + journals[0].id,
+        type: 'info',
+        title: 'Journal analyzed',
+        body: journals[0].analysis?.emotions?.primary || 'New entry recorded',
+        time: journals[0].created_at,
+      });
+    }
+    setNotifications(notifs);
+  };
+
   if (!open) return (
     <button onClick={() => setOpen(true)} style={{
       position: 'fixed', bottom: 88, right: 24, width: 48, height: 48,
@@ -294,6 +346,8 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   const [sideExpanded, setSideExpanded] = useState(false);
   const [sidePinned, setSidePinned] = useState(false);
   const [moodSaved, setMoodSaved] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -308,6 +362,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
     setSessions(s || []);
     setJournals(j || []);
     setAppointments(a || []);
+    buildNotifications(s || [], a || [], j || []);
     if (link?.psychologist_id) {
       setPsychologistId(link.psychologist_id);
       setPsychologistContact([{ id: link.psychologist_id, name: 'My Psychologist', role: 'psychologist' }]);
@@ -389,8 +444,33 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: t.bg3, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {Icons.bell(t.text2)}
+            <div style={{ position:'relative' }}>
+              <div onClick={() => setNotifOpen(o => !o)} style={{ width: 34, height: 34, borderRadius: 8, background: t.bg3, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position:'relative' }}>
+                {Icons.bell(t.text2)}
+                {notifications.filter(n => n.type === 'alert').length > 0 && (
+                  <div style={{ position:'absolute', top:4, right:4, width:8, height:8, borderRadius:'50%', background:'#DC2626', border:`2px solid ${t.bg2}` }}/>
+                )}
+              </div>
+              {notifOpen && (
+                <div style={{ position:'absolute', top:42, right:0, width:320, background:t.bg2, borderRadius:12, border:`0.5px solid ${t.border}`, boxShadow:'0 8px 32px rgba(0,0,0,0.12)', zIndex:100, overflow:'hidden' }}>
+                  <div style={{ padding:'12px 16px', borderBottom:`0.5px solid ${t.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:t.text }}>Notifications</span>
+                    <span onClick={() => setNotifOpen(false)} style={{ fontSize:11, color:t.blue, cursor:'pointer' }}>Close</span>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding:24, textAlign:'center', color:t.text3, fontSize:12 }}>No notifications</div>
+                  ) : notifications.map(n => (
+                    <div key={n.id} style={{ padding:'12px 16px', borderBottom:`0.5px solid ${t.border}`, display:'flex', gap:10, alignItems:'flex-start' }}>
+                      <div style={{ width:8, height:8, borderRadius:'50%', background: n.type==='alert'?'#DC2626': n.type==='success'?'#059669':'#1D4ED8', flexShrink:0, marginTop:4 }}/>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12, fontWeight:600, color:t.text, marginBottom:2 }}>{n.title}</div>
+                        <div style={{ fontSize:11, color:t.text3 }}>{n.body}</div>
+                        <div style={{ fontSize:10, color:t.text3, marginTop:3 }}>{new Date(n.time).toLocaleDateString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {onPsychologistMode && (
               <button onClick={onPsychologistMode} style={{ padding: '8px 14px', borderRadius: 8, border: `0.5px solid ${t.border}`, background: t.bg3, color: t.text2, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
