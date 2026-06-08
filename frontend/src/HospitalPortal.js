@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { getHospitalIntelligence, triageQueue, detectRevenueleakage, predictLOS, checkDrugInteractions } from './hospitalAlgorithms';
 import { supabase } from './supabase';
 
 const useIsMobile = () => {
@@ -470,6 +471,21 @@ export default function HospitalPortal({ user, onLogout }) {
   if (!hospital) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', fontFamily:"'Satoshi',-apple-system,sans-serif", color:S.muted }}>Hospital not found. Please contact support.</div>;
 
   const waiting = queue.filter(q=>q.status==='waiting').length;
+
+  // ── Hospital Intelligence Engine ──────────────────────
+  const intelligence = useMemo(() => {
+    try {
+      return getHospitalIntelligence({ queue, sessions:[], ipdList, labOrders, charges, staff, patients });
+    } catch { return null; }
+  }, [queue, ipdList, labOrders, charges, staff, patients]);
+
+  const triagedQueue = useMemo(() => {
+    try { return triageQueue(queue); } catch { return queue; }
+  }, [queue]);
+
+  const leakage = useMemo(() => {
+    try { return detectRevenueleakage(ipdList, labOrders, charges); } catch { return { leaks:[], total_leakage:0, count:0 }; }
+  }, [ipdList, labOrders, charges]);
   const crisis = beds.filter(b=>b.urgency==='crisis').length;
   const pendingRef = referrals.filter(r=>r.status==='pending').length;
 
@@ -1746,6 +1762,51 @@ export default function HospitalPortal({ user, onLogout }) {
               </div>
             )}
 
+            {/* AI Intelligence Insights */}
+            {intelligence?.insights?.length > 0 && (
+              <div style={{ display:'grid', gap:8, marginBottom:20 }}>
+                {intelligence.insights.map((insight, i) => (
+                  <div key={i} style={{ background: insight.type==='critical'?'#FEF2F2':insight.type==='warning'?'#FEF3C7':'#EFF6FF', border:`1px solid ${insight.type==='critical'?'#FECACA':insight.type==='warning'?'#FDE68A':'#BFDBFE'}`, borderRadius:10, padding:'10px 16px', display:'flex', alignItems:'center', gap:10 }}>
+                    <span style={{ fontSize:16 }}>{insight.icon}</span>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:700, color: insight.type==='critical'?'#DC2626':insight.type==='warning'?'#D97706':'#1D4ED8' }}>{insight.title}</div>
+                      <div style={{ fontSize:11, color:'#64748b', marginTop:1 }}>{insight.body}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Revenue Leakage Alert */}
+            {leakage?.count > 0 && (
+              <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:10, padding:'12px 16px', marginBottom:16 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#EA580C' }}>Revenue Leakage Detected — ₹{leakage.total_leakage.toLocaleString()} at risk</div>
+                  <span style={{ fontSize:11, color:'#94a3b8' }}>{leakage.count} unbilled service(s)</span>
+                </div>
+                {leakage.leaks.slice(0,3).map((l,i)=>(
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#374151', padding:'3px 0', borderBottom:'0.5px solid #FED7AA' }}>
+                    <span>{l.patient_name} — {l.message}</span>
+                    <span style={{ fontWeight:600, color:'#DC2626' }}>₹{l.estimated_loss}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Discharge candidates */}
+            {intelligence?.discharge_candidates?.length > 0 && (
+              <div style={{ background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:10, padding:'10px 16px', marginBottom:16 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:'#059669', marginBottom:6 }}>Discharge Candidates ({intelligence.discharge_candidates.length})</div>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  {intelligence.discharge_candidates.map((d,i)=>(
+                    <div key={i} style={{ background:'#fff', borderRadius:6, padding:'4px 10px', fontSize:11, color:'#059669', border:'1px solid #A7F3D0' }}>
+                      {d.hospital_patients?.full_name} — {d.los.expected_discharge}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* KPI Row 1 — Primary metrics */}
             <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:16 }}>
               {[
@@ -1791,9 +1852,14 @@ export default function HospitalPortal({ user, onLogout }) {
                   <div style={{ fontSize:11, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase' }}>Live OPD Queue</div>
                   <span onClick={()=>setTab('queue')} style={{ fontSize:11, color:S.blue, cursor:'pointer', fontWeight:500 }}>View all →</span>
                 </div>
-                {queue.filter(q=>q.status==='waiting').length===0 ? (
+                {triagedQueue.filter(q=>q.status==='waiting').length===0 ? (
                   <div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>Queue is clear</div>
-                ) : queue.filter(q=>q.status==='waiting').slice(0,4).map(q=>(
+                ) : triagedQueue.filter(q=>q.status==='waiting').slice(0,4).map(q=>(<div key={q.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                    <div style={{ fontWeight:700, color:S.blue, fontSize:12, minWidth:52 }}>{q.token_number}</div>
+                    <div style={{ flex:1, fontSize:12, color:S.navy, fontWeight:500 }}>{q.patient_name}</div>
+                    <div style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:4, background: q.score>=100?'#FEF2F2':q.score>=60?'#FEF3C7':'#EFF6FF', color: q.score>=100?'#DC2626':q.score>=60?'#D97706':'#1D4ED8' }}>S:{q.score}</div>
+                    <Badge color={q.priority==='crisis'?'red':q.priority==='urgent'?'yellow':'blue'}>{q.priority}</Badge>
+                  </div>
                   <div key={q.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
                     <div style={{ fontWeight:700, color:S.blue, fontSize:12, minWidth:52 }}>{q.token_number}</div>
                     <div style={{ flex:1, fontSize:12, color:S.navy, fontWeight:500 }}>{q.patient_name}</div>
