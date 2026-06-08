@@ -1084,7 +1084,6 @@ Keep responses concise, warm, and helpful. Use plain language. If suggesting to 
 
 # ── MSG91 SMS ─────────────────────────────────────────────
 import httpx
-import os
 
 class SMSInput(BaseModel):
     phone: str
@@ -1094,9 +1093,9 @@ class SMSInput(BaseModel):
 
 @app.post("/send-sms")
 async def send_sms(data: SMSInput):
-    auth_key    = os.getenv("MSG91_AUTH_KEY", "")
-    sender_id   = os.getenv("MSG91_SENDER_ID", "PSYFLW")
-    template_id = os.getenv("MSG91_TEMPLATE_ID", "")
+    auth_key    = _os.getenv("MSG91_AUTH_KEY", "")
+    sender_id   = _os.getenv("MSG91_SENDER_ID", "PSYFLW")
+    template_id = _os.getenv("MSG91_TEMPLATE_ID", "")
 
     if not auth_key:
         return {"success": False, "message": "MSG91 not configured"}
