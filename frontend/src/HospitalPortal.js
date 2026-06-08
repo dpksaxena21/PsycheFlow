@@ -61,6 +61,25 @@ export default function HospitalPortal({ user, onLogout }) {
   const [invForm, setInvForm] = useState({ patient_id:'', items:'', notes:'' });
   const [invLoading, setInvLoading] = useState(false);
   const [showInvForm, setShowInvForm] = useState(false);
+  // RCM
+  const [charges, setCharges] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [claims, setClaims] = useState([]);
+  const [refunds, setRefunds] = useState([]);
+  const [discounts, setDiscounts] = useState([]);
+  const [selInvoice, setSelInvoice] = useState(null);
+  const [billingTab, setBillingTab] = useState('dashboard');
+  const [billingPatient, setBillingPatient] = useState(null);
+  const [chargeForm, setChargeForm] = useState({ department:'', item_name:'', quantity:1, unit_price:'', hsn_code:'', gst_rate:18 });
+  const [payForm, setPayForm] = useState({ amount:'', payment_method:'cash', reference_number:'', notes:'' });
+  const [claimForm, setClaimForm] = useState({ policy_number:'', insurance_company:'', claim_amount:'', notes:'' });
+  const [refundForm, setRefundForm] = useState({ amount:'', reason:'', approved_by:'' });
+  const [discountForm, setDiscountForm] = useState({ discount_percent:'', reason:'', approved_by:'' });
+  const [showChargeForm, setShowChargeForm] = useState(false);
+  const [showPayForm, setShowPayForm] = useState(false);
+  const [showClaimForm, setShowClaimForm] = useState(false);
+  const [showRefundForm, setShowRefundForm] = useState(false);
+  const [showDiscountForm, setShowDiscountForm] = useState(false);
   const [hospital, setHospital] = useState(null);
   const [queue, setQueue] = useState([]);
   const [beds, setBeds] = useState([]);
@@ -228,6 +247,76 @@ export default function HospitalPortal({ user, onLogout }) {
     const { data } = await supabase.from('lab_orders').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('ordered_at', { ascending:false });
     setLabOrders(data || []);
   };
+  const loadRCM = async () => {
+    if (!hospital) return;
+    const [{ data: ch }, { data: py }, { data: cl }, { data: rf }, { data: dc }] = await Promise.all([
+      supabase.from('bill_charges').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false }),
+      supabase.from('bill_payments').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false }),
+      supabase.from('insurance_claims').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false }),
+      supabase.from('bill_refunds').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false }),
+      supabase.from('bill_discounts').select('*').eq('hospital_id', hospital.id).order('created_at', { ascending:false }),
+    ]);
+    setCharges(ch||[]);
+    setPayments(py||[]);
+    setClaims(cl||[]);
+    setRefunds(rf||[]);
+    setDiscounts(dc||[]);
+  };
+
+  const addCharge = async () => {
+    if (!chargeForm.department||!chargeForm.item_name||!chargeForm.unit_price||!selInvoice) return;
+    const total = parseFloat(chargeForm.unit_price) * parseInt(chargeForm.quantity||1);
+    await supabase.from('bill_charges').insert({ hospital_id:hospital.id, patient_id:selInvoice.patient_id, invoice_id:selInvoice.id, ...chargeForm, quantity:parseInt(chargeForm.quantity||1), unit_price:parseFloat(chargeForm.unit_price), total });
+    // Update invoice total
+    const newSubtotal = (parseFloat(selInvoice.subtotal||0)) + total;
+    const newTax = newSubtotal * 0.18;
+    await supabase.from('billing_invoices').update({ subtotal:newSubtotal, tax:newTax, total:newSubtotal+newTax }).eq('id', selInvoice.id);
+    setChargeForm({ department:'', item_name:'', quantity:1, unit_price:'', hsn_code:'', gst_rate:18 });
+    setShowChargeForm(false);
+    await loadBilling(); await loadRCM();
+  };
+
+  const addPayment = async () => {
+    if (!payForm.amount||!selInvoice) return;
+    await supabase.from('bill_payments').insert({ hospital_id:hospital.id, patient_id:selInvoice.patient_id, invoice_id:selInvoice.id, amount:parseFloat(payForm.amount), payment_method:payForm.payment_method, reference_number:payForm.reference_number, notes:payForm.notes });
+    // Check if fully paid
+    const totalPaid = payments.filter(p=>p.invoice_id===selInvoice.id).reduce((s,p)=>s+parseFloat(p.amount||0),0) + parseFloat(payForm.amount);
+    if (totalPaid >= parseFloat(selInvoice.total||0)) {
+      await supabase.from('billing_invoices').update({ status:'paid', payment_method:payForm.payment_method, paid_at:new Date().toISOString() }).eq('id', selInvoice.id);
+    }
+    setPayForm({ amount:'', payment_method:'cash', reference_number:'', notes:'' });
+    setShowPayForm(false);
+    await loadBilling(); await loadRCM();
+  };
+
+  const addClaim = async () => {
+    if (!claimForm.insurance_company||!claimForm.claim_amount||!selInvoice) return;
+    const claimNo = 'CLM-'+Date.now().toString().slice(-8);
+    await supabase.from('insurance_claims').insert({ hospital_id:hospital.id, patient_id:selInvoice.patient_id, invoice_id:selInvoice.id, claim_number:claimNo, ...claimForm, claim_amount:parseFloat(claimForm.claim_amount) });
+    setClaimForm({ policy_number:'', insurance_company:'', claim_amount:'', notes:'' });
+    setShowClaimForm(false);
+    await loadRCM();
+  };
+
+  const addRefund = async () => {
+    if (!refundForm.amount||!selInvoice) return;
+    await supabase.from('bill_refunds').insert({ hospital_id:hospital.id, patient_id:selInvoice.patient_id, invoice_id:selInvoice.id, amount:parseFloat(refundForm.amount), reason:refundForm.reason, approved_by:refundForm.approved_by });
+    setRefundForm({ amount:'', reason:'', approved_by:'' });
+    setShowRefundForm(false);
+    await loadRCM();
+  };
+
+  const addDiscount = async () => {
+    if (!discountForm.discount_percent||!selInvoice) return;
+    const discAmt = parseFloat(selInvoice.subtotal||0) * parseFloat(discountForm.discount_percent) / 100;
+    await supabase.from('bill_discounts').insert({ hospital_id:hospital.id, invoice_id:selInvoice.id, discount_percent:parseFloat(discountForm.discount_percent), discount_amount:discAmt, reason:discountForm.reason, approved_by:discountForm.approved_by, status:'approved' });
+    const newTotal = parseFloat(selInvoice.total||0) - discAmt;
+    await supabase.from('billing_invoices').update({ total:newTotal }).eq('id', selInvoice.id);
+    setDiscountForm({ discount_percent:'', reason:'', approved_by:'' });
+    setShowDiscountForm(false);
+    await loadBilling(); await loadRCM();
+  };
+
   const loadBilling = async () => {
     if (!hospital) return;
     const { data } = await supabase.from('billing_invoices').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false });
@@ -1143,98 +1232,450 @@ export default function HospitalPortal({ user, onLogout }) {
           </div>
         )}
 
-        {/* BILLING */}
+        {/* BILLING — FULL RCM */}
         {tab==='billing' && (
           <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
-              <div>
-                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Billing</h2>
-                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>
-                  {invoices.filter(i=>i.status==='unpaid').length} unpaid · 
-                  ₹{invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0)} collected
-                </div>
-              </div>
-              <button onClick={()=>setShowInvForm(f=>!f)} style={{ padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
-                {showInvForm?'Cancel':'+ New Invoice'}
-              </button>
-            </div>
-            {showInvForm && (
-              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
-                <div style={{ fontSize:12, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:16 }}>Create Invoice</div>
-                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:12, marginBottom:12 }}>
-                  <div>
-                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Patient *</div>
-                    <select value={invForm.patient_id} onChange={e=>setInvForm({...invForm,patient_id:e.target.value})}
-                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
-                      <option value="">Select patient</option>
-                      {patients.map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Notes</div>
-                    <input value={invForm.notes} onChange={e=>setInvForm({...invForm,notes:e.target.value})}
-                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
-                  </div>
-                </div>
-                <div style={{ marginBottom:12 }}>
-                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Line Items * (one per line: Description, Amount)</div>
-                  <textarea value={invForm.items} onChange={e=>setInvForm({...invForm,items:e.target.value})} rows={4}
-                    placeholder={'Consultation Fee, 500\nLab Tests, 1200\nMedication, 350'}
-                    style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'monospace', boxSizing:'border-box' }}/>
-                  <div style={{ fontSize:11, color:S.muted, marginTop:4 }}>Format: Item Name, Amount — 18% GST will be added automatically</div>
-                </div>
-                <button onClick={addInvoice} disabled={invLoading||!invForm.patient_id||!invForm.items} style={{ padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
-                  {invLoading?'Creating...':'Generate Invoice'}
+            {/* RCM Sub-nav */}
+            <div style={{ display:'flex', gap:4, marginBottom:20, overflowX:'auto', WebkitOverflowScrolling:'touch', paddingBottom:4 }}>
+              {['dashboard','invoices','charges','payments','insurance','refunds','discounts','revenue'].map(t=>(
+                <button key={t} onClick={()=>{ setBillingTab(t); setSelInvoice(null); }}
+                  style={{ padding:'7px 14px', border:'none', borderRadius:8, cursor:'pointer', fontSize:12, fontWeight:billingTab===t?700:400, background:billingTab===t?S.blue:'transparent', color:billingTab===t?'#fff':S.muted, whiteSpace:'nowrap', transition:'all 0.15s' }}>
+                  {t.charAt(0).toUpperCase()+t.slice(1)}
                 </button>
-              </div>
-            )}
-            <div style={{ display:'grid', gap:10 }}>
-              {invoices.length===0 ? (
-                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No invoices yet.</div>
-              ) : invoices.map(inv=>(
-                <div key={inv.id} style={{ ...card, padding:16 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
-                    <div>
-                      <div style={{ fontSize:14, fontWeight:700, color:S.navy }}>{inv.invoice_number}</div>
-                      <div style={{ fontSize:11, color:S.muted }}>{inv.hospital_patients?.full_name} · {new Date(inv.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
-                    </div>
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:20, fontWeight:700, color:inv.status==='paid'?S.success:S.danger }}>₹{parseFloat(inv.total||0).toFixed(2)}</div>
-                      <Badge color={inv.status==='paid'?'green':'red'}>{inv.status?.toUpperCase()}</Badge>
-                    </div>
-                  </div>
-                  {inv.items?.length>0 && (
-                    <div style={{ background:S.bg, borderRadius:8, padding:'8px 12px', marginBottom:10 }}>
-                      {inv.items.map((item,i)=>(
-                        <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:S.navy, padding:'2px 0', borderBottom:i<inv.items.length-1?'0.5px solid '+S.border:'none' }}>
-                          <span>{item.description}</span><span>₹{item.amount}</span>
-                        </div>
-                      ))}
-                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:S.muted, paddingTop:6 }}>
-                        <span>Subtotal</span><span>₹{parseFloat(inv.subtotal||0).toFixed(2)}</span>
-                      </div>
-                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:S.muted }}>
-                        <span>GST (18%)</span><span>₹{parseFloat(inv.tax||0).toFixed(2)}</span>
-                      </div>
-                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:700, color:S.navy, paddingTop:4, borderTop:'0.5px solid '+S.border, marginTop:4 }}>
-                        <span>Total</span><span>₹{parseFloat(inv.total||0).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  )}
-                  {inv.status==='unpaid' && (
-                    <div style={{ display:'flex', gap:8 }}>
-                      {['Cash','Card','UPI'].map(method=>(
-                        <button key={method} onClick={()=>markPaid(inv.id,method)}
-                          style={{ padding:'6px 14px', background:S.lightBlue, color:S.blue, border:'1px solid '+S.border, borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>
-                          Paid via {method}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {inv.status==='paid' && <div style={{ fontSize:11, color:S.success }}>✓ Paid via {inv.payment_method} · {inv.paid_at?new Date(inv.paid_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):''}</div>}
-                </div>
               ))}
             </div>
+
+            {/* BILLING DASHBOARD */}
+            {billingTab==='dashboard' && (
+              <div>
+                <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>Billing Command Center</h2>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(3,1fr)', gap:16, marginBottom:24 }}>
+                  {[
+                    { label:'Revenue Today', value:'₹'+invoices.filter(i=>i.status==='paid'&&new Date(i.paid_at||i.created_at).toDateString()===new Date().toDateString()).reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0), color:S.success },
+                    { label:'Pending Payments', value:'₹'+invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0), color:S.warning },
+                    { label:'Insurance Claims', value:'₹'+claims.reduce((s,c)=>s+parseFloat(c.claim_amount||0),0).toFixed(0), color:S.blue },
+                    { label:'Refund Requests', value:refunds.filter(r=>r.status==='requested').length, color:S.danger },
+                    { label:'Outstanding Bills', value:invoices.filter(i=>i.status==='unpaid').length+' invoices', color:S.warning },
+                    { label:'Total Collected', value:'₹'+payments.reduce((s,p)=>s+parseFloat(p.amount||0),0).toFixed(0), color:S.success },
+                  ].map((k,i)=>(
+                    <div key={i} style={{ ...card, padding:'18px 20px' }}>
+                      <div style={{ fontSize:22, fontWeight:700, color:k.color, letterSpacing:'-0.01em' }}>{k.value}</div>
+                      <div style={{ fontSize:12, color:S.muted, marginTop:4 }}>{k.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Recent unpaid */}
+                <div style={{ ...card }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:16 }}>Pending Invoices</div>
+                  {invoices.filter(i=>i.status==='unpaid').slice(0,5).map(inv=>(
+                    <div key={inv.id} onClick={()=>{ setSelInvoice(inv); setBillingTab('invoices'); }} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'0.5px solid '+S.border, cursor:'pointer' }}
+                      onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
+                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{inv.hospital_patients?.full_name}</div>
+                        <div style={{ fontSize:11, color:S.muted }}>{inv.invoice_number} · {new Date(inv.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                      </div>
+                      <div style={{ fontSize:15, fontWeight:700, color:S.danger }}>₹{parseFloat(inv.total||0).toFixed(0)}</div>
+                    </div>
+                  ))}
+                  {invoices.filter(i=>i.status==='unpaid').length===0 && <div style={{ textAlign:'center', padding:24, color:S.muted, fontSize:13 }}>No pending invoices</div>}
+                </div>
+              </div>
+            )}
+
+            {/* INVOICES */}
+            {billingTab==='invoices' && (
+              <div style={{ display:'grid', gridTemplateColumns:selInvoice&&!isMobile?'1fr 320px':'1fr', gap:16 }}>
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:S.navy }}>Invoices ({invoices.length})</div>
+                    <button onClick={()=>setShowInvForm(f=>!f)} style={{ padding:'7px 14px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>{showInvForm?'Cancel':'+ New Invoice'}</button>
+                  </div>
+                  {showInvForm && (
+                    <div style={{ ...card, marginBottom:16, borderColor:S.blue }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Create Invoice</div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+                        <div>
+                          <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:3, textTransform:'uppercase' }}>Patient *</div>
+                          <select value={invForm.patient_id} onChange={e=>setInvForm({...invForm,patient_id:e.target.value})} style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:12, background:S.bg, color:S.navy, outline:'none' }}>
+                            <option value="">Select</option>
+                            {patients.map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:3, textTransform:'uppercase' }}>Notes</div>
+                          <input value={invForm.notes} onChange={e=>setInvForm({...invForm,notes:e.target.value})} style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:12, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        </div>
+                      </div>
+                      <div style={{ marginBottom:10 }}>
+                        <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:3, textTransform:'uppercase' }}>Line Items (Description, Amount — one per line)</div>
+                        <textarea value={invForm.items} onChange={e=>setInvForm({...invForm,items:e.target.value})} rows={3} placeholder={'Consultation Fee, 500
+Lab Tests, 1200'} style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:12, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'monospace', boxSizing:'border-box' }}/>
+                      </div>
+                      <button onClick={addInvoice} disabled={invLoading||!invForm.patient_id||!invForm.items} style={{ padding:'8px 20px', background:S.blue, color:'#fff', border:'none', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>{invLoading?'Creating...':'Generate Invoice'}</button>
+                    </div>
+                  )}
+                  <div style={{ ...card, padding:0, overflow:'hidden' }}>
+                    <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                      <thead><tr style={{ background:S.bg }}>{['Invoice','Patient','Date','Subtotal','GST','Total','Status',''].map(h=><th key={h} style={{ padding:'9px 12px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', textAlign:'left', borderBottom:'0.5px solid '+S.border, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                      <tbody>
+                        {invoices.map(inv=>(
+                          <tr key={inv.id} style={{ borderBottom:'0.5px solid '+S.border, background:selInvoice?.id===inv.id?S.lightBlue:'transparent', cursor:'pointer' }}
+                            onClick={()=>setSelInvoice(inv)}
+                            onMouseEnter={e=>{ if(selInvoice?.id!==inv.id) e.currentTarget.style.background=S.bg; }}
+                            onMouseLeave={e=>{ if(selInvoice?.id!==inv.id) e.currentTarget.style.background='transparent'; }}>
+                            <td style={{ padding:'9px 12px', fontSize:12, fontWeight:700, color:S.blue }}>{inv.invoice_number}</td>
+                            <td style={{ padding:'9px 12px', fontSize:12, color:S.navy }}>{inv.hospital_patients?.full_name}</td>
+                            <td style={{ padding:'9px 12px', fontSize:11, color:S.muted }}>{new Date(inv.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</td>
+                            <td style={{ padding:'9px 12px', fontSize:12, color:S.navy }}>₹{parseFloat(inv.subtotal||0).toFixed(0)}</td>
+                            <td style={{ padding:'9px 12px', fontSize:12, color:S.muted }}>₹{parseFloat(inv.tax||0).toFixed(0)}</td>
+                            <td style={{ padding:'9px 12px', fontSize:13, fontWeight:700, color:inv.status==='paid'?S.success:S.danger }}>₹{parseFloat(inv.total||0).toFixed(0)}</td>
+                            <td style={{ padding:'9px 12px' }}><Badge color={inv.status==='paid'?'green':'red'}>{inv.status?.toUpperCase()}</Badge></td>
+                            <td style={{ padding:'9px 12px' }}><button onClick={e=>{e.stopPropagation();setSelInvoice(inv);}} style={{ fontSize:10, padding:'3px 8px', background:S.lightBlue, color:S.blue, border:'none', borderRadius:5, cursor:'pointer' }}>Manage</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {invoices.length===0&&<div style={{ textAlign:'center', padding:40, color:S.muted, fontSize:13 }}>No invoices yet.</div>}
+                  </div>
+                </div>
+                {/* Right sticky panel */}
+                {selInvoice && (
+                  <div style={{ ...card, padding:0, overflow:'hidden', alignSelf:'start', position:'sticky', top:80 }}>
+                    <div style={{ padding:'14px 16px', borderBottom:'0.5px solid '+S.border, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:S.navy }}>{selInvoice.invoice_number}</div>
+                      <button onClick={()=>setSelInvoice(null)} style={{ background:'none', border:'none', fontSize:16, cursor:'pointer', color:S.muted }}>×</button>
+                    </div>
+                    <div style={{ padding:14 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:S.navy, marginBottom:4 }}>{invoices.find(i=>i.id===selInvoice.id)?.hospital_patients?.full_name||selInvoice.hospital_patients?.full_name}</div>
+                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
+                        <span style={{ fontSize:11, color:S.muted }}>Total</span>
+                        <span style={{ fontSize:16, fontWeight:700, color:S.navy }}>₹{parseFloat(selInvoice.total||0).toFixed(0)}</span>
+                      </div>
+                      {/* Payments summary */}
+                      <div style={{ fontSize:11, color:S.muted, marginBottom:4 }}>Collected: ₹{payments.filter(p=>p.invoice_id===selInvoice.id).reduce((s,p)=>s+parseFloat(p.amount||0),0).toFixed(0)}</div>
+                      <div style={{ fontSize:11, color:S.danger, marginBottom:12 }}>Pending: ₹{Math.max(0, parseFloat(selInvoice.total||0) - payments.filter(p=>p.invoice_id===selInvoice.id).reduce((s,p)=>s+parseFloat(p.amount||0),0)).toFixed(0)}</div>
+                      {/* Action buttons */}
+                      {[
+                        { label:'+ Add Charge', show:true, action:()=>setShowChargeForm(f=>!f), color:S.blue, bg:S.lightBlue },
+                        { label:'Collect Payment', show:selInvoice.status==='unpaid', action:()=>setShowPayForm(f=>!f), color:'#fff', bg:S.success },
+                        { label:'Insurance Claim', show:true, action:()=>setShowClaimForm(f=>!f), color:S.blue, bg:'#EFF6FF' },
+                        { label:'Apply Discount', show:selInvoice.status==='unpaid', action:()=>setShowDiscountForm(f=>!f), color:S.warning, bg:'#FFFBEB' },
+                        { label:'Request Refund', show:true, action:()=>setShowRefundForm(f=>!f), color:S.danger, bg:'#FEF2F2' },
+                      ].filter(a=>a.show).map(a=>(
+                        <button key={a.label} onClick={a.action} style={{ width:'100%', padding:'9px', background:a.bg, color:a.color, border:'none', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', marginBottom:6, textAlign:'left', fontFamily:'inherit' }}>{a.label}</button>
+                      ))}
+                      {/* Add charge form */}
+                      {showChargeForm && (
+                        <div style={{ background:S.bg, borderRadius:8, padding:12, marginTop:8 }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:8 }}>Add Charge</div>
+                          {[['Department','department','text'],['Item Name','item_name','text'],['Qty','quantity','number'],['Unit Price ₹','unit_price','number'],['HSN Code','hsn_code','text']].map(([l,k,t])=>(
+                            <div key={k} style={{ marginBottom:6 }}>
+                              <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>{l}</div>
+                              <input type={t} value={chargeForm[k]} onChange={e=>setChargeForm({...chargeForm,[k]:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                            </div>
+                          ))}
+                          <button onClick={addCharge} style={{ width:'100%', padding:'7px', background:S.blue, color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', marginTop:4 }}>Add</button>
+                        </div>
+                      )}
+                      {/* Collect payment form */}
+                      {showPayForm && (
+                        <div style={{ background:S.bg, borderRadius:8, padding:12, marginTop:8 }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:8 }}>Collect Payment</div>
+                          <div style={{ marginBottom:6 }}>
+                            <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>Amount ₹</div>
+                            <input type="number" value={payForm.amount} onChange={e=>setPayForm({...payForm,amount:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                          </div>
+                          <div style={{ marginBottom:6 }}>
+                            <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>Method</div>
+                            <select value={payForm.payment_method} onChange={e=>setPayForm({...payForm,payment_method:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none' }}>
+                              {['cash','upi','card','netbanking','insurance','corporate'].map(m=><option key={m}>{m}</option>)}
+                            </select>
+                          </div>
+                          <div style={{ marginBottom:6 }}>
+                            <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>Reference No.</div>
+                            <input value={payForm.reference_number} onChange={e=>setPayForm({...payForm,reference_number:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                          </div>
+                          <button onClick={addPayment} style={{ width:'100%', padding:'7px', background:S.success, color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer' }}>Collect</button>
+                        </div>
+                      )}
+                      {/* Insurance claim form */}
+                      {showClaimForm && (
+                        <div style={{ background:S.bg, borderRadius:8, padding:12, marginTop:8 }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:8 }}>Insurance Claim</div>
+                          {[['Insurance Company','insurance_company','text'],['Policy Number','policy_number','text'],['Claim Amount ₹','claim_amount','number']].map(([l,k,t])=>(
+                            <div key={k} style={{ marginBottom:6 }}>
+                              <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>{l}</div>
+                              <input type={t} value={claimForm[k]} onChange={e=>setClaimForm({...claimForm,[k]:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                            </div>
+                          ))}
+                          <button onClick={addClaim} style={{ width:'100%', padding:'7px', background:S.blue, color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer' }}>Submit Claim</button>
+                        </div>
+                      )}
+                      {/* Discount form */}
+                      {showDiscountForm && (
+                        <div style={{ background:S.bg, borderRadius:8, padding:12, marginTop:8 }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:8 }}>Apply Discount</div>
+                          {[['Discount %','discount_percent','number'],['Reason','reason','text'],['Approved By','approved_by','text']].map(([l,k,t])=>(
+                            <div key={k} style={{ marginBottom:6 }}>
+                              <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>{l}</div>
+                              <input type={t} value={discountForm[k]} onChange={e=>setDiscountForm({...discountForm,[k]:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                            </div>
+                          ))}
+                          <button onClick={addDiscount} style={{ width:'100%', padding:'7px', background:S.warning, color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer' }}>Apply</button>
+                        </div>
+                      )}
+                      {/* Refund form */}
+                      {showRefundForm && (
+                        <div style={{ background:S.bg, borderRadius:8, padding:12, marginTop:8 }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:8 }}>Request Refund</div>
+                          {[['Amount ₹','amount','number'],['Reason','reason','text'],['Approved By','approved_by','text']].map(([l,k,t])=>(
+                            <div key={k} style={{ marginBottom:6 }}>
+                              <div style={{ fontSize:9, color:S.muted, marginBottom:2 }}>{l}</div>
+                              <input type={t} value={refundForm[k]} onChange={e=>setRefundForm({...refundForm,[k]:e.target.value})} style={{ width:'100%', padding:'6px 8px', borderRadius:6, border:'0.5px solid '+S.border, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                            </div>
+                          ))}
+                          <button onClick={addRefund} style={{ width:'100%', padding:'7px', background:S.danger, color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer' }}>Submit</button>
+                        </div>
+                      )}
+                      {/* Payments history */}
+                      {payments.filter(p=>p.invoice_id===selInvoice.id).length>0 && (
+                        <div style={{ marginTop:12 }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:6 }}>Payment History</div>
+                          {payments.filter(p=>p.invoice_id===selInvoice.id).map(p=>(
+                            <div key={p.id} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:'0.5px solid '+S.border, fontSize:11 }}>
+                              <span style={{ color:S.muted, textTransform:'capitalize' }}>{p.payment_method}</span>
+                              <span style={{ fontWeight:600, color:S.success }}>₹{parseFloat(p.amount||0).toFixed(0)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CHARGES */}
+            {billingTab==='charges' && (
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:16 }}>All Charges ({charges.length})</div>
+                <div style={{ ...card, padding:0, overflow:'hidden' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr style={{ background:S.bg }}>{['Date','Patient','Department','Item','Qty','Unit Price','Total','HSN'].map(h=><th key={h} style={{ padding:'9px 12px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', textAlign:'left', borderBottom:'0.5px solid '+S.border, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                    <tbody>
+                      {charges.length===0?<tr><td colSpan={8} style={{ padding:40, textAlign:'center', color:S.muted, fontSize:13 }}>No charges recorded yet.</td></tr>:charges.map(c=>(
+                        <tr key={c.id} style={{ borderBottom:'0.5px solid '+S.border }} onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{new Date(c.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.navy }}>{c.hospital_patients?.full_name}</td>
+                          <td style={{ padding:'8px 12px' }}><Badge color="blue">{c.department}</Badge></td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.navy }}>{c.item_name}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.muted }}>{c.quantity}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.muted }}>₹{parseFloat(c.unit_price||0).toFixed(0)}</td>
+                          <td style={{ padding:'8px 12px', fontSize:13, fontWeight:700, color:S.navy }}>₹{parseFloat(c.total||0).toFixed(0)}</td>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{c.hsn_code||'-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* PAYMENTS */}
+            {billingTab==='payments' && (
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:16 }}>Payment Transactions ({payments.length})</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:12, marginBottom:20 }}>
+                  {['cash','upi','card'].map(m=>(
+                    <div key={m} style={{ ...card, padding:'14px 18px' }}>
+                      <div style={{ fontSize:20, fontWeight:700, color:S.blue }}>₹{payments.filter(p=>p.payment_method===m).reduce((s,p)=>s+parseFloat(p.amount||0),0).toFixed(0)}</div>
+                      <div style={{ fontSize:11, color:S.muted, marginTop:2, textTransform:'capitalize' }}>{m} collections</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ ...card, padding:0, overflow:'hidden' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr style={{ background:S.bg }}>{['Date','Patient','Method','Reference','Amount'].map(h=><th key={h} style={{ padding:'9px 12px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', textAlign:'left', borderBottom:'0.5px solid '+S.border }}>{h}</th>)}</tr></thead>
+                    <tbody>
+                      {payments.length===0?<tr><td colSpan={5} style={{ padding:40, textAlign:'center', color:S.muted, fontSize:13 }}>No payments yet.</td></tr>:payments.map(p=>(
+                        <tr key={p.id} style={{ borderBottom:'0.5px solid '+S.border }} onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{new Date(p.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.navy }}>{p.hospital_patients?.full_name}</td>
+                          <td style={{ padding:'8px 12px' }}><Badge color="blue">{p.payment_method}</Badge></td>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{p.reference_number||'-'}</td>
+                          <td style={{ padding:'8px 12px', fontSize:13, fontWeight:700, color:S.success }}>₹{parseFloat(p.amount||0).toFixed(0)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* INSURANCE */}
+            {billingTab==='insurance' && (
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:16 }}>Insurance Claims ({claims.length})</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+                  {[
+                    { label:'Total Claimed', value:'₹'+claims.reduce((s,c)=>s+parseFloat(c.claim_amount||0),0).toFixed(0), color:S.blue },
+                    { label:'Approved', value:'₹'+claims.reduce((s,c)=>s+parseFloat(c.approved_amount||0),0).toFixed(0), color:S.success },
+                    { label:'Pending', value:claims.filter(c=>c.status==='pending').length, color:S.warning },
+                    { label:'Rejected', value:claims.filter(c=>c.status==='rejected').length, color:S.danger },
+                  ].map((k,i)=><div key={i} style={{ ...card, padding:'14px 18px' }}><div style={{ fontSize:20, fontWeight:700, color:k.color }}>{k.value}</div><div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div></div>)}
+                </div>
+                <div style={{ ...card, padding:0, overflow:'hidden' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr style={{ background:S.bg }}>{['Claim #','Patient','Insurer','Policy','Claimed','Approved','Received','Status'].map(h=><th key={h} style={{ padding:'9px 12px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', textAlign:'left', borderBottom:'0.5px solid '+S.border, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                    <tbody>
+                      {claims.length===0?<tr><td colSpan={8} style={{ padding:40, textAlign:'center', color:S.muted, fontSize:13 }}>No claims yet.</td></tr>:claims.map(c=>(
+                        <tr key={c.id} style={{ borderBottom:'0.5px solid '+S.border }} onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                          <td style={{ padding:'8px 12px', fontSize:12, fontWeight:700, color:S.blue }}>{c.claim_number}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.navy }}>{c.hospital_patients?.full_name}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.navy }}>{c.insurance_company}</td>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{c.policy_number||'-'}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, fontWeight:600, color:S.navy }}>₹{parseFloat(c.claim_amount||0).toFixed(0)}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.success }}>₹{parseFloat(c.approved_amount||0).toFixed(0)}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.blue }}>₹{parseFloat(c.received_amount||0).toFixed(0)}</td>
+                          <td style={{ padding:'8px 12px' }}><Badge color={c.status==='approved'?'green':c.status==='rejected'?'red':'yellow'}>{c.status?.toUpperCase()}</Badge></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* REFUNDS */}
+            {billingTab==='refunds' && (
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:16 }}>Refund Requests ({refunds.length})</div>
+                <div style={{ display:'grid', gap:10 }}>
+                  {refunds.length===0?<div style={{ ...card, textAlign:'center', padding:40, color:S.muted, fontSize:13 }}>No refund requests.</div>:refunds.map(r=>(
+                    <div key={r.id} style={{ ...card, padding:16, display:'flex', alignItems:'center', gap:12 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{r.hospital_patients?.full_name}</div>
+                        <div style={{ fontSize:11, color:S.muted }}>{r.reason} · {r.approved_by?'Approved by: '+r.approved_by:''}</div>
+                        <div style={{ fontSize:10, color:S.hint, marginTop:2 }}>{new Date(r.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                      </div>
+                      <div style={{ textAlign:'right' }}>
+                        <div style={{ fontSize:16, fontWeight:700, color:S.danger }}>₹{parseFloat(r.amount||0).toFixed(0)}</div>
+                        <Badge color={r.status==='paid'?'green':r.status==='approved'?'blue':'yellow'}>{r.status?.toUpperCase()}</Badge>
+                      </div>
+                      {r.status==='requested'&&<button onClick={()=>{ supabase.from('bill_refunds').update({status:'approved'}).eq('id',r.id).then(()=>loadRCM()); }} style={{ padding:'5px 12px', background:'#ECFDF5', color:S.success, border:'1px solid #A7F3D0', borderRadius:6, fontSize:11, fontWeight:600, cursor:'pointer' }}>Approve</button>}
+                      {r.status==='approved'&&<button onClick={()=>{ supabase.from('bill_refunds').update({status:'paid'}).eq('id',r.id).then(()=>loadRCM()); }} style={{ padding:'5px 12px', background:S.lightBlue, color:S.blue, border:'0.5px solid '+S.border, borderRadius:6, fontSize:11, fontWeight:600, cursor:'pointer' }}>Mark Paid</button>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* DISCOUNTS */}
+            {billingTab==='discounts' && (
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:16 }}>Discount Log ({discounts.length})</div>
+                <div style={{ ...card, padding:0, overflow:'hidden' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr style={{ background:S.bg }}>{['Date','Invoice','Discount %','Amount','Reason','Approved By','Status'].map(h=><th key={h} style={{ padding:'9px 12px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', textAlign:'left', borderBottom:'0.5px solid '+S.border }}>{h}</th>)}</tr></thead>
+                    <tbody>
+                      {discounts.length===0?<tr><td colSpan={7} style={{ padding:40, textAlign:'center', color:S.muted, fontSize:13 }}>No discounts applied.</td></tr>:discounts.map(d=>(
+                        <tr key={d.id} style={{ borderBottom:'0.5px solid '+S.border }}>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{new Date(d.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, color:S.blue }}>{invoices.find(i=>i.id===d.invoice_id)?.invoice_number||'-'}</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, fontWeight:600, color:S.warning }}>{d.discount_percent}%</td>
+                          <td style={{ padding:'8px 12px', fontSize:12, fontWeight:600, color:S.danger }}>-₹{parseFloat(d.discount_amount||0).toFixed(0)}</td>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{d.reason||'-'}</td>
+                          <td style={{ padding:'8px 12px', fontSize:11, color:S.muted }}>{d.approved_by||'-'}</td>
+                          <td style={{ padding:'8px 12px' }}><Badge color={d.status==='approved'?'green':'yellow'}>{d.status?.toUpperCase()}</Badge></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* REVENUE REPORTS */}
+            {billingTab==='revenue' && (
+              <div>
+                <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>Revenue Analytics</h2>
+                {/* Summary KPIs */}
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:24 }}>
+                  {[
+                    { label:'Total Revenue', value:'₹'+invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0), color:S.success },
+                    { label:'Outstanding', value:'₹'+invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0), color:S.danger },
+                    { label:'Avg Bill Size', value:'₹'+(invoices.length>0?(invoices.reduce((s,i)=>s+parseFloat(i.total||0),0)/invoices.length).toFixed(0):'0'), color:S.blue },
+                    { label:'Collection Rate', value:invoices.length>0?Math.round(invoices.filter(i=>i.status==='paid').length/invoices.length*100)+'%':'0%', color:S.cyan },
+                  ].map((k,i)=><div key={i} style={{ ...card, padding:'16px 20px' }}><div style={{ fontSize:22, fontWeight:700, color:k.color }}>{k.value}</div><div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div></div>)}
+                </div>
+                {/* Payment method breakdown */}
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:16, marginBottom:20 }}>
+                  <div style={{ ...card }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Revenue by Payment Method</div>
+                    {['cash','upi','card','netbanking','insurance','corporate'].map(m=>{
+                      const amt = payments.filter(p=>p.payment_method===m).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+                      const total = payments.reduce((s,p)=>s+parseFloat(p.amount||0),0);
+                      const pct = total>0?Math.round(amt/total*100):0;
+                      return amt>0?(
+                        <div key={m} style={{ marginBottom:10 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                            <span style={{ fontSize:12, color:S.navy, textTransform:'capitalize', fontWeight:500 }}>{m}</span>
+                            <span style={{ fontSize:12, fontWeight:700, color:S.navy }}>₹{amt.toFixed(0)} <span style={{ fontSize:10, color:S.muted }}>({pct}%)</span></span>
+                          </div>
+                          <div style={{ height:6, borderRadius:3, background:S.border }}>
+                            <div style={{ height:6, borderRadius:3, background:S.blue, width:pct+'%', transition:'width 0.3s' }}/>
+                          </div>
+                        </div>
+                      ):null;
+                    })}
+                    {payments.length===0&&<div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>No payment data yet.</div>}
+                  </div>
+                  <div style={{ ...card }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Charges by Department</div>
+                    {[...new Set(charges.map(c=>c.department))].map(dept=>{
+                      const amt = charges.filter(c=>c.department===dept).reduce((s,c)=>s+parseFloat(c.total||0),0);
+                      const total = charges.reduce((s,c)=>s+parseFloat(c.total||0),0);
+                      const pct = total>0?Math.round(amt/total*100):0;
+                      return (
+                        <div key={dept} style={{ marginBottom:10 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                            <span style={{ fontSize:12, color:S.navy, fontWeight:500 }}>{dept}</span>
+                            <span style={{ fontSize:12, fontWeight:700, color:S.navy }}>₹{amt.toFixed(0)} <span style={{ fontSize:10, color:S.muted }}>({pct}%)</span></span>
+                          </div>
+                          <div style={{ height:6, borderRadius:3, background:S.border }}>
+                            <div style={{ height:6, borderRadius:3, background:S.cyan, width:pct+'%', transition:'width 0.3s' }}/>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {charges.length===0&&<div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>No charge data yet.</div>}
+                  </div>
+                </div>
+                {/* Aging report */}
+                <div style={{ ...card }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Outstanding Aging Report</div>
+                  <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
+                    {[['0-30 Days',30],['31-60 Days',60],['61-90 Days',90],['90+ Days',999]].map(([label,days],idx)=>{
+                      const from = idx===0?0:[30,60,90][idx-1];
+                      const unpaid = invoices.filter(i=>{
+                        if(i.status!=='unpaid') return false;
+                        const age = Math.floor((new Date()-new Date(i.created_at))/(24*60*60*1000));
+                        return age>=from && (idx===3?age>90:age<days);
+                      });
+                      const amt = unpaid.reduce((s,i)=>s+parseFloat(i.total||0),0);
+                      return (
+                        <div key={label} style={{ padding:'12px 14px', borderRadius:8, background:idx===3?'#FEF2F2':idx===2?'#FEF3C7':S.bg, border:'0.5px solid '+S.border }}>
+                          <div style={{ fontSize:10, color:S.muted, marginBottom:4 }}>{label}</div>
+                          <div style={{ fontSize:18, fontWeight:700, color:idx>=2?S.danger:S.navy }}>₹{amt.toFixed(0)}</div>
+                          <div style={{ fontSize:10, color:S.muted }}>{unpaid.length} invoices</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
