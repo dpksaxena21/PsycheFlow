@@ -1214,7 +1214,56 @@ export default function HospitalPortal({ user, onLogout }) {
 
         {/* BED TRACKING */}
         {tab==='beds' && (
-          <div style={{ display:'grid', gridTemplateColumns:'340px 1fr', gap:20 }}>
+          <div>
+            {/* Visual Bed Map */}
+            <div style={{ ...card, marginBottom:20 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:S.navy }}>Visual Bed Map</div>
+                <div style={{ display:'flex', gap:12, fontSize:11, color:S.muted }}>
+                  {[['#ECFDF5','Available'],['#FEF2F2','Flagged/Crisis'],['#FEF3C7','Urgent'],['#EFF6FF','Normal']].map(([bg,label])=>(
+                    <div key={label} style={{ display:'flex', alignItems:'center', gap:4 }}>
+                      <div style={{ width:12, height:12, borderRadius:3, background:bg, border:'1px solid #e2e8f0' }}/>
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Group beds by ward */}
+              {(() => {
+                const wardMap = {};
+                beds.forEach(b => { if(!wardMap[b.ward_name]) wardMap[b.ward_name]=[]; wardMap[b.ward_name].push(b); });
+                const ipdByWard = {};
+                ipdList.filter(i=>i.status==='admitted').forEach(i=>{ if(!ipdByWard[i.ward]) ipdByWard[i.ward]=[]; ipdByWard[i.ward].push(i); });
+                const allWards = [...new Set([...Object.keys(wardMap), ...Object.keys(ipdByWard)])];
+                if(allWards.length===0) return <div style={{ textAlign:'center', padding:'24px 0', color:S.muted, fontSize:13 }}>No ward data yet. Add patients to IPD or flag beds to see the map.</div>;
+                return allWards.map(ward=>(
+                  <div key={ward} style={{ marginBottom:20 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>{ward}</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                      {/* IPD beds */}
+                      {(ipdByWard[ward]||[]).map(adm=>(
+                        <div key={adm.id} title={`${adm.hospital_patients?.full_name} — Admitted`}
+                          style={{ width:64, height:64, borderRadius:8, background:'#EFF6FF', border:'1.5px solid #BFDBFE', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:10, fontWeight:600, color:S.blue, textAlign:'center', padding:4 }}>
+                          <div style={{ fontSize:14 }}>🛏</div>
+                          <div style={{ fontSize:9, color:S.blue, fontWeight:700 }}>{adm.bed_number||'B?'}</div>
+                          <div style={{ fontSize:8, color:S.muted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', width:'100%', textAlign:'center' }}>{adm.hospital_patients?.full_name?.split(' ')[0]}</div>
+                        </div>
+                      ))}
+                      {/* Flagged beds */}
+                      {(wardMap[ward]||[]).map(b=>(
+                        <div key={b.id} title={`${b.patient_name} — ${b.urgency} — ${b.flag_reason}`}
+                          style={{ width:64, height:64, borderRadius:8, background:b.urgency==='crisis'?'#FEF2F2':b.urgency==='urgent'?'#FEF3C7':'#FFF7ED', border:`1.5px solid ${b.urgency==='crisis'?'#FECACA':b.urgency==='urgent'?'#FDE68A':'#FED7AA'}`, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:10, fontWeight:600, textAlign:'center', padding:4 }}>
+                          <div style={{ fontSize:14 }}>{b.urgency==='crisis'?'🚨':b.urgency==='urgent'?'⚠️':'🔔'}</div>
+                          <div style={{ fontSize:9, fontWeight:700, color:b.urgency==='crisis'?S.danger:S.warning }}>{b.bed_number}</div>
+                          <div style={{ fontSize:8, color:S.muted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', width:'100%', textAlign:'center' }}>{b.patient_name?.split(' ')[0]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'340px 1fr', gap:20 }}>
             <div style={{ ...card }}>
               <div style={{ fontSize:13, fontWeight:700, color:S.navy, marginBottom:16 }}>Flag Bed for Review</div>
               {[['Ward Name *','ward_name','ICU / Ward 4'],['Bed Number *','bed_number','B-12'],['Patient Name *','patient_name',''],['Patient Age','patient_age','']].map(([l,k,p]) => (
@@ -1272,6 +1321,7 @@ export default function HospitalPortal({ user, onLogout }) {
                 </div>
               ))}
             </div>
+          </div>
           </div>
         )}
 
