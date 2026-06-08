@@ -1,5 +1,5 @@
 # PsycheFlow — Master Product Bible
-## Auto-Updated: 2026-06-08 09:01
+## Auto-Updated: 2026-06-08 12:39
 ## Builder: Deepak Saxena | github.com/dpksaxena21/PsycheFlow
 ## Domain: psycheflow.in | GitHub: github.com/dpksaxena21/PsycheFlow
 
@@ -327,51 +327,3 @@ Rules:
 - I paste only last 15 lines of output  
 - No re-explaining what is already done
 - Continue directly from where we left off
-
-
-## Session Update — Jun 8, 2026
-
-### FIXED
-- scikit-learn==1.6.1 pinned in requirements.txt (Railway InconsistentVersionWarning resolved)
-- shap==0.46.0 confirmed working on Railway
-- Duplicate scikit-learn entry removed from requirements.txt
-- Page title updated: "PsycheFlow — Free Mental Health Assessment India | Online Psychologist Consultation"
-- All emoji replaced with custom SVG icons across App.js, PsychologistPortal.js, ACTEngine.js, ErrorBoundary.js, Questionnaire.js
-- Auth.js: purple (#4F46E5) replaced with blue (#1D4ED8) everywhere
-- Auth.js: role selector (patient/psychologist) removed — psychologists use /psychologist URL
-- Auth.js: right panel redesigned — white bg, Satoshi font, blue toggle, cleaner inputs
-- Dashboard nav conditional JSX syntax fixed (missing closing })
-- Landing.js: LogoMark updated to new E3 P mark
-
-### ADDED
-- icons.js — central SVG icon library (IconJournal, IconAnalyze, IconAlert, IconBrain, IconTarget, IconStar, IconChart, IconClipboard, IconHospital, IconPill, IconChat, IconUser, IconCheck, IconWarning, IconEEG, IconSparkle, IconShield)
-- favicon.svg — new E3 P mark with EEG trail (replaces old teardrop)
-- Logo.js — PsycheFlowIcon + PsycheFlowLogo React components
-- LoadingScreen.js — animated EEG wave on dark navy background, rotating status messages
-- frontend/public/robots.txt — private routes blocked, sitemap pointer
-- frontend/public/manifest.json — PWA metadata, app shortcuts (Take Assessment, Find Psychologist)
-- vercel.json — SPA routing rewrites, security headers (X-Frame-Options, CSP), static asset caching
-- Full SEO: 5x JSON-LD schemas (Organization, WebSite, MedicalWebPage, SoftwareApplication, FAQPage)
-- Meta keywords: 20+ targeted India mental health keywords
-- Sitemap updated to www.psycheflow.in, 6 pages, lastmod + changefreq
-
-### GOOGLE STATUS
-- www.psycheflow.in: URL is on Google, Page is indexed
-- Canonical: https://www.psycheflow.in/
-- Sitemap: Success, 6 pages discovered
-- Indexing requested (priority crawl queue)
-- Google Search still shows old "React App" cache — will update in 3-7 days
-
-### MOBILE RESPONSIVE
-- Dashboard: bottom tab bar (5 items), 1-col grids, safe area padding, isMobile hook
-- PsychologistPortal: fixed top bar on mobile, bottom tab bar, scrollable patient tabs, 2-col score cards
-- HospitalPortal: scrollable tab row, stacked header on mobile, 2-col stats grid
-
-### PENDING
-- og-image.png does not exist — OG previews broken on WhatsApp/LinkedIn shares
-- Anomaly detection — PHQ spike flagging (z-score, alert at >5 point delta)
-- MSG91 SMS — OPD token notifications
-- Notification bell — not functional
-- Mobile test on actual phone
-- Pricing page
-- Telehealth — WebRTC
