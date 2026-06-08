@@ -167,57 +167,7 @@ You can: check availability, suggest slots, confirm bookings (tell user to use A
     setLoading(false);
   };
 
-  const buildNotifications = (sessions, appointments, journals) => {
-    const notifs = [];
-    // Latest session
-    if (sessions.length > 0) {
-      const s = sessions[0];
-      notifs.push({
-        id: 'sess_' + s.id,
-        type: s.phq_score > 14 ? 'alert' : 'info',
-        title: s.phq_score > 14 ? 'High PHQ-9 score detected' : 'Assessment completed',
-        body: `PHQ-9: ${s.phq_score} · GAD-7: ${s.gad_score}`,
-        time: s.created_at,
-      });
-    }
-    // PHQ spike between last two sessions
-    if (sessions.length >= 2) {
-      const diff = sessions[0].phq_score - sessions[1].phq_score;
-      if (Math.abs(diff) >= 5) {
-        notifs.push({
-          id: 'spike_' + sessions[0].id,
-          type: diff > 0 ? 'alert' : 'success',
-          title: diff > 0 ? `PHQ-9 spike: +${diff} points` : `PHQ-9 improved: ${diff} points`,
-          body: diff > 0 ? 'Significant worsening since last session' : 'Significant improvement since last session',
-          time: sessions[0].created_at,
-        });
-      }
-    }
-    // Upcoming appointment
-    const upcoming = appointments.filter(a => a.status === 'scheduled' && new Date(a.scheduled_at) > new Date());
-    if (upcoming.length > 0) {
-      const next = upcoming[0];
-      const d = new Date(next.scheduled_at);
-      notifs.push({
-        id: 'appt_' + next.id,
-        type: 'info',
-        title: 'Upcoming appointment',
-        body: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-        time: next.scheduled_at,
-      });
-    }
-    // Latest journal
-    if (journals.length > 0) {
-      notifs.push({
-        id: 'jour_' + journals[0].id,
-        type: 'info',
-        title: 'Journal analyzed',
-        body: journals[0].analysis?.emotions?.primary || 'New entry recorded',
-        time: journals[0].created_at,
-      });
-    }
-    setNotifications(notifs);
-  };
+
 
   if (!open) return (
     <button onClick={() => setOpen(true)} style={{
@@ -351,6 +301,26 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
 
   useEffect(() => { fetchAll(); }, []);
 
+  const buildNotifications = (sessions, appointments, journals) => {
+    const notifs = [];
+    if (sessions.length > 0) {
+      const s = sessions[0];
+      notifs.push({ id:'sess_'+s.id, type:s.phq_score>14?'alert':'info', title:s.phq_score>14?'High PHQ-9 score detected':'Assessment completed', body:`PHQ-9: ${s.phq_score} · GAD-7: ${s.gad_score}`, time:s.created_at });
+    }
+    if (sessions.length >= 2) {
+      const diff = sessions[0].phq_score - sessions[1].phq_score;
+      if (Math.abs(diff) >= 5) notifs.push({ id:'spike_'+sessions[0].id, type:diff>0?'alert':'success', title:diff>0?`PHQ-9 spike: +${diff} points`:`PHQ-9 improved: ${diff} points`, body:diff>0?'Significant worsening since last session':'Significant improvement since last session', time:sessions[0].created_at });
+    }
+    const upcoming = appointments.filter(a => a.status==='scheduled' && new Date(a.scheduled_at)>new Date());
+    if (upcoming.length > 0) {
+      const next = upcoming[0];
+      const d = new Date(next.scheduled_at);
+      notifs.push({ id:'appt_'+next.id, type:'info', title:'Upcoming appointment', body:d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' · '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}), time:next.scheduled_at });
+    }
+    if (journals.length > 0) notifs.push({ id:'jour_'+journals[0].id, type:'info', title:'Journal analyzed', body:journals[0].analysis?.emotions?.primary||'New entry recorded', time:journals[0].created_at });
+    setNotifications(notifs);
+  };
+
   const fetchAll = async () => {
     setLoading(true);
     const [{ data: s }, { data: j }, { data: a }, { data: link }] = await Promise.all([
@@ -359,10 +329,13 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       supabase.from('appointments').select('*').eq('patient_id', user.id).order('scheduled_at', { ascending: true }),
       supabase.from('patient_psychologist').select('psychologist_id').eq('patient_id', user.id).eq('active', true).not('psychologist_id', 'is', null).neq('psychologist_id', user.id).limit(1).maybeSingle(),
     ]);
-    setSessions(s || []);
-    setJournals(j || []);
-    setAppointments(a || []);
-    buildNotifications(s || [], a || [], j || []);
+    const sData = s || [];
+    const jData = j || [];
+    const aData = a || [];
+    setSessions(sData);
+    setJournals(jData);
+    setAppointments(aData);
+    buildNotifications(sData, aData, jData);
     if (link?.psychologist_id) {
       setPsychologistId(link.psychologist_id);
       setPsychologistContact([{ id: link.psychologist_id, name: 'My Psychologist', role: 'psychologist' }]);
