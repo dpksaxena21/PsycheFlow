@@ -1309,8 +1309,7 @@ export default function HospitalPortal({ user, onLogout }) {
                       </div>
                       <div style={{ marginBottom:10 }}>
                         <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:3, textTransform:'uppercase' }}>Line Items (Description, Amount — one per line)</div>
-                        <textarea value={invForm.items} onChange={e=>setInvForm({...invForm,items:e.target.value})} rows={3} placeholder={'Consultation Fee, 500
-Lab Tests, 1200'} style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:12, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'monospace', boxSizing:'border-box' }}/>
+                        <textarea value={invForm.items} onChange={e=>setInvForm({...invForm,items:e.target.value})} rows={3} placeholder={'Consultation Fee, 500\nLab Tests, 1200'} style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:12, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'monospace', boxSizing:'border-box' }}/>
                       </div>
                       <button onClick={addInvoice} disabled={invLoading||!invForm.patient_id||!invForm.items} style={{ padding:'8px 20px', background:S.blue, color:'#fff', border:'none', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>{invLoading?'Creating...':'Generate Invoice'}</button>
                     </div>
