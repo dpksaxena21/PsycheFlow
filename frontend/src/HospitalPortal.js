@@ -1017,23 +1017,48 @@ export default function HospitalPortal({ user, onLogout }) {
                 </button>
               </div>
             )}
-            <div style={{ display:'grid', gap:8 }}>
-              {drugs.length===0 ? (
-                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No drugs in inventory. Add your first drug above.</div>
-              ) : drugs.map(d=>(
-                <div key={d.id} style={{ ...card, padding:16, display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{d.drug_name} {d.generic_name&&<span style={{ fontSize:12, color:S.muted }}>({d.generic_name})</span>}</div>
-                    <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{d.category||'Uncategorized'} · {d.supplier||'No supplier'} · Exp: {d.expiry_date||'N/A'}</div>
-                  </div>
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:18, fontWeight:700, color: d.stock_quantity<=d.reorder_level?S.danger:S.success }}>{d.stock_quantity}</div>
-                    <div style={{ fontSize:10, color:S.muted }}>{d.unit}</div>
-                    {d.price_per_unit>0&&<div style={{ fontSize:11, color:S.blue, marginTop:2 }}>₹{d.price_per_unit}/{d.unit}</div>}
-                  </div>
-                  <Badge color={d.stock_quantity<=d.reorder_level?'red':'green'}>{d.stock_quantity<=d.reorder_level?'Low Stock':'In Stock'}</Badge>
-                </div>
-              ))}
+            {/* Expiring soon alert */}
+            {drugs.filter(d=>d.expiry_date&&new Date(d.expiry_date)<new Date(Date.now()+30*24*60*60*1000)).length>0 && (
+              <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:10, padding:'10px 16px', marginBottom:12, fontSize:12, color:S.warning, fontWeight:500 }}>
+                ⏰ {drugs.filter(d=>d.expiry_date&&new Date(d.expiry_date)<new Date(Date.now()+30*24*60*60*1000)).length} drug(s) expiring within 30 days
+              </div>
+            )}
+            {/* Dense table */}
+            <div style={{ ...card, padding:0, overflow:'hidden' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead>
+                  <tr style={{ background:S.bg }}>
+                    {['Drug Name','Generic','Category','Stock','Unit','Reorder','Expiry','Price','Supplier','Status'].map(h=>(
+                      <th key={h} style={{ padding:'9px 12px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', textAlign:'left', borderBottom:'0.5px solid '+S.border, whiteSpace:'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {drugs.length===0 ? (
+                    <tr><td colSpan={10} style={{ padding:48, textAlign:'center', color:S.muted, fontSize:13 }}>No drugs in inventory.</td></tr>
+                  ) : drugs.map(d=>{
+                    const expiring = d.expiry_date && new Date(d.expiry_date) < new Date(Date.now()+30*24*60*60*1000);
+                    const lowStock = d.stock_quantity <= d.reorder_level;
+                    return (
+                    <tr key={d.id} style={{ borderBottom:'0.5px solid '+S.border, background: expiring?'#FFFBEB':lowStock?'#FFF5F5':'transparent' }}
+                      onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
+                      onMouseLeave={e=>e.currentTarget.style.background=expiring?'#FFFBEB':lowStock?'#FFF5F5':'transparent'}>
+                      <td style={{ padding:'9px 12px', fontSize:13, fontWeight:600, color:S.navy }}>{d.drug_name}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:S.muted }}>{d.generic_name||'-'}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:S.muted }}>{d.category||'-'}</td>
+                      <td style={{ padding:'9px 12px', fontSize:13, fontWeight:700, color:lowStock?S.danger:S.success }}>{d.stock_quantity}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:S.muted }}>{d.unit}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:S.muted }}>{d.reorder_level}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:expiring?S.danger:S.muted }}>{d.expiry_date||'-'}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:S.blue }}>{d.price_per_unit>0?'₹'+d.price_per_unit:'-'}</td>
+                      <td style={{ padding:'9px 12px', fontSize:12, color:S.muted }}>{d.supplier||'-'}</td>
+                      <td style={{ padding:'9px 12px' }}>
+                        <Badge color={lowStock?'red':expiring?'yellow':'green'}>{lowStock?'Low':expiring?'Expiring':'OK'}</Badge>
+                      </td>
+                    </tr>
+                  );})}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -1380,7 +1405,22 @@ export default function HospitalPortal({ user, onLogout }) {
 
         {/* OPD QUEUE */}
         {tab==='queue' && (
-          <div style={{ display:'grid', gridTemplateColumns:'340px 1fr', gap:20 }}>
+          <div>
+            {/* Queue KPIs */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Waiting', value:queue.filter(q=>q.status==='waiting').length, color:S.warning },
+                { label:'In Consultation', value:queue.filter(q=>q.status==='in_consultation').length, color:S.blue },
+                { label:'Completed Today', value:queue.filter(q=>q.status==='done').length, color:S.success },
+                { label:'Crisis', value:queue.filter(q=>q.priority==='crisis').length, color:S.danger },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px', borderLeft:`3px solid ${k.color}` }}>
+                  <div style={{ fontSize:26, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'340px 1fr', gap:20 }}>
             <div style={{ ...card }}>
               <div style={{ fontSize:13, fontWeight:700, color:S.navy, marginBottom:16 }}>Add Patient to Queue</div>
               {[['Patient Name *','patient_name','text'],['Phone','patient_phone','tel'],['Age','patient_age','number']].map(([l,k,t]) => (
@@ -1428,6 +1468,7 @@ export default function HospitalPortal({ user, onLogout }) {
                   </div>
                 ))}
               </div>
+            </div>
             </div>
           </div>
         )}
