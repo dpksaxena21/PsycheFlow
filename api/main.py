@@ -1,6 +1,10 @@
 # ── PsycheFlow API v2 ─────────────────────────────────────
 import sys as _sys
 import os as _os
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', message='.*InconsistentVersionWarning.*')
+warnings.filterwarnings('ignore', message='.*If you are loading a serialized model.*')
 _sys.path.insert(0, _os.path.dirname(__file__))
 from rag import get_relevant_context
 
