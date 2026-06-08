@@ -30,7 +30,7 @@ export default function HospitalPortal({ user, onLogout }) {
   const [patLoading, setPatLoading] = useState(false);
   // EHR
   const [ehrRecords, setEhrRecords] = useState([]);
-  const [ehrForm, setEhrForm] = useState({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', vitals:'', follow_up_date:'' });
+  const [ehrForm, setEhrForm] = useState({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', follow_up_date:'', bp_systolic:'', bp_diastolic:'', heart_rate:'', temperature:'', spo2:'', respiratory_rate:'', blood_sugar:'', weight:'', prescription:'' });
   const [ehrLoading, setEhrLoading] = useState(false);
   const [showEhrForm, setShowEhrForm] = useState(false);
   // IPD
@@ -154,8 +154,17 @@ export default function HospitalPortal({ user, onLogout }) {
   const addEHR = async () => {
     if (!selPatient || !ehrForm.chief_complaint || !hospital) return;
     setEhrLoading(true);
-    await supabase.from('ehr_records').insert({ hospital_id:hospital.id, patient_id:selPatient.id, doctor_id:user.id, ...ehrForm, vitals: ehrForm.vitals ? { notes: ehrForm.vitals } : {} });
-    setEhrForm({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', vitals:'', follow_up_date:'' });
+    const vitals = {
+      bp: ehrForm.bp_systolic && ehrForm.bp_diastolic ? `${ehrForm.bp_systolic}/${ehrForm.bp_diastolic} mmHg` : '',
+      heart_rate: ehrForm.heart_rate ? `${ehrForm.heart_rate} bpm` : '',
+      temperature: ehrForm.temperature ? `${ehrForm.temperature} °F` : '',
+      spo2: ehrForm.spo2 ? `${ehrForm.spo2}%` : '',
+      respiratory_rate: ehrForm.respiratory_rate ? `${ehrForm.respiratory_rate} /min` : '',
+      blood_sugar: ehrForm.blood_sugar ? `${ehrForm.blood_sugar} mg/dL` : '',
+      weight: ehrForm.weight ? `${ehrForm.weight} kg` : '',
+    };
+    await supabase.from('ehr_records').insert({ hospital_id:hospital.id, patient_id:selPatient.id, doctor_id:user.id, record_type:ehrForm.record_type, chief_complaint:ehrForm.chief_complaint, diagnosis:ehrForm.diagnosis, notes:ehrForm.notes, follow_up_date:ehrForm.follow_up_date||null, vitals, prescription:ehrForm.prescription });
+    setEhrForm({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', follow_up_date:'', bp_systolic:'', bp_diastolic:'', heart_rate:'', temperature:'', spo2:'', respiratory_rate:'', blood_sugar:'', weight:'', prescription:'' });
     setShowEhrForm(false);
     await loadEHR(selPatient.id);
     setEhrLoading(false);
@@ -477,13 +486,101 @@ export default function HospitalPortal({ user, onLogout }) {
                       style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
                   </div>
                 </div>
-                {[['Chief Complaint *','chief_complaint'],['Diagnosis','diagnosis'],['Vitals (BP, HR, Temp, SpO2)','vitals'],['Clinical Notes','notes']].map(([label,key]) => (
-                  <div key={key} style={{ marginBottom:12 }}>
-                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>{label}</div>
-                    <textarea value={ehrForm[key]} onChange={e=>setEhrForm({...ehrForm,[key]:e.target.value})} rows={key==='notes'?4:2}
-                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                {/* Chief Complaint */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Chief Complaint *</div>
+                  <textarea value={ehrForm.chief_complaint} onChange={e=>setEhrForm({...ehrForm,chief_complaint:e.target.value})} rows={2}
+                    style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                </div>
+                {/* Diagnosis */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Diagnosis</div>
+                  <textarea value={ehrForm.diagnosis} onChange={e=>setEhrForm({...ehrForm,diagnosis:e.target.value})} rows={2}
+                    style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                </div>
+                {/* Vitals — structured */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:8, textTransform:'uppercase' }}>Vitals</div>
+                  <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:8 }}>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>BP Systolic</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.bp_systolic} onChange={e=>setEhrForm({...ehrForm,bp_systolic:e.target.value})} placeholder="120"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted, whiteSpace:'nowrap' }}>mmHg</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>BP Diastolic</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.bp_diastolic} onChange={e=>setEhrForm({...ehrForm,bp_diastolic:e.target.value})} placeholder="80"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted, whiteSpace:'nowrap' }}>mmHg</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Heart Rate</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.heart_rate} onChange={e=>setEhrForm({...ehrForm,heart_rate:e.target.value})} placeholder="72"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted }}>bpm</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Temperature</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.temperature} onChange={e=>setEhrForm({...ehrForm,temperature:e.target.value})} placeholder="98.6"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted }}>°F</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>SpO2</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.spo2} onChange={e=>setEhrForm({...ehrForm,spo2:e.target.value})} placeholder="98" max="100"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background: parseInt(ehrForm.spo2)<95?'#FEF2F2':S.bg, color: parseInt(ehrForm.spo2)<95?S.danger:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted }}>%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Resp. Rate</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.respiratory_rate} onChange={e=>setEhrForm({...ehrForm,respiratory_rate:e.target.value})} placeholder="16"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted }}>/min</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Blood Sugar</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.blood_sugar} onChange={e=>setEhrForm({...ehrForm,blood_sugar:e.target.value})} placeholder="100"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background: parseInt(ehrForm.blood_sugar)>200?'#FEF2F2':S.bg, color: parseInt(ehrForm.blood_sugar)>200?S.danger:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted, whiteSpace:'nowrap' }}>mg/dL</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Weight</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <input type="number" value={ehrForm.weight} onChange={e=>setEhrForm({...ehrForm,weight:e.target.value})} placeholder="70"
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                        <span style={{ fontSize:10, color:S.muted }}>kg</span>
+                      </div>
+                    </div>
                   </div>
-                ))}
+                </div>
+                {/* Prescription */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Prescription</div>
+                  <textarea value={ehrForm.prescription} onChange={e=>setEhrForm({...ehrForm,prescription:e.target.value})} rows={3}
+                    placeholder="Tab Paracetamol 500mg — 1-0-1 × 5 days&#10;Tab Amoxicillin 500mg — 1-1-1 × 7 days"
+                    style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'monospace', boxSizing:'border-box' }}/>
+                </div>
+                {/* Clinical Notes */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Clinical Notes</div>
+                  <textarea value={ehrForm.notes} onChange={e=>setEhrForm({...ehrForm,notes:e.target.value})} rows={4}
+                    style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                </div>
                 <button onClick={addEHR} disabled={ehrLoading||!ehrForm.chief_complaint}
                   style={{ padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
                   {ehrLoading ? 'Saving...' : 'Save Record'}
@@ -508,7 +605,20 @@ export default function HospitalPortal({ user, onLogout }) {
                 <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(2,1fr)', gap:12 }}>
                   {r.chief_complaint && <div><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Chief Complaint</div><div style={{ fontSize:13, color:S.navy }}>{r.chief_complaint}</div></div>}
                   {r.diagnosis && <div><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Diagnosis</div><div style={{ fontSize:13, color:S.navy }}>{r.diagnosis}</div></div>}
-                  {r.vitals?.notes && <div><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Vitals</div><div style={{ fontSize:13, color:S.navy }}>{r.vitals.notes}</div></div>}
+                  {r.vitals && Object.values(r.vitals).some(v=>v) && (
+                    <div style={{ gridColumn: isMobile?'1':'1/-1' }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:6 }}>Vitals</div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        {r.vitals.bp && <span style={{ padding:'3px 10px', borderRadius:100, background:S.lightBlue, color:S.blue, fontSize:11, fontWeight:600 }}>BP: {r.vitals.bp}</span>}
+                        {r.vitals.heart_rate && <span style={{ padding:'3px 10px', borderRadius:100, background:'#FEF3C7', color:'#D97706', fontSize:11, fontWeight:600 }}>HR: {r.vitals.heart_rate}</span>}
+                        {r.vitals.temperature && <span style={{ padding:'3px 10px', borderRadius:100, background:'#FFF7ED', color:'#EA580C', fontSize:11, fontWeight:600 }}>Temp: {r.vitals.temperature}</span>}
+                        {r.vitals.spo2 && <span style={{ padding:'3px 10px', borderRadius:100, background: parseInt(r.vitals.spo2)<95?'#FEF2F2':'#ECFDF5', color: parseInt(r.vitals.spo2)<95?S.danger:S.success, fontSize:11, fontWeight:600 }}>SpO2: {r.vitals.spo2}</span>}
+                        {r.vitals.respiratory_rate && <span style={{ padding:'3px 10px', borderRadius:100, background:S.lightBlue, color:S.blue, fontSize:11, fontWeight:600 }}>RR: {r.vitals.respiratory_rate}</span>}
+                        {r.vitals.blood_sugar && <span style={{ padding:'3px 10px', borderRadius:100, background: parseInt(r.vitals.blood_sugar)>200?'#FEF2F2':'#ECFDF5', color: parseInt(r.vitals.blood_sugar)>200?S.danger:S.success, fontSize:11, fontWeight:600 }}>BS: {r.vitals.blood_sugar}</span>}
+                        {r.vitals.weight && <span style={{ padding:'3px 10px', borderRadius:100, background:S.bg, color:S.muted, fontSize:11, fontWeight:600 }}>Wt: {r.vitals.weight}</span>}
+                      </div>
+                    </div>
+                  )}
                   {r.notes && <div style={{ gridColumn: isMobile?'1':'1/-1' }}><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Clinical Notes</div><div style={{ fontSize:13, color:S.navy, lineHeight:1.6 }}>{r.notes}</div></div>}
                 </div>
               </div>
