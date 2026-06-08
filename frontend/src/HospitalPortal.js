@@ -38,6 +38,21 @@ export default function HospitalPortal({ user, onLogout }) {
   const [ipdForm, setIpdForm] = useState({ patient_id:'', ward:'', bed_number:'', admitting_doctor:'', diagnosis_on_admission:'' });
   const [ipdLoading, setIpdLoading] = useState(false);
   const [showIpdForm, setShowIpdForm] = useState(false);
+  // Pharmacy
+  const [drugs, setDrugs] = useState([]);
+  const [drugForm, setDrugForm] = useState({ drug_name:'', generic_name:'', category:'', stock_quantity:0, unit:'tablets', reorder_level:10, expiry_date:'', price_per_unit:'', supplier:'' });
+  const [drugLoading, setDrugLoading] = useState(false);
+  const [showDrugForm, setShowDrugForm] = useState(false);
+  // Lab
+  const [labOrders, setLabOrders] = useState([]);
+  const [labForm, setLabForm] = useState({ patient_id:'', test_name:'', test_category:'', priority:'routine', notes:'' });
+  const [labLoading, setLabLoading] = useState(false);
+  const [showLabForm, setShowLabForm] = useState(false);
+  // Billing
+  const [invoices, setInvoices] = useState([]);
+  const [invForm, setInvForm] = useState({ patient_id:'', items:'', notes:'' });
+  const [invLoading, setInvLoading] = useState(false);
+  const [showInvForm, setShowInvForm] = useState(false);
   const [hospital, setHospital] = useState(null);
   const [queue, setQueue] = useState([]);
   const [beds, setBeds] = useState([]);
@@ -161,6 +176,65 @@ export default function HospitalPortal({ user, onLogout }) {
     await loadIPD();
   };
 
+  const loadPharmacy = async () => {
+    if (!hospital) return;
+    const { data } = await supabase.from('pharmacy_inventory').select('*').eq('hospital_id', hospital.id).order('drug_name');
+    setDrugs(data || []);
+  };
+  const loadLab = async () => {
+    if (!hospital) return;
+    const { data } = await supabase.from('lab_orders').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('ordered_at', { ascending:false });
+    setLabOrders(data || []);
+  };
+  const loadBilling = async () => {
+    if (!hospital) return;
+    const { data } = await supabase.from('billing_invoices').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false });
+    setInvoices(data || []);
+  };
+  const addDrug = async () => {
+    if (!drugForm.drug_name || !hospital) return;
+    setDrugLoading(true);
+    await supabase.from('pharmacy_inventory').insert({ hospital_id:hospital.id, ...drugForm, stock_quantity:parseInt(drugForm.stock_quantity)||0, reorder_level:parseInt(drugForm.reorder_level)||10, price_per_unit:parseFloat(drugForm.price_per_unit)||0 });
+    setDrugForm({ drug_name:'', generic_name:'', category:'', stock_quantity:0, unit:'tablets', reorder_level:10, expiry_date:'', price_per_unit:'', supplier:'' });
+    setShowDrugForm(false);
+    await loadPharmacy();
+    setDrugLoading(false);
+  };
+  const addLabOrder = async () => {
+    if (!labForm.patient_id || !labForm.test_name || !hospital) return;
+    setLabLoading(true);
+    await supabase.from('lab_orders').insert({ hospital_id:hospital.id, doctor_id:user.id, ...labForm });
+    setLabForm({ patient_id:'', test_name:'', test_category:'', priority:'routine', notes:'' });
+    setShowLabForm(false);
+    await loadLab();
+    setLabLoading(false);
+  };
+  const updateLabResult = async (id, result) => {
+    await supabase.from('lab_orders').update({ result, status:'resulted', resulted_at:new Date().toISOString() }).eq('id',id);
+    await loadLab();
+  };
+  const genInvoiceNumber = () => 'INV-' + Date.now().toString().slice(-8);
+  const addInvoice = async () => {
+    if (!invForm.patient_id || !invForm.items || !hospital) return;
+    setInvLoading(true);
+    const items = invForm.items.split('\n').filter(Boolean).map(line => {
+      const parts = line.split(',');
+      return { description: parts[0]?.trim(), amount: parseFloat(parts[1])||0 };
+    });
+    const subtotal = items.reduce((s,i) => s + i.amount, 0);
+    const tax = subtotal * 0.18;
+    const total = subtotal + tax;
+    await supabase.from('billing_invoices').insert({ hospital_id:hospital.id, patient_id:invForm.patient_id, invoice_number:genInvoiceNumber(), items, subtotal, tax, total, notes:invForm.notes });
+    setInvForm({ patient_id:'', items:'', notes:'' });
+    setShowInvForm(false);
+    await loadBilling();
+    setInvLoading(false);
+  };
+  const markPaid = async (id, method) => {
+    await supabase.from('billing_invoices').update({ status:'paid', payment_method:method, paid_at:new Date().toISOString() }).eq('id',id);
+    await loadBilling();
+  };
+
   // Token generation
   const genToken = () => {
     const existing = queue.map(q => parseInt(q.token_number.replace('PSY-',''))||0);
@@ -237,6 +311,9 @@ export default function HospitalPortal({ user, onLogout }) {
     { id:'patients', label:'Patients' },
     { id:'ehr', label:'EHR' },
     { id:'ipd', label:'IPD' },
+    { id:'pharmacy', label:'Pharmacy' },
+    { id:'lab', label:'Lab' },
+    { id:'billing', label:'Billing' },
     { id:'queue', label:'OPD Queue' },
     { id:'beds', label:'Bed Tracking' },
     { id:'referrals', label:'Referrals' },
@@ -509,6 +586,234 @@ export default function HospitalPortal({ user, onLogout }) {
                       <strong>Discharge Summary:</strong> {adm.discharge_summary}
                     </div>
                   )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PHARMACY */}
+        {tab==='pharmacy' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+              <div>
+                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Pharmacy Inventory</h2>
+                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{drugs.length} drugs · {drugs.filter(d=>d.stock_quantity<=d.reorder_level).length} low stock</div>
+              </div>
+              <button onClick={()=>setShowDrugForm(f=>!f)} style={{ padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                {showDrugForm?'Cancel':'+ Add Drug'}
+              </button>
+            </div>
+            {drugs.filter(d=>d.stock_quantity<=d.reorder_level).length > 0 && (
+              <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:10, padding:'10px 16px', marginBottom:16, fontSize:12, color:'#D97706', fontWeight:500 }}>
+                ⚠ {drugs.filter(d=>d.stock_quantity<=d.reorder_level).length} drug(s) at or below reorder level — restock needed
+              </div>
+            )}
+            {showDrugForm && (
+              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
+                <div style={{ fontSize:12, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:16 }}>Add Drug to Inventory</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:12 }}>
+                  {[['Drug Name *','drug_name','text'],['Generic Name','generic_name','text'],['Category','category','text'],['Stock Qty','stock_quantity','number'],['Unit','unit','text'],['Reorder Level','reorder_level','number'],['Expiry Date','expiry_date','date'],['Price/Unit (₹)','price_per_unit','number'],['Supplier','supplier','text']].map(([label,key,type])=>(
+                    <div key={key}>
+                      <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>{label}</div>
+                      <input type={type} value={drugForm[key]} onChange={e=>setDrugForm({...drugForm,[key]:e.target.value})}
+                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={addDrug} disabled={drugLoading||!drugForm.drug_name} style={{ marginTop:16, padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  {drugLoading?'Adding...':'Add to Inventory'}
+                </button>
+              </div>
+            )}
+            <div style={{ display:'grid', gap:8 }}>
+              {drugs.length===0 ? (
+                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No drugs in inventory. Add your first drug above.</div>
+              ) : drugs.map(d=>(
+                <div key={d.id} style={{ ...card, padding:16, display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{d.drug_name} {d.generic_name&&<span style={{ fontSize:12, color:S.muted }}>({d.generic_name})</span>}</div>
+                    <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{d.category||'Uncategorized'} · {d.supplier||'No supplier'} · Exp: {d.expiry_date||'N/A'}</div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:18, fontWeight:700, color: d.stock_quantity<=d.reorder_level?S.danger:S.success }}>{d.stock_quantity}</div>
+                    <div style={{ fontSize:10, color:S.muted }}>{d.unit}</div>
+                    {d.price_per_unit>0&&<div style={{ fontSize:11, color:S.blue, marginTop:2 }}>₹{d.price_per_unit}/{d.unit}</div>}
+                  </div>
+                  <Badge color={d.stock_quantity<=d.reorder_level?'red':'green'}>{d.stock_quantity<=d.reorder_level?'Low Stock':'In Stock'}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* LAB */}
+        {tab==='lab' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+              <div>
+                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Laboratory</h2>
+                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{labOrders.filter(l=>l.status==='ordered').length} pending · {labOrders.filter(l=>l.status==='resulted').length} resulted</div>
+              </div>
+              <button onClick={()=>setShowLabForm(f=>!f)} style={{ padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                {showLabForm?'Cancel':'+ New Test Order'}
+              </button>
+            </div>
+            {showLabForm && (
+              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
+                <div style={{ fontSize:12, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:16 }}>New Lab Order</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:12 }}>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Patient *</div>
+                    <select value={labForm.patient_id} onChange={e=>setLabForm({...labForm,patient_id:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                      <option value="">Select patient</option>
+                      {patients.map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Priority</div>
+                    <select value={labForm.priority} onChange={e=>setLabForm({...labForm,priority:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                      {['routine','urgent','stat'].map(p=><option key={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  {[['Test Name *','test_name','text'],['Category (e.g. Hematology)','test_category','text']].map(([label,key,type])=>(
+                    <div key={key}>
+                      <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>{label}</div>
+                      <input type={type} value={labForm[key]} onChange={e=>setLabForm({...labForm,[key]:e.target.value})}
+                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                    </div>
+                  ))}
+                  <div style={{ gridColumn:isMobile?'1':'1/-1' }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Clinical Notes</div>
+                    <textarea value={labForm.notes} onChange={e=>setLabForm({...labForm,notes:e.target.value})} rows={2}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                  </div>
+                </div>
+                <button onClick={addLabOrder} disabled={labLoading||!labForm.patient_id||!labForm.test_name} style={{ marginTop:16, padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  {labLoading?'Ordering...':'Place Order'}
+                </button>
+              </div>
+            )}
+            <div style={{ display:'grid', gap:10 }}>
+              {labOrders.length===0 ? (
+                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No lab orders yet.</div>
+              ) : labOrders.map(o=>(
+                <div key={o.id} style={{ ...card, padding:16 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{o.test_name}</div>
+                      <div style={{ fontSize:11, color:S.muted }}>{o.hospital_patients?.full_name} · {o.hospital_patients?.patient_uid} · {o.test_category||'General'}</div>
+                    </div>
+                    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                      <Badge color={o.priority==='stat'?'red':o.priority==='urgent'?'yellow':'blue'}>{o.priority?.toUpperCase()}</Badge>
+                      <Badge color={o.status==='resulted'?'green':'yellow'}>{o.status?.toUpperCase()}</Badge>
+                    </div>
+                  </div>
+                  {o.result && <div style={{ padding:'8px 12px', background:S.bg, borderRadius:8, fontSize:12, color:S.navy, marginBottom:8 }}><strong>Result:</strong> {o.result}</div>}
+                  {o.status==='ordered' && (
+                    <button onClick={()=>{ const r=prompt('Enter test result:'); if(r) updateLabResult(o.id,r); }}
+                      style={{ padding:'6px 14px', background:S.lightBlue, color:S.blue, border:'1px solid '+S.border, borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                      Enter Result
+                    </button>
+                  )}
+                  <div style={{ fontSize:10, color:S.hint, marginTop:6 }}>{new Date(o.ordered_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* BILLING */}
+        {tab==='billing' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+              <div>
+                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Billing</h2>
+                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>
+                  {invoices.filter(i=>i.status==='unpaid').length} unpaid · 
+                  ₹{invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0)} collected
+                </div>
+              </div>
+              <button onClick={()=>setShowInvForm(f=>!f)} style={{ padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                {showInvForm?'Cancel':'+ New Invoice'}
+              </button>
+            </div>
+            {showInvForm && (
+              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
+                <div style={{ fontSize:12, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:16 }}>Create Invoice</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:12, marginBottom:12 }}>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Patient *</div>
+                    <select value={invForm.patient_id} onChange={e=>setInvForm({...invForm,patient_id:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                      <option value="">Select patient</option>
+                      {patients.map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Notes</div>
+                    <input value={invForm.notes} onChange={e=>setInvForm({...invForm,notes:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                  </div>
+                </div>
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Line Items * (one per line: Description, Amount)</div>
+                  <textarea value={invForm.items} onChange={e=>setInvForm({...invForm,items:e.target.value})} rows={4}
+                    placeholder={'Consultation Fee, 500\nLab Tests, 1200\nMedication, 350'}
+                    style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'monospace', boxSizing:'border-box' }}/>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:4 }}>Format: Item Name, Amount — 18% GST will be added automatically</div>
+                </div>
+                <button onClick={addInvoice} disabled={invLoading||!invForm.patient_id||!invForm.items} style={{ padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  {invLoading?'Creating...':'Generate Invoice'}
+                </button>
+              </div>
+            )}
+            <div style={{ display:'grid', gap:10 }}>
+              {invoices.length===0 ? (
+                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No invoices yet.</div>
+              ) : invoices.map(inv=>(
+                <div key={inv.id} style={{ ...card, padding:16 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:700, color:S.navy }}>{inv.invoice_number}</div>
+                      <div style={{ fontSize:11, color:S.muted }}>{inv.hospital_patients?.full_name} · {new Date(inv.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+                    </div>
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:20, fontWeight:700, color:inv.status==='paid'?S.success:S.danger }}>₹{parseFloat(inv.total||0).toFixed(2)}</div>
+                      <Badge color={inv.status==='paid'?'green':'red'}>{inv.status?.toUpperCase()}</Badge>
+                    </div>
+                  </div>
+                  {inv.items?.length>0 && (
+                    <div style={{ background:S.bg, borderRadius:8, padding:'8px 12px', marginBottom:10 }}>
+                      {inv.items.map((item,i)=>(
+                        <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:S.navy, padding:'2px 0', borderBottom:i<inv.items.length-1?'0.5px solid '+S.border:'none' }}>
+                          <span>{item.description}</span><span>₹{item.amount}</span>
+                        </div>
+                      ))}
+                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:S.muted, paddingTop:6 }}>
+                        <span>Subtotal</span><span>₹{parseFloat(inv.subtotal||0).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:S.muted }}>
+                        <span>GST (18%)</span><span>₹{parseFloat(inv.tax||0).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:700, color:S.navy, paddingTop:4, borderTop:'0.5px solid '+S.border, marginTop:4 }}>
+                        <span>Total</span><span>₹{parseFloat(inv.total||0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {inv.status==='unpaid' && (
+                    <div style={{ display:'flex', gap:8 }}>
+                      {['Cash','Card','UPI'].map(method=>(
+                        <button key={method} onClick={()=>markPaid(inv.id,method)}
+                          style={{ padding:'6px 14px', background:S.lightBlue, color:S.blue, border:'1px solid '+S.border, borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                          Paid via {method}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {inv.status==='paid' && <div style={{ fontSize:11, color:S.success }}>✓ Paid via {inv.payment_method} · {inv.paid_at?new Date(inv.paid_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):''}</div>}
                 </div>
               ))}
             </div>
