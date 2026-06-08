@@ -1852,16 +1852,12 @@ export default function HospitalPortal({ user, onLogout }) {
                 </div>
                 {triagedQueue.filter(q=>q.status==='waiting').length===0 ? (
                   <div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>Queue is clear</div>
-                ) : triagedQueue.filter(q=>q.status==='waiting').slice(0,4).map(q=>(<div key={q.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                ) : triagedQueue.filter(q=>q.status==='waiting').slice(0,4).map(q=>(
+                  <div key={q.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
                     <div style={{ fontWeight:700, color:S.blue, fontSize:12, minWidth:52 }}>{q.token_number}</div>
                     <div style={{ flex:1, fontSize:12, color:S.navy, fontWeight:500 }}>{q.patient_name}</div>
                     <div style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:4, background: q.score>=100?'#FEF2F2':q.score>=60?'#FEF3C7':'#EFF6FF', color: q.score>=100?'#DC2626':q.score>=60?'#D97706':'#1D4ED8' }}>S:{q.score}</div>
                     <Badge color={q.priority==='crisis'?'red':q.priority==='urgent'?'yellow':'blue'}>{q.priority}</Badge>
-                  </div>
-                  <div key={q.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
-                    <div style={{ fontWeight:700, color:S.blue, fontSize:12, minWidth:52 }}>{q.token_number}</div>
-                    <div style={{ flex:1, fontSize:12, color:S.navy, fontWeight:500 }}>{q.patient_name}</div>
-                    <Badge color={priorityColor(q.priority)}>{q.priority}</Badge>
                   </div>
                 ))}
               </div>
