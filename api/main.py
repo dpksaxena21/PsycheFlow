@@ -1081,3 +1081,53 @@ Keep responses concise, warm, and helpful. Use plain language. If suggesting to 
     )
 
     return {"response": response.content[0].text}
+
+# ── MSG91 SMS ─────────────────────────────────────────────
+import httpx
+
+class SMSInput(BaseModel):
+    phone: str
+    token_number: str
+    hospital_name: str
+    priority: str = "normal"
+
+@app.post("/send-sms")
+async def send_sms(data: SMSInput):
+    auth_key    = os.getenv("MSG91_AUTH_KEY", "")
+    sender_id   = os.getenv("MSG91_SENDER_ID", "PSYFLW")
+    template_id = os.getenv("MSG91_TEMPLATE_ID", "")
+
+    if not auth_key:
+        return {"success": False, "message": "MSG91 not configured"}
+
+    phone = data.phone.strip().replace(" ", "").replace("-", "")
+    if not phone.startswith("91"):
+        phone = "91" + phone
+
+    message = (
+        f"Your PsycheFlow OPD token at {data.hospital_name} is {data.token_number}. "
+        f"Priority: {data.priority.capitalize()}. "
+        f"Please be present when called. - PsycheFlow"
+    )
+
+    payload = {
+        "sender": sender_id,
+        "route":  "4",
+        "country": "91",
+        "sms": [{"message": message, "to": [phone]}]
+    }
+    if template_id:
+        payload["sms"][0]["template_id"] = template_id
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                "https://api.msg91.com/api/v2/sendsms",
+                json=payload,
+                headers={"authkey": auth_key, "content-type": "application/json"},
+                timeout=10
+            )
+        result = res.json()
+        return {"success": result.get("type") == "success", "message": result.get("message", ""), "raw": result}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
