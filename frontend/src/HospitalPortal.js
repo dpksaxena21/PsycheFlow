@@ -1184,8 +1184,6 @@ export default function HospitalPortal({ user, onLogout }) {
                     if(drugCategory) filtered = filtered.filter(d=>d.category===drugCategory);
                     return filtered;
                   })().map(d=>{
-                    <tr><td colSpan={10} style={{ padding:48, textAlign:'center', color:S.muted, fontSize:13 }}>No drugs in inventory.</td></tr>
-                  ) : drugs.map(d=>{
                     const expiring = d.expiry_date && new Date(d.expiry_date) < new Date(Date.now()+30*24*60*60*1000);
                     const lowStock = d.stock_quantity <= d.reorder_level;
                     return (
