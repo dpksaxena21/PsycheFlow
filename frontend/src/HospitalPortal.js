@@ -21,7 +21,16 @@ const statusColor = s => s==='waiting'?'yellow': s==='in_consultation'?'blue': s
 
 export default function HospitalPortal({ user, onLogout }) {
   const isMobile = useIsMobile();
-  const [tab, setTab] = useState('dashboard');
+  const [tab, setTab] = useState(() => {
+    const hash = window.location.hash.replace('#','');
+    const valid = ['dashboard','patients','ehr','ipd','pharmacy','lab','billing','queue','beds','referrals','analytics','staff'];
+    return valid.includes(hash) ? hash : 'dashboard';
+  });
+
+  const setTabWithRoute = (t) => {
+    setTab(t);
+    window.location.hash = t;
+  };
   const [globalSearch, setGlobalSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
@@ -51,6 +60,8 @@ export default function HospitalPortal({ user, onLogout }) {
   const [drugForm, setDrugForm] = useState({ drug_name:'', generic_name:'', category:'', stock_quantity:0, unit:'tablets', reorder_level:10, expiry_date:'', price_per_unit:'', supplier:'' });
   const [drugLoading, setDrugLoading] = useState(false);
   const [showDrugForm, setShowDrugForm] = useState(false);
+  const [drugSearch, setDrugSearch] = useState('');
+  const [drugCategory, setDrugCategory] = useState('');
   // Lab
   const [labOrders, setLabOrders] = useState([]);
   const [labForm, setLabForm] = useState({ patient_id:'', test_name:'', test_category:'', priority:'routine', notes:'' });
@@ -484,7 +495,7 @@ export default function HospitalPortal({ user, onLogout }) {
         </div>
         <div style={{ display:'flex', gap:4, flex:1, overflowX: isMobile ? 'auto' : 'visible', WebkitOverflowScrolling:'touch' }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
+            <button key={t.id} onClick={() => setTabWithRoute(t.id)}
               style={{ padding: isMobile ? '12px 12px' : '18px 16px', border:'none', background:'transparent', fontSize: isMobile ? 12 : 13, whiteSpace:'nowrap', fontWeight: tab===t.id?700:400, color: tab===t.id?S.blue:S.muted, cursor:'pointer', borderBottom: tab===t.id?'2px solid '+S.blue:'2px solid transparent' }}>
               {t.label}
               {t.id==='queue' && waiting>0 && <span style={{ marginLeft:6, background:S.blue, color:'#fff', borderRadius:100, padding:'1px 6px', fontSize:10, fontWeight:700 }}>{waiting}</span>}
@@ -528,12 +539,12 @@ export default function HospitalPortal({ user, onLogout }) {
             {showQuickActions && (
               <div style={{ position:'absolute', top:36, right:0, width:200, background:S.card, borderRadius:10, border:'0.5px solid '+S.border, boxShadow:'0 8px 24px rgba(0,0,0,0.1)', zIndex:200, overflow:'hidden' }}>
                 {[
-                  { label:'+ New Patient', action:()=>{ setTab('patients'); setShowQuickActions(false); } },
-                  { label:'+ New EHR Record', action:()=>{ setTab('ehr'); setShowEhrForm(true); setShowQuickActions(false); } },
-                  { label:'+ Admit Patient', action:()=>{ setTab('ipd'); setShowIpdForm(true); setShowQuickActions(false); } },
-                  { label:'+ Lab Order', action:()=>{ setTab('lab'); setShowLabForm(true); setShowQuickActions(false); } },
-                  { label:'+ Create Invoice', action:()=>{ setTab('billing'); setShowInvForm(true); setShowQuickActions(false); } },
-                  { label:'+ OPD Token', action:()=>{ setTab('queue'); setShowQuickActions(false); } },
+                  { label:'+ New Patient', action:()=>{ setTabWithRoute('patients'); setShowQuickActions(false); } },
+                  { label:'+ New EHR Record', action:()=>{ setTabWithRoute('ehr'); setShowEhrForm(true); setShowQuickActions(false); } },
+                  { label:'+ Admit Patient', action:()=>{ setTabWithRoute('ipd'); setShowIpdForm(true); setShowQuickActions(false); } },
+                  { label:'+ Lab Order', action:()=>{ setTabWithRoute('lab'); setShowLabForm(true); setShowQuickActions(false); } },
+                  { label:'+ Create Invoice', action:()=>{ setTabWithRoute('billing'); setShowInvForm(true); setShowQuickActions(false); } },
+                  { label:'+ OPD Token', action:()=>{ setTabWithRoute('queue'); setShowQuickActions(false); } },
                 ].map((a,i) => (
                   <div key={i} onClick={a.action} style={{ padding:'10px 14px', fontSize:13, color:S.navy, cursor:'pointer', borderBottom:'0.5px solid '+S.border, fontWeight:500 }}
                     onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
@@ -1106,6 +1117,23 @@ export default function HospitalPortal({ user, onLogout }) {
                 </button>
               </div>
             )}
+            {/* Pharmacy search + filter */}
+            <div style={{ display:'flex', gap:8, marginBottom:12, flexWrap:'wrap' }}>
+              <input value={drugSearch} onChange={e=>setDrugSearch(e.target.value)} placeholder="Search drug name or generic..."
+                style={{ flex:1, padding:'8px 14px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, outline:'none', background:S.bg, color:S.navy, minWidth:200 }}/>
+              <select value={drugCategory} onChange={e=>setDrugCategory(e.target.value)}
+                style={{ padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                <option value="">All Categories</option>
+                {[...new Set(drugs.map(d=>d.category).filter(Boolean))].map(c=><option key={c} value={c}>{c}</option>)}
+              </select>
+              <select onChange={e=>{ if(e.target.value==='low') setDrugSearch('__low__'); else if(e.target.value==='expiring') setDrugSearch('__expiring__'); else setDrugSearch(''); }}
+                style={{ padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                <option value="">All Status</option>
+                <option value="low">Low Stock</option>
+                <option value="expiring">Expiring Soon</option>
+              </select>
+            </div>
+
             {/* Expiring soon alert */}
             {drugs.filter(d=>d.expiry_date&&new Date(d.expiry_date)<new Date(Date.now()+30*24*60*60*1000)).length>0 && (
               <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:10, padding:'10px 16px', marginBottom:12, fontSize:12, color:S.warning, fontWeight:500 }}>
@@ -1123,7 +1151,23 @@ export default function HospitalPortal({ user, onLogout }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {drugs.length===0 ? (
+                  {(() => {
+                    let filtered = drugs;
+                    if(drugSearch==='__low__') filtered = drugs.filter(d=>d.stock_quantity<=d.reorder_level);
+                    else if(drugSearch==='__expiring__') filtered = drugs.filter(d=>d.expiry_date&&new Date(d.expiry_date)<new Date(Date.now()+30*24*60*60*1000));
+                    else if(drugSearch) filtered = drugs.filter(d=>d.drug_name?.toLowerCase().includes(drugSearch.toLowerCase())||d.generic_name?.toLowerCase().includes(drugSearch.toLowerCase()));
+                    if(drugCategory) filtered = filtered.filter(d=>d.category===drugCategory);
+                    return filtered;
+                  })().length===0 ? (
+                    <tr><td colSpan={10} style={{ padding:40, textAlign:'center', color:S.muted, fontSize:13 }}>No drugs match your search.</td></tr>
+                  ) : (() => {
+                    let filtered = drugs;
+                    if(drugSearch==='__low__') filtered = drugs.filter(d=>d.stock_quantity<=d.reorder_level);
+                    else if(drugSearch==='__expiring__') filtered = drugs.filter(d=>d.expiry_date&&new Date(d.expiry_date)<new Date(Date.now()+30*24*60*60*1000));
+                    else if(drugSearch) filtered = drugs.filter(d=>d.drug_name?.toLowerCase().includes(drugSearch.toLowerCase())||d.generic_name?.toLowerCase().includes(drugSearch.toLowerCase()));
+                    if(drugCategory) filtered = filtered.filter(d=>d.category===drugCategory);
+                    return filtered;
+                  })().map(d=>{
                     <tr><td colSpan={10} style={{ padding:48, textAlign:'center', color:S.muted, fontSize:13 }}>No drugs in inventory.</td></tr>
                   ) : drugs.map(d=>{
                     const expiring = d.expiry_date && new Date(d.expiry_date) < new Date(Date.now()+30*24*60*60*1000);
