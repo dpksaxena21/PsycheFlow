@@ -38,6 +38,9 @@ export default function HospitalPortal({ user, onLogout }) {
   const [ehrForm, setEhrForm] = useState({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', follow_up_date:'', bp_systolic:'', bp_diastolic:'', heart_rate:'', temperature:'', spo2:'', respiratory_rate:'', blood_sugar:'', weight:'', prescription:'' });
   const [ehrLoading, setEhrLoading] = useState(false);
   const [showEhrForm, setShowEhrForm] = useState(false);
+  const [ehrTab, setEhrTab] = useState('notes');
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
   // IPD
   const [ipdList, setIpdList] = useState([]);
   const [ipdForm, setIpdForm] = useState({ patient_id:'', ward:'', bed_number:'', admitting_doctor:'', diagnosis_on_admission:'' });
@@ -188,6 +191,31 @@ export default function HospitalPortal({ user, onLogout }) {
   const dischargePatient = async (id, summary) => {
     await supabase.from('ipd_admissions').update({ status:'discharged', discharge_date:new Date().toISOString(), discharge_summary:summary }).eq('id',id);
     await loadIPD();
+  };
+
+  const generateAISummary = async (type) => {
+    if (!selPatient) return;
+    setAiLoading(true);
+    setAiSummary('');
+    try {
+      const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(API + '/chatbot', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          message: type === 'summarize'
+            ? `Summarize this patient: ${selPatient.full_name}, ${selPatient.date_of_birth?Math.floor((new Date()-new Date(selPatient.date_of_birth))/(365.25*24*60*60*1000)):'?'}y, ${selPatient.gender||''}. Allergies: ${selPatient.allergies||'none'}. EHR records: ${ehrRecords.length}. Latest diagnosis: ${ehrRecords[0]?.diagnosis||'none'}. Be brief and clinical.`
+            : type === 'progress'
+            ? `Generate a clinical progress note for: ${selPatient.full_name}. Latest vitals: ${ehrRecords[0]?.vitals ? JSON.stringify(ehrRecords[0].vitals) : 'not recorded'}. Diagnosis: ${ehrRecords[0]?.diagnosis||'unknown'}. Keep it professional and brief.`
+            : `Generate a discharge summary for: ${selPatient.full_name}. Diagnosis: ${ehrRecords[0]?.diagnosis||'unknown'}. Include follow-up instructions. Be concise.`,
+          user_id: 'hospital_admin',
+          context: {}
+        })
+      });
+      const data = await res.json();
+      setAiSummary(data.response || data.message || 'Unable to generate summary.');
+    } catch { setAiSummary('Error generating AI summary.'); }
+    setAiLoading(false);
   };
 
   const loadPharmacy = async () => {
@@ -630,20 +658,45 @@ export default function HospitalPortal({ user, onLogout }) {
         {/* EHR */}
         {tab==='ehr' && (
           <div>
-            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20, flexWrap:'wrap' }}>
+            {/* Back + actions */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, flexWrap:'wrap' }}>
               <button onClick={()=>setTab('patients')} style={{ padding:'6px 14px', background:'#fff', border:'0.5px solid '+S.border, borderRadius:8, cursor:'pointer', fontSize:12, color:S.muted }}>← Patients</button>
-              {selPatient ? (
-                <div>
-                  <h2 style={{ margin:0, color:S.navy, fontSize:18, fontWeight:700 }}>{selPatient.full_name}</h2>
-                  <div style={{ fontSize:11, color:S.muted }}>{selPatient.patient_uid} · {selPatient.blood_group||'N/A'} · {selPatient.allergies ? '⚠ '+selPatient.allergies : 'No known allergies'}</div>
-                </div>
-              ) : <div style={{ color:S.muted, fontSize:13 }}>Select a patient from the registry</div>}
-              {selPatient && (
-                <button onClick={()=>setShowEhrForm(f=>!f)} style={{ marginLeft:'auto', padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
-                  {showEhrForm ? 'Cancel' : '+ New Record'}
-                </button>
-              )}
+              {selPatient && <button onClick={()=>setShowEhrForm(f=>!f)} style={{ marginLeft:'auto', padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>{showEhrForm?'Cancel':'+ New Record'}</button>}
             </div>
+
+            {/* Sticky Patient Header */}
+            {selPatient ? (
+              <div style={{ background:S.navy, borderRadius:12, padding:'16px 20px', marginBottom:16, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+                <div style={{ width:44, height:44, borderRadius:'50%', background:'rgba(255,255,255,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:700, color:'#fff', flexShrink:0 }}>{selPatient.full_name?.charAt(0)}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:17, fontWeight:700, color:'#fff' }}>{selPatient.full_name}</div>
+                  <div style={{ display:'flex', gap:12, marginTop:4, flexWrap:'wrap' }}>
+                    {[
+                      selPatient.date_of_birth ? Math.floor((new Date()-new Date(selPatient.date_of_birth))/(365.25*24*60*60*1000))+'y' : null,
+                      selPatient.gender,
+                      'MRN: '+selPatient.patient_uid,
+                      selPatient.blood_group,
+                    ].filter(Boolean).map((v,i)=><span key={i} style={{ fontSize:11, color:'rgba(255,255,255,0.6)' }}>{v}</span>)}
+                  </div>
+                </div>
+                {selPatient.allergies && (
+                  <div style={{ background:'rgba(220,38,38,0.2)', border:'1px solid rgba(220,38,38,0.4)', borderRadius:7, padding:'4px 10px', fontSize:11, fontWeight:700, color:'#FCA5A5' }}>⚠ {selPatient.allergies}</div>
+                )}
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>{ehrRecords.length} records</div>
+              </div>
+            ) : <div style={{ ...card, textAlign:'center', padding:32, color:S.muted, fontSize:13, marginBottom:16 }}>Select a patient from the Patients tab to view their EHR.</div>}
+
+            {selPatient && (
+              <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 280px', gap:16 }}>
+                <div>
+                  {/* Sub tabs */}
+                  <div style={{ display:'flex', gap:4, marginBottom:16, background:S.bg, borderRadius:8, padding:3 }}>
+                    {['notes','timeline'].map(t=>(
+                      <button key={t} onClick={()=>setEhrTab(t)} style={{ flex:1, padding:'7px', border:'none', borderRadius:6, cursor:'pointer', fontSize:12, fontWeight:ehrTab===t?700:400, background:ehrTab===t?S.card:S.bg, color:ehrTab===t?S.navy:S.muted, boxShadow:ehrTab===t?'0 1px 4px rgba(0,0,0,0.08)':'none' }}>
+                        {t==='notes'?'Clinical Notes':'Timeline'}
+                      </button>
+                    ))}
+                  </div>
 
             {/* New EHR Form */}
             {showEhrForm && selPatient && (
@@ -765,6 +818,33 @@ export default function HospitalPortal({ user, onLogout }) {
               </div>
             )}
 
+            {/* Timeline / Notes toggle */}
+            {ehrTab==='timeline' && selPatient && (
+              <div style={{ ...card, padding:0, overflow:'hidden' }}>
+                <div style={{ padding:'12px 16px', borderBottom:'0.5px solid '+S.border, fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em' }}>Patient Timeline</div>
+                {ehrRecords.length===0 ? <div style={{ padding:32, textAlign:'center', color:S.muted, fontSize:13 }}>No records yet.</div> : (
+                  <div style={{ padding:'8px 16px' }}>
+                    {ehrRecords.map((r,i)=>(
+                      <div key={r.id} style={{ display:'flex', gap:12, padding:'12px 0', borderBottom:i<ehrRecords.length-1?'0.5px solid '+S.border:'none' }}>
+                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
+                          <div style={{ width:10, height:10, borderRadius:'50%', background: r.record_type==='emergency'?S.danger:r.record_type==='discharge'?S.success:S.blue, flexShrink:0, marginTop:3 }}/>
+                          {i<ehrRecords.length-1 && <div style={{ width:1, flex:1, background:S.border, marginTop:4 }}/>}
+                        </div>
+                        <div style={{ flex:1, paddingBottom:8 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                            <span style={{ fontSize:12, fontWeight:600, color:S.navy }}>{r.record_type?.replace('_',' ').toUpperCase()}</span>
+                            <span style={{ fontSize:10, color:S.muted }}>{new Date(r.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+                          </div>
+                          {r.chief_complaint && <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{r.chief_complaint}</div>}
+                          {r.diagnosis && <div style={{ fontSize:12, color:S.blue, marginTop:2, fontWeight:500 }}>Dx: {r.diagnosis}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* EHR Records */}
             {!selPatient ? (
               <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>Select a patient from the Patients tab to view their EHR.</div>
@@ -800,6 +880,30 @@ export default function HospitalPortal({ user, onLogout }) {
                 </div>
               </div>
             ))}
+                </div>
+                {/* AI Panel */}
+                <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                  <div style={{ ...card, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>AI Copilot</div>
+                    {[
+                      { label:'Summarize Patient', type:'summarize' },
+                      { label:'Generate Progress Note', type:'progress' },
+                      { label:'Draft Discharge Summary', type:'discharge' },
+                    ].map(a=>(
+                      <button key={a.type} onClick={()=>generateAISummary(a.type)} disabled={aiLoading||!selPatient}
+                        style={{ width:'100%', padding:'9px 12px', background:S.lightBlue, color:S.blue, border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', marginBottom:8, textAlign:'left', fontFamily:'inherit' }}>
+                        {aiLoading?'Generating...':a.label}
+                      </button>
+                    ))}
+                    {aiSummary && (
+                      <div style={{ background:S.bg, borderRadius:8, padding:12, fontSize:12, color:S.navy, lineHeight:1.7, marginTop:4, borderLeft:'3px solid '+S.blue }}>
+                        {aiSummary}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
