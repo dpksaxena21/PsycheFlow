@@ -1767,7 +1767,7 @@ export default function HospitalPortal({ user, onLogout }) {
               <div style={{ display:'grid', gap:8, marginBottom:20 }}>
                 {intelligence.insights.map((insight, i) => (
                   <div key={i} style={{ background: insight.type==='critical'?'#FEF2F2':insight.type==='warning'?'#FEF3C7':'#EFF6FF', border:`1px solid ${insight.type==='critical'?'#FECACA':insight.type==='warning'?'#FDE68A':'#BFDBFE'}`, borderRadius:10, padding:'10px 16px', display:'flex', alignItems:'center', gap:10 }}>
-                    <span style={{ fontSize:16 }}>{insight.icon}</span>
+                    <div style={{ flexShrink:0 }} dangerouslySetInnerHTML={{ __html: insight.icon }} />
                     <div>
                       <div style={{ fontSize:13, fontWeight:700, color: insight.type==='critical'?'#DC2626':insight.type==='warning'?'#D97706':'#1D4ED8' }}>{insight.title}</div>
                       <div style={{ fontSize:11, color:'#64748b', marginTop:1 }}>{insight.body}</div>
