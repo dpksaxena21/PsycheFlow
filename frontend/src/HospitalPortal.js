@@ -22,6 +22,9 @@ const statusColor = s => s==='waiting'?'yellow': s==='in_consultation'?'blue': s
 export default function HospitalPortal({ user, onLogout }) {
   const isMobile = useIsMobile();
   const [tab, setTab] = useState('dashboard');
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   // Patients
   const [patients, setPatients] = useState([]);
   const [patSearch, setPatSearch] = useState('');
@@ -340,6 +343,12 @@ export default function HospitalPortal({ user, onLogout }) {
   const crisis = beds.filter(b=>b.urgency==='crisis').length;
   const pendingRef = referrals.filter(r=>r.status==='pending').length;
 
+  const searchResults = globalSearch.length >= 2 ? [
+    ...patients.filter(p => p.full_name?.toLowerCase().includes(globalSearch.toLowerCase()) || p.patient_uid?.includes(globalSearch.toUpperCase())).slice(0,3).map(p => ({ type:'patient', label:p.full_name, sub:p.patient_uid, action:()=>{ setSelPatient(p); loadEHR(p.id); setTab('ehr'); setGlobalSearch(''); setShowSearch(false); } })),
+    ...drugs.filter(d => d.drug_name?.toLowerCase().includes(globalSearch.toLowerCase())).slice(0,2).map(d => ({ type:'drug', label:d.drug_name, sub:`Stock: ${d.stock_quantity} ${d.unit}`, action:()=>{ setTab('pharmacy'); setGlobalSearch(''); setShowSearch(false); } })),
+    ...labOrders.filter(l => l.hospital_patients?.full_name?.toLowerCase().includes(globalSearch.toLowerCase()) || l.test_name?.toLowerCase().includes(globalSearch.toLowerCase())).slice(0,2).map(l => ({ type:'lab', label:l.test_name, sub:l.hospital_patients?.full_name, action:()=>{ setTab('lab'); setGlobalSearch(''); setShowSearch(false); } })),
+  ] : [];
+
   return (
     <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:S.bg, minHeight:'100vh' }}>
       {/* Header */}
@@ -365,6 +374,58 @@ export default function HospitalPortal({ user, onLogout }) {
             </button>
           ))}
         </div>
+        {/* Global Search */}
+        {!isMobile && (
+          <div style={{ position:'relative', marginRight:8 }}>
+            <input value={globalSearch} onChange={e=>{ setGlobalSearch(e.target.value); setShowSearch(true); }} onFocus={()=>setShowSearch(true)}
+              placeholder="Search patients, drugs, tests..."
+              style={{ padding:'7px 14px 7px 32px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:12, outline:'none', background:S.bg, color:S.navy, width:240 }}/>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }}>
+              <circle cx="11" cy="11" r="7" stroke={S.muted} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={S.muted} strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            {showSearch && searchResults.length > 0 && (
+              <div style={{ position:'absolute', top:36, left:0, width:320, background:S.card, borderRadius:10, border:'0.5px solid '+S.border, boxShadow:'0 8px 24px rgba(0,0,0,0.1)', zIndex:200, overflow:'hidden' }}>
+                {searchResults.map((r,i) => (
+                  <div key={i} onClick={r.action} style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', borderBottom:'0.5px solid '+S.border }}
+                    onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
+                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <span style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:4, background: r.type==='patient'?S.lightBlue:r.type==='drug'?'#FEF3C7':'#ECFDF5', color: r.type==='patient'?S.blue:r.type==='drug'?S.warning:S.success, textTransform:'uppercase' }}>{r.type}</span>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{r.label}</div>
+                      <div style={{ fontSize:10, color:S.muted }}>{r.sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {/* Quick Actions */}
+        {!isMobile && (
+          <div style={{ position:'relative', marginRight:8 }}>
+            <button onClick={()=>setShowQuickActions(q=>!q)} style={{ padding:'7px 14px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+              + Quick Action
+            </button>
+            {showQuickActions && (
+              <div style={{ position:'absolute', top:36, right:0, width:200, background:S.card, borderRadius:10, border:'0.5px solid '+S.border, boxShadow:'0 8px 24px rgba(0,0,0,0.1)', zIndex:200, overflow:'hidden' }}>
+                {[
+                  { label:'+ New Patient', action:()=>{ setTab('patients'); setShowQuickActions(false); } },
+                  { label:'+ New EHR Record', action:()=>{ setTab('ehr'); setShowEhrForm(true); setShowQuickActions(false); } },
+                  { label:'+ Admit Patient', action:()=>{ setTab('ipd'); setShowIpdForm(true); setShowQuickActions(false); } },
+                  { label:'+ Lab Order', action:()=>{ setTab('lab'); setShowLabForm(true); setShowQuickActions(false); } },
+                  { label:'+ Create Invoice', action:()=>{ setTab('billing'); setShowInvForm(true); setShowQuickActions(false); } },
+                  { label:'+ OPD Token', action:()=>{ setTab('queue'); setShowQuickActions(false); } },
+                ].map((a,i) => (
+                  <div key={i} onClick={a.action} style={{ padding:'10px 14px', fontSize:13, color:S.navy, cursor:'pointer', borderBottom:'0.5px solid '+S.border, fontWeight:500 }}
+                    onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
+                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    {a.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {!isMobile && <button onClick={onLogout} style={{ padding:'8px 16px', background:'transparent', border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, color:S.muted, cursor:'pointer' }}>Sign out</button>}
       </div>
 
@@ -806,29 +867,31 @@ export default function HospitalPortal({ user, onLogout }) {
                 </button>
               </div>
             )}
-            <div style={{ display:'grid', gap:10 }}>
-              {labOrders.length===0 ? (
-                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No lab orders yet.</div>
-              ) : labOrders.map(o=>(
-                <div key={o.id} style={{ ...card, padding:16 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                    <div>
-                      <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{o.test_name}</div>
-                      <div style={{ fontSize:11, color:S.muted }}>{o.hospital_patients?.full_name} · {o.hospital_patients?.patient_uid} · {o.test_category||'General'}</div>
-                    </div>
-                    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                      <Badge color={o.priority==='stat'?'red':o.priority==='urgent'?'yellow':'blue'}>{o.priority?.toUpperCase()}</Badge>
-                      <Badge color={o.status==='resulted'?'green':'yellow'}>{o.status?.toUpperCase()}</Badge>
-                    </div>
+            {/* Kanban columns */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:16 }}>
+              {['ordered','processing','resulted'].map(status => (
+                <div key={status} style={{ background: status==='ordered'?'#FFFBEB':status==='processing'?'#EFF6FF':'#ECFDF5', borderRadius:12, padding:16, minHeight:200 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+                    <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color: status==='ordered'?S.warning:status==='processing'?S.blue:S.success }}>{status}</div>
+                    <span style={{ fontSize:11, fontWeight:700, padding:'1px 8px', borderRadius:100, background:'rgba(0,0,0,0.06)', color:S.navy }}>{labOrders.filter(l=>l.status===status).length}</span>
                   </div>
-                  {o.result && <div style={{ padding:'8px 12px', background:S.bg, borderRadius:8, fontSize:12, color:S.navy, marginBottom:8 }}><strong>Result:</strong> {o.result}</div>}
-                  {o.status==='ordered' && (
-                    <button onClick={()=>{ const r=prompt('Enter test result:'); if(r) updateLabResult(o.id,r); }}
-                      style={{ padding:'6px 14px', background:S.lightBlue, color:S.blue, border:'1px solid '+S.border, borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>
-                      Enter Result
-                    </button>
-                  )}
-                  <div style={{ fontSize:10, color:S.hint, marginTop:6 }}>{new Date(o.ordered_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+                  {labOrders.filter(l=>l.status===status).length===0 ? (
+                    <div style={{ fontSize:12, color:S.hint, textAlign:'center', padding:'20px 0' }}>No {status} tests</div>
+                  ) : labOrders.filter(l=>l.status===status).map(o=>(
+                    <div key={o.id} style={{ background:S.card, borderRadius:8, padding:12, marginBottom:8, border:'0.5px solid '+S.border }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+                        <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{o.test_name}</div>
+                        <Badge color={o.priority==='stat'?'red':o.priority==='urgent'?'yellow':'blue'}>{o.priority}</Badge>
+                      </div>
+                      <div style={{ fontSize:11, color:S.muted, marginBottom:6 }}>{o.hospital_patients?.full_name} · {o.test_category||'General'}</div>
+                      {o.result && <div style={{ fontSize:11, color:S.success, fontWeight:600, marginBottom:4 }}>Result: {o.result}</div>}
+                      <div style={{ display:'flex', gap:6 }}>
+                        {o.status==='ordered' && <button onClick={()=>{ const r=prompt('Enter test result:'); if(r) updateLabResult(o.id,r); }} style={{ fontSize:11, padding:'3px 10px', background:S.blue, color:'#fff', border:'none', borderRadius:6, cursor:'pointer' }}>Enter Result</button>}
+                        {o.status==='ordered' && <button onClick={()=>{ supabase.from('lab_orders').update({status:'processing'}).eq('id',o.id).then(()=>loadLab()); }} style={{ fontSize:11, padding:'3px 10px', background:'transparent', color:S.blue, border:'0.5px solid '+S.blue, borderRadius:6, cursor:'pointer' }}>Processing</button>}
+                      </div>
+                      <div style={{ fontSize:9, color:S.hint, marginTop:4 }}>{new Date(o.ordered_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
