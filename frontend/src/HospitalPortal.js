@@ -97,7 +97,23 @@ export default function HospitalPortal({ user, onLogout }) {
   const addToQueue = async () => {
     if (!qForm.patient_name || !hospital) return;
     setQLoading(true);
-    await supabase.from('opd_queue').insert({ hospital_id:hospital.id, token_number:genToken(), patient_name:qForm.patient_name, patient_phone:qForm.patient_phone, patient_age:parseInt(qForm.patient_age)||null, priority:qForm.priority, notes:qForm.notes, status:'waiting' });
+    const token = genToken();
+    await supabase.from('opd_queue').insert({ hospital_id:hospital.id, token_number:token, patient_name:qForm.patient_name, patient_phone:qForm.patient_phone, patient_age:parseInt(qForm.patient_age)||null, priority:qForm.priority, notes:qForm.notes, status:'waiting' });
+    // Send SMS if phone provided
+    if (qForm.patient_phone && qForm.patient_phone.length >= 10) {
+      try {
+        await fetch(process.env.REACT_APP_API_URL + '/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: qForm.patient_phone,
+            token_number: token,
+            hospital_name: hospital.name,
+            priority: qForm.priority
+          })
+        });
+      } catch (e) { console.warn('SMS failed:', e); }
+    }
     setQForm({ patient_name:'', patient_phone:'', patient_age:'', priority:'normal', notes:'' });
     await loadAll();
     setQLoading(false);
