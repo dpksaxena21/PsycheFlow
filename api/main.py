@@ -1084,6 +1084,7 @@ Keep responses concise, warm, and helpful. Use plain language. If suggesting to 
 
 # ── MSG91 SMS ─────────────────────────────────────────────
 import httpx
+import os
 
 class SMSInput(BaseModel):
     phone: str
