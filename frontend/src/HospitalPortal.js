@@ -31,6 +31,8 @@ export default function HospitalPortal({ user, onLogout }) {
   const [selPatient, setSelPatient] = useState(null);
   const [patForm, setPatForm] = useState({ full_name:'', date_of_birth:'', gender:'', phone:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', blood_group:'', allergies:'', insurance_provider:'', insurance_number:'' });
   const [patLoading, setPatLoading] = useState(false);
+  const [drawerPatient, setDrawerPatient] = useState(null);
+  const [showRegForm, setShowRegForm] = useState(false);
   // EHR
   const [ehrRecords, setEhrRecords] = useState([]);
   const [ehrForm, setEhrForm] = useState({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', follow_up_date:'', bp_systolic:'', bp_diastolic:'', heart_rate:'', temperature:'', spo2:'', respiratory_rate:'', blood_sugar:'', weight:'', prescription:'' });
@@ -433,81 +435,195 @@ export default function HospitalPortal({ user, onLogout }) {
 
         {/* PATIENTS */}
         {tab==='patients' && (
-          <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
-              <div>
-                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Patient Registry</h2>
-                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{patients.length} registered patients</div>
-              </div>
+          <div style={{ position:'relative' }}>
+            {/* KPI Row */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Total Patients', value:patients.length, color:S.blue },
+                { label:'New This Month', value:patients.filter(p=>new Date(p.created_at).getMonth()===new Date().getMonth()).length, color:S.cyan },
+                { label:'Currently Admitted', value:ipdList.filter(i=>i.status==='admitted').length, color:'#7C3AED' },
+                { label:'With Allergies', value:patients.filter(p=>p.allergies).length, color:S.danger },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px' }}>
+                  <div style={{ fontSize:26, fontWeight:700, color:k.color, letterSpacing:'-0.02em' }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Header + actions */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:10 }}>
               <div style={{ display:'flex', gap:8 }}>
                 <input value={patSearch} onChange={e=>setPatSearch(e.target.value)} placeholder="Search by name or ID..."
                   style={{ padding:'8px 14px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, outline:'none', background:S.bg, color:S.navy, width:220 }}/>
               </div>
-            </div>
-
-            {/* Registration Form */}
-            <div style={{ ...card, marginBottom:20 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>Register New Patient</div>
-              <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(3,1fr)', gap:12 }}>
-                {[
-                  ['Full Name *','full_name','text'],['Date of Birth','date_of_birth','date'],['Gender','gender','select-gender'],
-                  ['Phone','phone','tel'],['Email','email','email'],['Blood Group','blood_group','select-blood'],
-                  ['Address','address','text'],['Allergies','allergies','text'],['Insurance Provider','insurance_provider','text'],
-                  ['Emergency Contact','emergency_contact_name','text'],['Emergency Phone','emergency_contact_phone','tel'],['Insurance Number','insurance_number','text'],
-                ].map(([label,key,type]) => (
-                  <div key={key}>
-                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>{label}</div>
-                    {type==='select-gender' ? (
-                      <select value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
-                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
-                        <option value="">Select</option>
-                        {['Male','Female','Other','Prefer not to say'].map(g=><option key={g}>{g}</option>)}
-                      </select>
-                    ) : type==='select-blood' ? (
-                      <select value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
-                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
-                        <option value="">Select</option>
-                        {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b=><option key={b}>{b}</option>)}
-                      </select>
-                    ) : (
-                      <input type={type} value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
-                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button onClick={addPatient} disabled={patLoading||!patForm.full_name}
-                style={{ marginTop:16, padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
-                {patLoading ? 'Registering...' : '+ Register Patient'}
+              <button onClick={()=>setShowRegForm(f=>!f)} style={{ padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                {showRegForm?'Cancel':'+ Register Patient'}
               </button>
             </div>
 
-            {/* Patient List */}
-            <div style={{ display:'grid', gap:10 }}>
-              {patients.filter(p => !patSearch || p.full_name?.toLowerCase().includes(patSearch.toLowerCase()) || p.patient_uid?.includes(patSearch.toUpperCase())).map(p => (
-                <div key={p.id} style={{ ...card, padding:16, display:'flex', alignItems:'center', gap:16, cursor:'pointer' }}
-                  onClick={() => { setSelPatient(p); loadEHR(p.id); setTab('ehr'); }}
-                  onMouseEnter={e=>e.currentTarget.style.borderColor=S.blue}
-                  onMouseLeave={e=>e.currentTarget.style.borderColor=S.border}>
-                  <div style={{ width:44, height:44, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:S.blue, flexShrink:0 }}>
-                    {p.full_name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{p.full_name}</div>
-                    <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>
-                      {p.patient_uid} · {p.gender || 'N/A'} · {p.blood_group || 'N/A'} · {p.phone || 'No phone'}
+            {/* Registration Form — collapsible */}
+            {showRegForm && (
+              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
+                <div style={{ fontSize:12, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>Register New Patient</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(3,1fr)', gap:12 }}>
+                  {[
+                    ['Full Name *','full_name','text'],['Date of Birth','date_of_birth','date'],['Gender','gender','select-gender'],
+                    ['Phone','phone','tel'],['Email','email','email'],['Blood Group','blood_group','select-blood'],
+                    ['Address','address','text'],['Allergies','allergies','text'],['Insurance Provider','insurance_provider','text'],
+                    ['Emergency Contact','emergency_contact_name','text'],['Emergency Phone','emergency_contact_phone','tel'],['Insurance Number','insurance_number','text'],
+                  ].map(([label,key,type]) => (
+                    <div key={key}>
+                      <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>{label}</div>
+                      {type==='select-gender' ? (
+                        <select value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
+                          style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                          <option value="">Select</option>
+                          {['Male','Female','Other','Prefer not to say'].map(g=><option key={g}>{g}</option>)}
+                        </select>
+                      ) : type==='select-blood' ? (
+                        <select value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
+                          style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                          <option value="">Select</option>
+                          {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b=><option key={b}>{b}</option>)}
+                        </select>
+                      ) : (
+                        <input type={type} value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
+                          style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={()=>{ addPatient(); setShowRegForm(false); }} disabled={patLoading||!patForm.full_name}
+                  style={{ marginTop:16, padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                  {patLoading ? 'Registering...' : '+ Register Patient'}
+                </button>
+              </div>
+            )}
+
+            {/* Patient Table */}
+            <div style={{ ...card, padding:0, overflow:'hidden' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead>
+                  <tr style={{ background:S.bg }}>
+                    {['MRN','Patient','Age / Gender','Blood','Phone','Allergies','Registered','Actions'].map(h=>(
+                      <th key={h} style={{ padding:'10px 14px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'left', borderBottom:'0.5px solid '+S.border, whiteSpace:'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {patients.filter(p => !patSearch || p.full_name?.toLowerCase().includes(patSearch.toLowerCase()) || p.patient_uid?.includes(patSearch.toUpperCase())).map((p,i) => (
+                    <tr key={p.id} style={{ borderBottom:'0.5px solid '+S.border, cursor:'pointer' }}
+                      onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
+                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <td style={{ padding:'10px 14px', fontSize:12, fontWeight:700, color:S.blue }}>{p.patient_uid}</td>
+                      <td style={{ padding:'10px 14px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div style={{ width:30, height:30, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:S.blue, flexShrink:0 }}>{p.full_name?.charAt(0)}</div>
+                          <div>
+                            <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{p.full_name}</div>
+                            <div style={{ fontSize:10, color:S.muted }}>{p.email||'No email'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding:'10px 14px', fontSize:12, color:S.navy }}>
+                        {p.date_of_birth ? Math.floor((new Date()-new Date(p.date_of_birth))/(365.25*24*60*60*1000))+'y' : '-'} / {p.gender||'-'}
+                      </td>
+                      <td style={{ padding:'10px 14px', fontSize:12, color:S.navy }}>{p.blood_group||'-'}</td>
+                      <td style={{ padding:'10px 14px', fontSize:12, color:S.navy }}>{p.phone||'-'}</td>
+                      <td style={{ padding:'10px 14px' }}>{p.allergies?<Badge color="red">{p.allergies.slice(0,15)}</Badge>:<span style={{fontSize:11,color:S.hint}}>None</span>}</td>
+                      <td style={{ padding:'10px 14px', fontSize:11, color:S.muted }}>{new Date(p.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</td>
+                      <td style={{ padding:'10px 14px' }}>
+                        <div style={{ display:'flex', gap:4 }}>
+                          <button onClick={()=>setDrawerPatient(p)} style={{ fontSize:10, padding:'3px 8px', background:S.lightBlue, color:S.blue, border:'none', borderRadius:5, cursor:'pointer', fontWeight:600 }}>View</button>
+                          <button onClick={()=>{ setSelPatient(p); loadEHR(p.id); setTab('ehr'); }} style={{ fontSize:10, padding:'3px 8px', background:'#ECFDF5', color:S.success, border:'none', borderRadius:5, cursor:'pointer', fontWeight:600 }}>EHR</button>
+                          <button onClick={()=>{ setIpdForm({...ipdForm,patient_id:p.id}); setTab('ipd'); setShowIpdForm(true); }} style={{ fontSize:10, padding:'3px 8px', background:'#F3F4F6', color:S.muted, border:'none', borderRadius:5, cursor:'pointer', fontWeight:600 }}>Admit</button>
+                          <button onClick={()=>{ setInvForm({...invForm,patient_id:p.id}); setTab('billing'); setShowInvForm(true); }} style={{ fontSize:10, padding:'3px 8px', background:'#FEF3C7', color:S.warning, border:'none', borderRadius:5, cursor:'pointer', fontWeight:600 }}>Bill</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {patients.length===0 && <div style={{ textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No patients yet. Click "+ Register Patient" to add your first patient.</div>}
+            </div>
+
+            {/* Patient Drawer */}
+            {drawerPatient && (
+              <div style={{ position:'fixed', top:0, right:0, width:isMobile?'100%':380, height:'100vh', background:S.card, borderLeft:'0.5px solid '+S.border, boxShadow:'-4px 0 24px rgba(0,0,0,0.1)', zIndex:300, overflowY:'auto', display:'flex', flexDirection:'column' }}>
+                <div style={{ padding:'16px 20px', borderBottom:'0.5px solid '+S.border, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:S.navy }}>Patient Snapshot</div>
+                  <button onClick={()=>setDrawerPatient(null)} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer', color:S.muted }}>×</button>
+                </div>
+                <div style={{ padding:20, flex:1 }}>
+                  {/* Avatar + name */}
+                  <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
+                    <div style={{ width:56, height:56, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:700, color:S.blue }}>{drawerPatient.full_name?.charAt(0)}</div>
+                    <div>
+                      <div style={{ fontSize:18, fontWeight:700, color:S.navy }}>{drawerPatient.full_name}</div>
+                      <div style={{ fontSize:12, color:S.blue, fontWeight:600 }}>{drawerPatient.patient_uid}</div>
                     </div>
                   </div>
-                  <div style={{ textAlign:'right' }}>
-                    {p.allergies && <Badge color="red">Allergies</Badge>}
-                    <div style={{ fontSize:10, color:S.hint, marginTop:4 }}>{new Date(p.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+                  {/* Details grid */}
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
+                    {[
+                      ['Age', drawerPatient.date_of_birth ? Math.floor((new Date()-new Date(drawerPatient.date_of_birth))/(365.25*24*60*60*1000))+'y' : 'N/A'],
+                      ['Gender', drawerPatient.gender||'N/A'],
+                      ['Blood Group', drawerPatient.blood_group||'N/A'],
+                      ['Phone', drawerPatient.phone||'N/A'],
+                      ['Email', drawerPatient.email||'N/A'],
+                      ['Insurance', drawerPatient.insurance_provider||'None'],
+                    ].map(([label,val])=>(
+                      <div key={label} style={{ background:S.bg, borderRadius:8, padding:'10px 12px' }}>
+                        <div style={{ fontSize:9, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:3 }}>{label}</div>
+                        <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Allergies */}
+                  {drawerPatient.allergies && (
+                    <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 14px', marginBottom:16 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:S.danger, textTransform:'uppercase', marginBottom:3 }}>⚠ Allergies</div>
+                      <div style={{ fontSize:13, color:S.danger }}>{drawerPatient.allergies}</div>
+                    </div>
+                  )}
+                  {/* Emergency contact */}
+                  {drawerPatient.emergency_contact_name && (
+                    <div style={{ background:S.bg, borderRadius:8, padding:'10px 14px', marginBottom:16 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:3 }}>Emergency Contact</div>
+                      <div style={{ fontSize:13, color:S.navy }}>{drawerPatient.emergency_contact_name}</div>
+                      <div style={{ fontSize:12, color:S.muted }}>{drawerPatient.emergency_contact_phone}</div>
+                    </div>
+                  )}
+                  {/* IPD status */}
+                  {(() => { const adm = ipdList.find(i=>i.patient_id===drawerPatient.id&&i.status==='admitted'); return adm ? (
+                    <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 14px', marginBottom:16 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:S.blue, textTransform:'uppercase', marginBottom:3 }}>Currently Admitted</div>
+                      <div style={{ fontSize:13, color:S.navy }}>Ward: {adm.ward} · Bed: {adm.bed_number}</div>
+                      <div style={{ fontSize:11, color:S.muted }}>{adm.admitting_doctor}</div>
+                    </div>
+                  ) : null; })()}
+                  {/* Outstanding bills */}
+                  {(() => { const unpaid = invoices.filter(i=>i.patient_id===drawerPatient.id&&i.status==='unpaid'); return unpaid.length>0 ? (
+                    <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'10px 14px', marginBottom:16 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:S.warning, textTransform:'uppercase', marginBottom:3 }}>Outstanding Balance</div>
+                      <div style={{ fontSize:18, fontWeight:700, color:S.warning }}>₹{unpaid.reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0)}</div>
+                    </div>
+                  ) : null; })()}
+                  {/* Quick actions */}
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:8 }}>
+                    {[
+                      { label:'View EHR', color:S.blue, bg:S.lightBlue, action:()=>{ setSelPatient(drawerPatient); loadEHR(drawerPatient.id); setTab('ehr'); setDrawerPatient(null); } },
+                      { label:'Admit IPD', color:'#7C3AED', bg:'#F5F3FF', action:()=>{ setIpdForm({...ipdForm,patient_id:drawerPatient.id}); setTab('ipd'); setShowIpdForm(true); setDrawerPatient(null); } },
+                      { label:'Create Bill', color:S.warning, bg:'#FFFBEB', action:()=>{ setInvForm({...invForm,patient_id:drawerPatient.id}); setTab('billing'); setShowInvForm(true); setDrawerPatient(null); } },
+                      { label:'Lab Order', color:S.success, bg:'#ECFDF5', action:()=>{ setLabForm({...labForm,patient_id:drawerPatient.id}); setTab('lab'); setShowLabForm(true); setDrawerPatient(null); } },
+                    ].map(a=>(
+                      <button key={a.label} onClick={a.action} style={{ padding:'10px', background:a.bg, color:a.color, border:'none', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>{a.label}</button>
+                    ))}
                   </div>
                 </div>
-              ))}
-              {patients.length === 0 && (
-                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No patients registered yet. Use the form above to register your first patient.</div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
