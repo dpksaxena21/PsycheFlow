@@ -820,53 +820,168 @@ export default function HospitalPortal({ user, onLogout }) {
           </div>
         )}
 
-        {/* DASHBOARD */}
+        {/* COMMAND CENTER DASHBOARD */}
         {tab==='dashboard' && (
           <div>
+            {/* Header */}
             <div style={{ marginBottom:24 }}>
-              <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:4 }}>Hospital Admin</div>
-              <h1 style={{ fontSize:24, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:0 }}>Good {new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, {hospital.admin_name || 'Admin'}</h1>
+              <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:4 }}>Hospital Command Center</div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:8 }}>
+                <h1 style={{ fontSize:24, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:0 }}>
+                  Good {new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, {hospital.admin_name||'Admin'}
+                </h1>
+                <div style={{ fontSize:12, color:S.muted }}>{new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+              </div>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:16, marginBottom:24 }}>
+
+            {/* Critical Alerts Banner */}
+            {(crisis>0 || beds.filter(b=>b.urgency==='crisis').length>0) && (
+              <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10, padding:'12px 16px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:S.danger, animation:'pulse 1s infinite' }}/>
+                <span style={{ fontSize:13, fontWeight:700, color:S.danger }}>
+                  {crisis} crisis patient(s) in queue · {beds.filter(b=>b.urgency==='crisis').length} crisis bed flag(s) — Immediate attention required
+                </span>
+              </div>
+            )}
+
+            {/* KPI Row 1 — Primary metrics */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:16 }}>
               {[
-                { label:'Waiting in OPD', value:waiting, color:S.blue, action:'queue' },
-                { label:'Pending bed flags', value:beds.length, color:crisis>0?S.danger:S.muted, action:'beds' },
-                { label:'Pending referrals', value:pendingRef, color:pendingRef>0?S.warning:S.muted, action:'referrals' },
-                { label:'Staff members', value:staff.length, color:S.success, action:'staff' },
-              ].map((s,i) => (
-                <div key={i} onClick={() => setTab(s.action)} style={{ ...card, cursor:'pointer' }}>
-                  <div style={{ fontSize:32, fontWeight:700, color:s.color, letterSpacing:'-0.02em', marginBottom:4 }}>{s.value}</div>
-                  <div style={{ fontSize:12, color:S.muted }}>{s.label}</div>
+                { label:'OPD Waiting', value:waiting, sub:`${queue.filter(q=>q.status==='in_consultation').length} in consultation`, color:S.blue, action:'queue', icon:'🏥' },
+                { label:'Registered Patients', value:patients.length, sub:'Total in registry', color:S.cyan, action:'patients', icon:'👥' },
+                { label:'IPD Admitted', value:ipdList.filter(i=>i.status==='admitted').length, sub:`${ipdList.filter(i=>i.status==='discharged').length} discharged today`, color:'#7C3AED', action:'ipd', icon:'🛏' },
+                { label:'Crisis Flags', value:crisis + beds.filter(b=>b.urgency==='crisis').length, sub:'Needs immediate review', color:crisis>0?S.danger:S.success, action:'beds', icon:'🚨' },
+              ].map((s,i)=>(
+                <div key={i} onClick={()=>setTab(s.action)} style={{ ...card, cursor:'pointer', borderLeft:`3px solid ${s.color}`, padding:'16px 20px' }}
+                  onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
+                  onMouseLeave={e=>e.currentTarget.style.transform=''}>
+                  <div style={{ fontSize:28, fontWeight:700, color:s.color, letterSpacing:'-0.02em', marginBottom:2 }}>{s.value}</div>
+                  <div style={{ fontSize:12, fontWeight:600, color:S.navy, marginBottom:2 }}>{s.label}</div>
+                  <div style={{ fontSize:10, color:S.muted }}>{s.sub}</div>
                 </div>
               ))}
             </div>
-            {queue.filter(q=>q.status==='waiting').length > 0 && (
-              <div style={{ ...card, marginBottom:16 }}>
-                <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>OPD Queue — Today</div>
-                {queue.filter(q=>q.status==='waiting').slice(0,5).map(q => (
-                  <div key={q.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'0.5px solid '+S.border }}>
-                    <div style={{ fontWeight:700, color:S.blue, fontSize:13, minWidth:60 }}>{q.token_number}</div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{q.patient_name}</div>
-                      {q.notes && <div style={{ fontSize:11, color:S.muted }}>{q.notes}</div>}
-                    </div>
+
+            {/* KPI Row 2 — Financial & Operations */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Revenue Today', value:'₹'+invoices.filter(i=>i.status==='paid'&&new Date(i.paid_at).toDateString()===new Date().toDateString()).reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0), sub:'Collected payments', color:S.success, action:'billing' },
+                { label:'Pending Bills', value:invoices.filter(i=>i.status==='unpaid').length, sub:'Unpaid invoices', color:S.warning, action:'billing' },
+                { label:'Lab Orders', value:labOrders.filter(l=>l.status==='ordered').length, sub:'Awaiting results', color:S.cyan, action:'lab' },
+                { label:'Low Stock Drugs', value:drugs.filter(d=>d.stock_quantity<=d.reorder_level).length, sub:'Need restocking', color:drugs.filter(d=>d.stock_quantity<=d.reorder_level).length>0?S.danger:S.success, action:'pharmacy' },
+              ].map((s,i)=>(
+                <div key={i} onClick={()=>setTab(s.action)} style={{ ...card, cursor:'pointer', padding:'16px 20px' }}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor=S.blue}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor=S.border}>
+                  <div style={{ fontSize:22, fontWeight:700, color:s.color, letterSpacing:'-0.01em', marginBottom:2 }}>{s.value}</div>
+                  <div style={{ fontSize:12, fontWeight:600, color:S.navy, marginBottom:2 }}>{s.label}</div>
+                  <div style={{ fontSize:10, color:S.muted }}>{s.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Live feeds — 3 column */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:16 }}>
+
+              {/* OPD Live Queue */}
+              <div style={{ ...card }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase' }}>Live OPD Queue</div>
+                  <span onClick={()=>setTab('queue')} style={{ fontSize:11, color:S.blue, cursor:'pointer', fontWeight:500 }}>View all →</span>
+                </div>
+                {queue.filter(q=>q.status==='waiting').length===0 ? (
+                  <div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>Queue is clear</div>
+                ) : queue.filter(q=>q.status==='waiting').slice(0,4).map(q=>(
+                  <div key={q.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                    <div style={{ fontWeight:700, color:S.blue, fontSize:12, minWidth:52 }}>{q.token_number}</div>
+                    <div style={{ flex:1, fontSize:12, color:S.navy, fontWeight:500 }}>{q.patient_name}</div>
                     <Badge color={priorityColor(q.priority)}>{q.priority}</Badge>
                   </div>
                 ))}
               </div>
-            )}
-            {beds.length > 0 && (
+
+              {/* Recent Patients */}
               <div style={{ ...card }}>
-                <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>Pending Bed Reviews</div>
-                {beds.slice(0,3).map(b => (
-                  <div key={b.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'0.5px solid '+S.border }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:S.navy }}>{b.ward_name} · Bed {b.bed_number}</div>
-                    <div style={{ flex:1, fontSize:12, color:S.muted }}>{b.patient_name} · {b.flag_reason}</div>
-                    <Badge color={b.urgency==='crisis'?'red':b.urgency==='urgent'?'yellow':'green'}>{b.urgency}</Badge>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase' }}>Recent Patients</div>
+                  <span onClick={()=>setTab('patients')} style={{ fontSize:11, color:S.blue, cursor:'pointer', fontWeight:500 }}>View all →</span>
+                </div>
+                {patients.length===0 ? (
+                  <div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>No patients registered</div>
+                ) : patients.slice(0,4).map(p=>(
+                  <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                    <div style={{ width:28, height:28, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:S.blue, flexShrink:0 }}>
+                      {p.full_name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, fontWeight:500, color:S.navy }}>{p.full_name}</div>
+                      <div style={{ fontSize:10, color:S.muted }}>{p.patient_uid}</div>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {/* IPD Status */}
+              <div style={{ ...card }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase' }}>IPD Status</div>
+                  <span onClick={()=>setTab('ipd')} style={{ fontSize:11, color:S.blue, cursor:'pointer', fontWeight:500 }}>View all →</span>
+                </div>
+                {ipdList.filter(i=>i.status==='admitted').length===0 ? (
+                  <div style={{ fontSize:12, color:S.muted, textAlign:'center', padding:'16px 0' }}>No current admissions</div>
+                ) : ipdList.filter(i=>i.status==='admitted').slice(0,4).map(adm=>(
+                  <div key={adm.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, fontWeight:500, color:S.navy }}>{adm.hospital_patients?.full_name}</div>
+                      <div style={{ fontSize:10, color:S.muted }}>Ward: {adm.ward} · Bed: {adm.bed_number}</div>
+                    </div>
+                    <Badge color="blue">Admitted</Badge>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Bed flags + pending bills row */}
+            {(beds.length>0 || invoices.filter(i=>i.status==='unpaid').length>0) && (
+              <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:16, marginTop:16 }}>
+                {beds.length>0 && (
+                  <div style={{ ...card }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase' }}>Pending Bed Reviews</div>
+                      <span onClick={()=>setTab('beds')} style={{ fontSize:11, color:S.blue, cursor:'pointer', fontWeight:500 }}>View all →</span>
+                    </div>
+                    {beds.slice(0,3).map(b=>(
+                      <div key={b.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{b.ward_name} · Bed {b.bed_number}</div>
+                          <div style={{ fontSize:11, color:S.muted }}>{b.patient_name} · {b.flag_reason}</div>
+                        </div>
+                        <Badge color={b.urgency==='crisis'?'red':b.urgency==='urgent'?'yellow':'green'}>{b.urgency}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {invoices.filter(i=>i.status==='unpaid').length>0 && (
+                  <div style={{ ...card }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase' }}>Unpaid Invoices</div>
+                      <span onClick={()=>setTab('billing')} style={{ fontSize:11, color:S.blue, cursor:'pointer', fontWeight:500 }}>View all →</span>
+                    </div>
+                    {invoices.filter(i=>i.status==='unpaid').slice(0,3).map(inv=>(
+                      <div key={inv.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'8px 0', borderBottom:'0.5px solid '+S.border }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{inv.hospital_patients?.full_name}</div>
+                          <div style={{ fontSize:11, color:S.muted }}>{inv.invoice_number}</div>
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:700, color:S.danger }}>₹{parseFloat(inv.total||0).toFixed(0)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
+            <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
           </div>
         )}
 
