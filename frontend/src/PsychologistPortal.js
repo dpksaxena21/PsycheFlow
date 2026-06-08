@@ -558,6 +558,8 @@ export default function PsychologistPortal({ user, onLogout }) {
   const [loading, setLoading]       = useState(true);
   const [soapNote, setSoapNote]     = useState('');
   const [generating, setGenerating] = useState(false);
+  const [anomalies, setAnomalies] = useState(null);
+  const [anomalyLoading, setAnomalyLoading] = useState(false);
   const [alerts, setAlerts]         = useState([]);
   const [crisisAlerts, setCrisisAlerts] = useState([]);
 
@@ -637,6 +639,23 @@ export default function PsychologistPortal({ user, onLogout }) {
       .eq('user_id', patientId).order('created_at', { ascending: false });
     setSessions(s || []);
     setJournals(j || []);
+    if (s && s.length >= 2) fetchAnomalies(s);
+  };
+
+  const fetchAnomalies = async (sessions) => {
+    if (!sessions || sessions.length < 2) return;
+    setAnomalyLoading(true);
+    try {
+      const res = await axios.post(API + '/anomaly-detection', {
+        sessions: sessions.map(s => ({
+          phq_score: s.phq_score,
+          gad_score: s.gad_score,
+          created_at: s.created_at
+        }))
+      });
+      setAnomalies(res.data);
+    } catch { setAnomalies(null); }
+    setAnomalyLoading(false);
   };
 
   const linkPatient = async () => {
@@ -747,6 +766,7 @@ export default function PsychologistPortal({ user, onLogout }) {
                     fetchPatientFull(p.patient_id);
                     setPatientTab('overview');
                     setSoapNote('');
+                    setAnomalies(null);
                   }} />
                 ))}
               </div>
@@ -806,6 +826,49 @@ export default function PsychologistPortal({ user, onLogout }) {
                   </div>
                 ) : (
                   <div>
+                    {/* Anomaly Detection Banner */}
+                    {anomalyLoading && (
+                      <div style={{ background:'#EFF6FF', borderRadius:10, padding:'10px 16px', marginBottom:16, fontSize:12, color:'#1D4ED8', display:'flex', alignItems:'center', gap:8 }}>
+                        <IconEEG size={14} color='#1D4ED8'/> Running anomaly detection...
+                      </div>
+                    )}
+                    {anomalies && anomalies.anomalies?.length > 0 && (
+                      <div style={{ marginBottom:20 }}>
+                        <div style={{ background: anomalies.requires_immediate_review ? '#FEF2F2' : '#FFFBEB', borderRadius:12, padding:16, border: `1px solid ${anomalies.requires_immediate_review ? '#FECACA' : '#FDE68A'}`, marginBottom:8 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                            <IconAlert size={15} color={anomalies.requires_immediate_review ? '#DC2626' : '#D97706'}/>
+                            <span style={{ fontSize:13, fontWeight:700, color: anomalies.requires_immediate_review ? '#DC2626' : '#D97706' }}>
+                              {anomalies.requires_immediate_review ? 'Immediate Review Required' : 'Anomalies Detected'}
+                            </span>
+                            <span style={{ marginLeft:'auto', fontSize:11, color:'#94a3b8' }}>Trend: {anomalies.risk_trend}</span>
+                          </div>
+                          <p style={{ fontSize:12, color:'#374151', margin:'0 0 10px', lineHeight:1.6 }}>{anomalies.summary}</p>
+                          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                            {anomalies.anomalies.map((a, i) => (
+                              <div key={i} style={{ background:'rgba(255,255,255,0.7)', borderRadius:8, padding:'8px 12px', display:'flex', alignItems:'center', gap:8 }}>
+                                <div style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: a.severity==='critical'?'#DC2626': a.severity==='high'?'#D97706':'#F59E0B' }}/>
+                                <div style={{ flex:1 }}>
+                                  <div style={{ fontSize:12, fontWeight:600, color:'#1e293b' }}>{a.message}</div>
+                                  <div style={{ fontSize:10, color:'#94a3b8', marginTop:2 }}>
+                                    Session {a.session_index} · {a.type.replace('_',' ')} · z={a.z_score}
+                                  </div>
+                                </div>
+                                <span style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:100,
+                                  background: a.severity==='critical'?'#FEE2E2': a.severity==='high'?'#FEF3C7':'#FEF9C3',
+                                  color: a.severity==='critical'?'#DC2626': a.severity==='high'?'#D97706':'#CA8A04'
+                                }}>{a.severity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {anomalies && anomalies.anomalies?.length === 0 && (
+                      <div style={{ background:'#ECFDF5', borderRadius:10, padding:'10px 16px', marginBottom:16, border:'1px solid #A7F3D0', display:'flex', alignItems:'center', gap:8 }}>
+                        <IconCheck size={14} color='#059669'/>
+                        <span style={{ fontSize:12, color:'#059669', fontWeight:500 }}>No anomalies detected · Trend: {anomalies.risk_trend}</span>
+                      </div>
+                    )}
                     {/* Score Cards */}
                     <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)',
                       gap:12, marginBottom:20 }}>

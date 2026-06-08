@@ -563,6 +563,99 @@ class NarrativeInput(BaseModel):
     sessions: list
     journals: list
 
+
+
+# ── ANOMALY DETECTION ─────────────────────────────────────
+class AnomalyInput(BaseModel):
+    sessions: list  # list of {phq_score, gad_score, created_at}
+    patient_id: str = ""
+
+@app.post("/anomaly-detection")
+def anomaly_detection(data: AnomalyInput):
+    sessions = data.sessions
+    if len(sessions) < 2:
+        return {"anomalies": [], "risk_trend": "insufficient_data", "summary": "Need at least 2 sessions to detect anomalies."}
+
+    # Sort by date ascending
+    sorted_sessions = sorted(sessions, key=lambda x: x.get("created_at", ""))
+    
+    anomalies = []
+    phq_scores = [s.get("phq_score", 0) for s in sorted_sessions]
+    gad_scores = [s.get("gad_score", 0) for s in sorted_sessions]
+
+    # Z-score on PHQ deltas
+    import numpy as np
+    phq_deltas = [phq_scores[i] - phq_scores[i-1] for i in range(1, len(phq_scores))]
+    gad_deltas = [gad_scores[i] - gad_scores[i-1] for i in range(1, len(gad_scores))]
+
+    phq_mean = np.mean(phq_deltas) if phq_deltas else 0
+    phq_std  = np.std(phq_deltas) if len(phq_deltas) > 1 else 1
+
+    for i, delta in enumerate(phq_deltas):
+        session_idx = i + 1
+        z = (delta - phq_mean) / (phq_std if phq_std > 0 else 1)
+
+        # Flag if: absolute change >= 5 OR z-score >= 1.5
+        if abs(delta) >= 5 or abs(z) >= 1.5:
+            severity = "critical" if abs(delta) >= 10 else "high" if abs(delta) >= 7 else "moderate"
+            anomalies.append({
+                "session_index": session_idx,
+                "type": "phq_spike" if delta > 0 else "phq_drop",
+                "delta": delta,
+                "z_score": round(z, 2),
+                "severity": severity,
+                "phq_before": phq_scores[i],
+                "phq_after": phq_scores[session_idx],
+                "date": sorted_sessions[session_idx].get("created_at", ""),
+                "message": f"PHQ-9 {'increased' if delta > 0 else 'decreased'} by {abs(delta)} points (z={round(z,2)}). {'Immediate review recommended.' if severity == 'critical' else 'Monitor closely.'}"
+            })
+
+    # GAD spike check
+    for i, delta in enumerate(gad_deltas):
+        if abs(delta) >= 5:
+            anomalies.append({
+                "session_index": i + 1,
+                "type": "gad_spike" if delta > 0 else "gad_drop",
+                "delta": delta,
+                "z_score": 0,
+                "severity": "high" if abs(delta) >= 7 else "moderate",
+                "gad_before": gad_scores[i],
+                "gad_after": gad_scores[i+1],
+                "date": sorted_sessions[i+1].get("created_at", ""),
+                "message": f"GAD-7 {'increased' if delta > 0 else 'decreased'} by {abs(delta)} points."
+            })
+
+    # Overall trend
+    if len(phq_scores) >= 3:
+        recent = phq_scores[-3:]
+        if all(recent[i] < recent[i-1] for i in range(1, len(recent))):
+            trend = "improving"
+        elif all(recent[i] > recent[i-1] for i in range(1, len(recent))):
+            trend = "worsening"
+        else:
+            trend = "fluctuating"
+    else:
+        trend = "improving" if phq_scores[-1] < phq_scores[0] else "worsening" if phq_scores[-1] > phq_scores[0] else "stable"
+
+    critical_count = len([a for a in anomalies if a["severity"] == "critical"])
+    high_count     = len([a for a in anomalies if a["severity"] == "high"])
+
+    summary = f"{len(anomalies)} anomaly{'s' if len(anomalies) != 1 else ''} detected across {len(sessions)} sessions. Trend: {trend}."
+    if critical_count > 0:
+        summary += f" {critical_count} critical spike(s) require immediate review."
+    elif high_count > 0:
+        summary += f" {high_count} high-severity change(s) detected."
+
+    return {
+        "anomalies": anomalies,
+        "risk_trend": trend,
+        "total_sessions": len(sessions),
+        "phq_range": {"min": min(phq_scores), "max": max(phq_scores), "latest": phq_scores[-1]},
+        "gad_range": {"min": min(gad_scores), "max": max(gad_scores), "latest": gad_scores[-1]},
+        "summary": summary,
+        "requires_immediate_review": critical_count > 0
+    }
+
 @app.post("/longitudinal-narrative")
 def longitudinal_narrative(data: NarrativeInput):
     import anthropic as _a, os as _o
