@@ -22,6 +22,22 @@ const statusColor = s => s==='waiting'?'yellow': s==='in_consultation'?'blue': s
 export default function HospitalPortal({ user, onLogout }) {
   const isMobile = useIsMobile();
   const [tab, setTab] = useState('dashboard');
+  // Patients
+  const [patients, setPatients] = useState([]);
+  const [patSearch, setPatSearch] = useState('');
+  const [selPatient, setSelPatient] = useState(null);
+  const [patForm, setPatForm] = useState({ full_name:'', date_of_birth:'', gender:'', phone:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', blood_group:'', allergies:'', insurance_provider:'', insurance_number:'' });
+  const [patLoading, setPatLoading] = useState(false);
+  // EHR
+  const [ehrRecords, setEhrRecords] = useState([]);
+  const [ehrForm, setEhrForm] = useState({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', vitals:'', follow_up_date:'' });
+  const [ehrLoading, setEhrLoading] = useState(false);
+  const [showEhrForm, setShowEhrForm] = useState(false);
+  // IPD
+  const [ipdList, setIpdList] = useState([]);
+  const [ipdForm, setIpdForm] = useState({ patient_id:'', ward:'', bed_number:'', admitting_doctor:'', diagnosis_on_admission:'' });
+  const [ipdLoading, setIpdLoading] = useState(false);
+  const [showIpdForm, setShowIpdForm] = useState(false);
   const [hospital, setHospital] = useState(null);
   const [queue, setQueue] = useState([]);
   const [beds, setBeds] = useState([]);
@@ -86,6 +102,64 @@ export default function HospitalPortal({ user, onLogout }) {
   }, [user]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  const loadPatients = async () => {
+    if (!hospital) return;
+    const { data } = await supabase.from('hospital_patients').select('*').eq('hospital_id', hospital.id).order('created_at', { ascending:false });
+    setPatients(data || []);
+  };
+
+  const loadEHR = async (patientId) => {
+    const { data } = await supabase.from('ehr_records').select('*').eq('patient_id', patientId).order('created_at', { ascending:false });
+    setEhrRecords(data || []);
+  };
+
+  const loadIPD = async () => {
+    if (!hospital) return;
+    const { data } = await supabase.from('ipd_admissions').select('*, hospital_patients(full_name, patient_uid)').eq('hospital_id', hospital.id).order('created_at', { ascending:false });
+    setIpdList(data || []);
+  };
+
+  const genPatientUID = () => {
+    const yr = new Date().getFullYear().toString().slice(-2);
+    const rand = Math.random().toString(36).substring(2,6).toUpperCase();
+    return `PSYP-${yr}-${rand}`;
+  };
+
+  const addPatient = async () => {
+    if (!patForm.full_name || !hospital) return;
+    setPatLoading(true);
+    const uid = genPatientUID();
+    await supabase.from('hospital_patients').insert({ hospital_id:hospital.id, patient_uid:uid, ...patForm });
+    setPatForm({ full_name:'', date_of_birth:'', gender:'', phone:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', blood_group:'', allergies:'', insurance_provider:'', insurance_number:'' });
+    await loadPatients();
+    setPatLoading(false);
+  };
+
+  const addEHR = async () => {
+    if (!selPatient || !ehrForm.chief_complaint || !hospital) return;
+    setEhrLoading(true);
+    await supabase.from('ehr_records').insert({ hospital_id:hospital.id, patient_id:selPatient.id, doctor_id:user.id, ...ehrForm, vitals: ehrForm.vitals ? { notes: ehrForm.vitals } : {} });
+    setEhrForm({ record_type:'consultation', chief_complaint:'', diagnosis:'', notes:'', vitals:'', follow_up_date:'' });
+    setShowEhrForm(false);
+    await loadEHR(selPatient.id);
+    setEhrLoading(false);
+  };
+
+  const addIPD = async () => {
+    if (!ipdForm.patient_id || !hospital) return;
+    setIpdLoading(true);
+    await supabase.from('ipd_admissions').insert({ hospital_id:hospital.id, ...ipdForm, status:'admitted' });
+    setIpdForm({ patient_id:'', ward:'', bed_number:'', admitting_doctor:'', diagnosis_on_admission:'' });
+    setShowIpdForm(false);
+    await loadIPD();
+    setIpdLoading(false);
+  };
+
+  const dischargePatient = async (id, summary) => {
+    await supabase.from('ipd_admissions').update({ status:'discharged', discharge_date:new Date().toISOString(), discharge_summary:summary }).eq('id',id);
+    await loadIPD();
+  };
 
   // Token generation
   const genToken = () => {
@@ -160,6 +234,9 @@ export default function HospitalPortal({ user, onLogout }) {
 
   const tabs = [
     { id:'dashboard', label:'Dashboard' },
+    { id:'patients', label:'Patients' },
+    { id:'ehr', label:'EHR' },
+    { id:'ipd', label:'IPD' },
     { id:'queue', label:'OPD Queue' },
     { id:'beds', label:'Bed Tracking' },
     { id:'referrals', label:'Referrals' },
@@ -206,6 +283,237 @@ export default function HospitalPortal({ user, onLogout }) {
       </div>
 
       <div style={{ padding: isMobile ? '16px 12px' : '28px 32px', maxWidth:1200, margin:'0 auto' }}>
+
+        {/* PATIENTS */}
+        {tab==='patients' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+              <div>
+                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Patient Registry</h2>
+                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{patients.length} registered patients</div>
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                <input value={patSearch} onChange={e=>setPatSearch(e.target.value)} placeholder="Search by name or ID..."
+                  style={{ padding:'8px 14px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, outline:'none', background:S.bg, color:S.navy, width:220 }}/>
+              </div>
+            </div>
+
+            {/* Registration Form */}
+            <div style={{ ...card, marginBottom:20 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>Register New Patient</div>
+              <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(3,1fr)', gap:12 }}>
+                {[
+                  ['Full Name *','full_name','text'],['Date of Birth','date_of_birth','date'],['Gender','gender','select-gender'],
+                  ['Phone','phone','tel'],['Email','email','email'],['Blood Group','blood_group','select-blood'],
+                  ['Address','address','text'],['Allergies','allergies','text'],['Insurance Provider','insurance_provider','text'],
+                  ['Emergency Contact','emergency_contact_name','text'],['Emergency Phone','emergency_contact_phone','tel'],['Insurance Number','insurance_number','text'],
+                ].map(([label,key,type]) => (
+                  <div key={key}>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>{label}</div>
+                    {type==='select-gender' ? (
+                      <select value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
+                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                        <option value="">Select</option>
+                        {['Male','Female','Other','Prefer not to say'].map(g=><option key={g}>{g}</option>)}
+                      </select>
+                    ) : type==='select-blood' ? (
+                      <select value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
+                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                        <option value="">Select</option>
+                        {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b=><option key={b}>{b}</option>)}
+                      </select>
+                    ) : (
+                      <input type={type} value={patForm[key]} onChange={e=>setPatForm({...patForm,[key]:e.target.value})}
+                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button onClick={addPatient} disabled={patLoading||!patForm.full_name}
+                style={{ marginTop:16, padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                {patLoading ? 'Registering...' : '+ Register Patient'}
+              </button>
+            </div>
+
+            {/* Patient List */}
+            <div style={{ display:'grid', gap:10 }}>
+              {patients.filter(p => !patSearch || p.full_name?.toLowerCase().includes(patSearch.toLowerCase()) || p.patient_uid?.includes(patSearch.toUpperCase())).map(p => (
+                <div key={p.id} style={{ ...card, padding:16, display:'flex', alignItems:'center', gap:16, cursor:'pointer' }}
+                  onClick={() => { setSelPatient(p); loadEHR(p.id); setTab('ehr'); }}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor=S.blue}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor=S.border}>
+                  <div style={{ width:44, height:44, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:S.blue, flexShrink:0 }}>
+                    {p.full_name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{p.full_name}</div>
+                    <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>
+                      {p.patient_uid} · {p.gender || 'N/A'} · {p.blood_group || 'N/A'} · {p.phone || 'No phone'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    {p.allergies && <Badge color="red">Allergies</Badge>}
+                    <div style={{ fontSize:10, color:S.hint, marginTop:4 }}>{new Date(p.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+                  </div>
+                </div>
+              ))}
+              {patients.length === 0 && (
+                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No patients registered yet. Use the form above to register your first patient.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* EHR */}
+        {tab==='ehr' && (
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20, flexWrap:'wrap' }}>
+              <button onClick={()=>setTab('patients')} style={{ padding:'6px 14px', background:'#fff', border:'0.5px solid '+S.border, borderRadius:8, cursor:'pointer', fontSize:12, color:S.muted }}>← Patients</button>
+              {selPatient ? (
+                <div>
+                  <h2 style={{ margin:0, color:S.navy, fontSize:18, fontWeight:700 }}>{selPatient.full_name}</h2>
+                  <div style={{ fontSize:11, color:S.muted }}>{selPatient.patient_uid} · {selPatient.blood_group||'N/A'} · {selPatient.allergies ? '⚠ '+selPatient.allergies : 'No known allergies'}</div>
+                </div>
+              ) : <div style={{ color:S.muted, fontSize:13 }}>Select a patient from the registry</div>}
+              {selPatient && (
+                <button onClick={()=>setShowEhrForm(f=>!f)} style={{ marginLeft:'auto', padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  {showEhrForm ? 'Cancel' : '+ New Record'}
+                </button>
+              )}
+            </div>
+
+            {/* New EHR Form */}
+            {showEhrForm && selPatient && (
+              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
+                <div style={{ fontSize:12, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>New Clinical Record</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(2,1fr)', gap:12, marginBottom:12 }}>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Record Type</div>
+                    <select value={ehrForm.record_type} onChange={e=>setEhrForm({...ehrForm,record_type:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                      {['consultation','follow_up','emergency','procedure','discharge'].map(t=><option key={t} value={t}>{t.replace('_',' ').toUpperCase()}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Follow-up Date</div>
+                    <input type="date" value={ehrForm.follow_up_date} onChange={e=>setEhrForm({...ehrForm,follow_up_date:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                  </div>
+                </div>
+                {[['Chief Complaint *','chief_complaint'],['Diagnosis','diagnosis'],['Vitals (BP, HR, Temp, SpO2)','vitals'],['Clinical Notes','notes']].map(([label,key]) => (
+                  <div key={key} style={{ marginBottom:12 }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>{label}</div>
+                    <textarea value={ehrForm[key]} onChange={e=>setEhrForm({...ehrForm,[key]:e.target.value})} rows={key==='notes'?4:2}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                  </div>
+                ))}
+                <button onClick={addEHR} disabled={ehrLoading||!ehrForm.chief_complaint}
+                  style={{ padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                  {ehrLoading ? 'Saving...' : 'Save Record'}
+                </button>
+              </div>
+            )}
+
+            {/* EHR Records */}
+            {!selPatient ? (
+              <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>Select a patient from the Patients tab to view their EHR.</div>
+            ) : ehrRecords.length === 0 ? (
+              <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No records yet. Click "+ New Record" to add the first clinical entry.</div>
+            ) : ehrRecords.map(r => (
+              <div key={r.id} style={{ ...card, marginBottom:12 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <Badge color={r.record_type==='emergency'?'red':r.record_type==='discharge'?'green':'blue'}>{r.record_type?.replace('_',' ').toUpperCase()}</Badge>
+                    <span style={{ fontSize:12, color:S.muted }}>{new Date(r.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                  </div>
+                  {r.follow_up_date && <Badge color="yellow">Follow-up: {new Date(r.follow_up_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</Badge>}
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(2,1fr)', gap:12 }}>
+                  {r.chief_complaint && <div><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Chief Complaint</div><div style={{ fontSize:13, color:S.navy }}>{r.chief_complaint}</div></div>}
+                  {r.diagnosis && <div><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Diagnosis</div><div style={{ fontSize:13, color:S.navy }}>{r.diagnosis}</div></div>}
+                  {r.vitals?.notes && <div><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Vitals</div><div style={{ fontSize:13, color:S.navy }}>{r.vitals.notes}</div></div>}
+                  {r.notes && <div style={{ gridColumn: isMobile?'1':'1/-1' }}><div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', marginBottom:4 }}>Clinical Notes</div><div style={{ fontSize:13, color:S.navy, lineHeight:1.6 }}>{r.notes}</div></div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* IPD */}
+        {tab==='ipd' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+              <div>
+                <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>IPD — Inpatient Management</h2>
+                <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{ipdList.filter(i=>i.status==='admitted').length} currently admitted</div>
+              </div>
+              <button onClick={()=>setShowIpdForm(f=>!f)} style={{ padding:'8px 16px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                {showIpdForm ? 'Cancel' : '+ New Admission'}
+              </button>
+            </div>
+
+            {/* Admission Form */}
+            {showIpdForm && (
+              <div style={{ ...card, marginBottom:20, borderColor:S.blue }}>
+                <div style={{ fontSize:12, fontWeight:700, color:S.muted, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:16 }}>New Admission</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(2,1fr)', gap:12 }}>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Patient *</div>
+                    <select value={ipdForm.patient_id} onChange={e=>setIpdForm({...ipdForm,patient_id:e.target.value})}
+                      style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none' }}>
+                      <option value="">Select patient</option>
+                      {patients.map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
+                    </select>
+                  </div>
+                  {[['Ward','ward'],['Bed Number','bed_number'],['Admitting Doctor','admitting_doctor'],['Diagnosis on Admission','diagnosis_on_admission']].map(([label,key]) => (
+                    <div key={key}>
+                      <div style={{ fontSize:11, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>{label}</div>
+                      <input value={ipdForm[key]} onChange={e=>setIpdForm({...ipdForm,[key]:e.target.value})}
+                        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:13, background:S.bg, color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={addIPD} disabled={ipdLoading||!ipdForm.patient_id}
+                  style={{ marginTop:16, padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  {ipdLoading ? 'Admitting...' : 'Admit Patient'}
+                </button>
+              </div>
+            )}
+
+            {/* IPD List */}
+            <div style={{ display:'grid', gap:10 }}>
+              {ipdList.length === 0 ? (
+                <div style={{ ...card, textAlign:'center', padding:48, color:S.muted, fontSize:13 }}>No admissions yet.</div>
+              ) : ipdList.map(adm => (
+                <div key={adm.id} style={{ ...card, padding:16 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:700, color:S.navy }}>{adm.hospital_patients?.full_name}</div>
+                      <div style={{ fontSize:11, color:S.muted }}>{adm.hospital_patients?.patient_uid} · Ward: {adm.ward} · Bed: {adm.bed_number}</div>
+                    </div>
+                    <Badge color={adm.status==='admitted'?'blue':adm.status==='discharged'?'green':'yellow'}>{adm.status?.toUpperCase()}</Badge>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(3,1fr)', gap:8, marginBottom:10 }}>
+                    <div><div style={{ fontSize:10, color:S.muted, textTransform:'uppercase', fontWeight:600 }}>Admitted</div><div style={{ fontSize:12, color:S.navy }}>{new Date(adm.admission_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+                    <div><div style={{ fontSize:10, color:S.muted, textTransform:'uppercase', fontWeight:600 }}>Doctor</div><div style={{ fontSize:12, color:S.navy }}>{adm.admitting_doctor||'N/A'}</div></div>
+                    <div><div style={{ fontSize:10, color:S.muted, textTransform:'uppercase', fontWeight:600 }}>Diagnosis</div><div style={{ fontSize:12, color:S.navy }}>{adm.diagnosis_on_admission||'N/A'}</div></div>
+                  </div>
+                  {adm.status === 'admitted' && (
+                    <button onClick={() => { const s = prompt('Discharge summary:'); if(s) dischargePatient(adm.id, s); }}
+                      style={{ padding:'6px 14px', background:'#ECFDF5', color:S.success, border:'1px solid #A7F3D0', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                      Discharge Patient
+                    </button>
+                  )}
+                  {adm.discharge_summary && (
+                    <div style={{ marginTop:10, padding:'8px 12px', background:S.bg, borderRadius:8, fontSize:12, color:S.muted }}>
+                      <strong>Discharge Summary:</strong> {adm.discharge_summary}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* DASHBOARD */}
         {tab==='dashboard' && (
