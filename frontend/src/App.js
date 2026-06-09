@@ -20,6 +20,8 @@ import PsychologistLanding from './PsychologistLanding';
 import HospitalLanding from './HospitalLanding';
 import HospitalAuth from './HospitalAuth';
 import HospitalPortal from './HospitalPortal';
+import SuperAdmin from './SuperAdmin';
+import SuperAdminAuth from './SuperAdminAuth';
 import PsychologistAuth from './PsychologistAuth';
 import Terms from './Terms';
 import DPDP from './DPDP';
@@ -124,6 +126,8 @@ export default function App() {
   const [assessMode, setAssessMode]           = useState(null);
   const [showACT, setShowACT]                 = useState(false);
   const [showCrisis, setShowCrisis]           = useState(false);
+  const [superAdminUser, setSuperAdminUser]   = useState(() => { try { return JSON.parse(localStorage.getItem('psycheflow_superadmin')||'null'); } catch { return null; } });
+  const [showSuperAdminAuth, setShowSuperAdminAuth] = useState(false);
 
 
   // checkOnboarding now handled by Zustand store
@@ -241,6 +245,12 @@ export default function App() {
   const gadLevel = (s) => s<=4?{label:'Minimal',color:'#22c55e'}:s<=9?{label:'Mild',color:'#f59e0b'}:s<=14?{label:'Moderate',color:'#f97316'}:{label:'Severe',color:'#ef4444'};
 
   // Route guards
+  // Check URL for superadmin route
+  if (window.location.pathname === '/superadmin' || showSuperAdminAuth) {
+    if (superAdminUser) return <SuperAdmin onLogout={() => { setSuperAdminUser(null); localStorage.removeItem('psycheflow_superadmin'); window.location.href = '/'; }} />;
+    return <SuperAdminAuth onLogin={(u) => { setSuperAdminUser(u); localStorage.setItem('psycheflow_superadmin', JSON.stringify(u)); setShowSuperAdminAuth(false); }} />;
+  }
+
   if (hospitalUser) return <HospitalPortal user={hospitalUser} onLogout={() => { setHospitalUser(null); setShowHospitalLanding(true); localStorage.removeItem('psycheflow_hospital_user'); }} />;
   if (showHospitalAuth) return <HospitalAuth onBack={() => { setShowHospitalAuth(false); setShowHospitalLanding(true); }} onLogin={(u) => { setHospitalUser(u); setShowHospitalAuth(false); localStorage.setItem('psycheflow_hospital_user', JSON.stringify(u)); }} />;
   if (showHospitalLanding) return <HospitalLanding onBack={() => setShowHospitalLanding(false)} onContact={() => setShowHospitalLanding(false)} onGetStarted={() => { setShowHospitalLanding(false); setShowHospitalAuth(true); }} />;
