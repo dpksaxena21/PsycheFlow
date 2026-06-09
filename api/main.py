@@ -223,7 +223,7 @@ def predict(request: Request, data: ProfileInput):
 
 @app.post("/analyze-journal")
 @limiter.limit("20/minute")
-def journal_endpoint(data: JournalInput):
+def journal_endpoint(request: Request, data: JournalInput):
     if len(data.text.strip()) < 20:
         return {"error": "Please write at least a few sentences."}
 
@@ -265,7 +265,7 @@ def classify_condition(data: TextInput):
 
 @app.post("/generate-report")
 @limiter.limit("5/minute")
-def report_endpoint(data: ReportInput):
+def report_endpoint(request: Request, data: ReportInput):
     result = generate_full_report(data.dict())
     return result
 
@@ -893,7 +893,7 @@ class CrisisCheckRequest(BaseModel):
 
 @app.post("/check-crisis")
 @limiter.limit("30/minute")
-async def check_crisis(req: CrisisCheckRequest):
+async def check_crisis(request: Request, req: CrisisCheckRequest):
     result = await check_and_escalate(
         patient_id=req.patient_id,
         phq_score=req.phq_score,
