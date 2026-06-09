@@ -605,7 +605,7 @@ export default function HospitalPortal({ user, onLogout }) {
           </div>
           {isMobile && <button onClick={onLogout} style={{ padding:'6px 12px', background:'transparent', border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, color:S.muted, cursor:'pointer' }}>Sign out</button>}
         </div>
-        <div style={{ display:'flex', gap:4, flex:1, overflowX: isMobile ? 'auto' : 'visible', WebkitOverflowScrolling:'touch' }}>
+        <div style={{ display:'flex', gap:4, flex:1, overflowX:'auto', WebkitOverflowScrolling:'touch', minWidth:0 }}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTabWithRoute(t.id)}
               style={{ padding: isMobile ? '12px 12px' : '18px 16px', border:'none', background:'transparent', fontSize: isMobile ? 12 : 13, whiteSpace:'nowrap', fontWeight: tab===t.id?700:400, color: tab===t.id?S.blue:S.muted, cursor:'pointer', borderBottom: tab===t.id?'2px solid '+S.blue:'2px solid transparent' }}>
@@ -618,7 +618,7 @@ export default function HospitalPortal({ user, onLogout }) {
         </div>
         {/* Global Search */}
         {!isMobile && (
-          <div style={{ position:'relative', marginRight:8 }}>
+          <div style={{ position:'relative', marginRight:8, flexShrink:0 }}>
             <input value={globalSearch} onChange={e=>{ setGlobalSearch(e.target.value); setShowSearch(true); }} onFocus={()=>setShowSearch(true)}
               placeholder="Search patients, drugs, tests..."
               style={{ padding:'7px 14px 7px 32px', borderRadius:8, border:'0.5px solid '+S.border, fontSize:12, outline:'none', background:S.bg, color:S.navy, width:240 }}/>
