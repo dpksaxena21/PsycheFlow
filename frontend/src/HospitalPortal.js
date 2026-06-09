@@ -278,12 +278,13 @@ export default function HospitalPortal({ user, onLogout }) {
 
   const searchPsychologists = async (term) => {
     if (term.length < 2) { setPsychResults([]); return; }
-    const { data } = await supabase.from('profiles')
-      .select('id, display_name, full_name, specialization')
-      .eq('is_psychologist', true)
-      .or(`display_name.ilike.%${term}%,full_name.ilike.%${term}%`)
-      .limit(5);
-    setPsychResults(data || []);
+    try {
+      const { data } = await supabase.from('profiles')
+        .select('id, display_name, full_name, specialization')
+        .or(`display_name.ilike.%${term}%,full_name.ilike.%${term}%`)
+        .limit(5);
+      setPsychResults(data || []);
+    } catch { setPsychResults([]); }
   };
 
   const sendCrossReferral = async () => {
@@ -304,16 +305,20 @@ export default function HospitalPortal({ user, onLogout }) {
 
   const linkPatientToPlatform = async () => {
     if (!linkForm.patient_id || !linkForm.platform_email) return;
-    const { data: platformUser } = await supabase.from('profiles')
-      .select('id').eq('email', linkForm.platform_email).single();
-    if (!platformUser) { alert('No PsycheFlow account found with that email.'); return; }
-    await supabase.from('hospital_patients')
-      .update({ platform_user_id: platformUser.id, platform_linked_at: new Date().toISOString() })
-      .eq('id', linkForm.patient_id);
-    setLinkForm({ patient_id:'', platform_email:'' });
-    setShowLinkForm(false);
-    await loadPatients();
-    alert('Patient linked to PsycheFlow account successfully.');
+    try {
+      // Try profiles table first with display_name or full_name match
+      const { data: profile } = await supabase.from('profiles')
+        .select('id').eq('email', linkForm.platform_email).maybeSingle();
+      const userId = profile?.id;
+      if (!userId) { alert('No PsycheFlow account found with that email. Ask the patient to register first.'); return; }
+      await supabase.from('hospital_patients')
+        .update({ platform_user_id: userId, platform_linked_at: new Date().toISOString() })
+        .eq('id', linkForm.patient_id);
+      setLinkForm({ patient_id:'', platform_email:'' });
+      setShowLinkForm(false);
+      await loadPatients();
+      alert('Patient linked successfully.');
+    } catch(e) { alert('Link failed. Please try again.'); }
   };
 
   const loadRCM = async () => {
