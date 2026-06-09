@@ -292,7 +292,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* CTA */}
-      <div style={{ margin:'0 48px 48px', background:`linear-gradient(135deg,${S.navy},#1a3a6b)`, borderRadius:20, padding:'64px 48px', textAlign:'center' }}>
+      <div style={{ margin: isMobile ? '0 16px 32px' : '0 48px 48px', background:`linear-gradient(135deg,${S.navy},#1a3a6b)`, borderRadius:20, padding: isMobile ? '40px 20px' : '64px 48px', textAlign:'center' }}>
         <h2 style={{ fontSize:34, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.1 }}>Mental health support that actually fits<br/>how clinicians work.</h2>
         <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', marginBottom:28, lineHeight:1.6 }}>Join hospitals and psychologists transforming<br/>mental health outcomes across India.</p>
         <BtnPrimary onClick={onGetStarted} style={{ fontSize:14, padding:'12px 28px' }}>Get started free →</BtnPrimary>
@@ -301,7 +301,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </div>
 
       {/* FOOTER */}
-      <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr 1fr 1fr', gap:32, padding:'40px 48px', borderTop:`0.5px solid ${S.border}` }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1.4fr 1fr 1fr 1fr', gap: isMobile ? 24 : 32, padding: isMobile ? '32px 20px' : '40px 48px', borderTop:`0.5px solid ${S.border}` }}>
         <div>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}><LogoMark size={28}/><span style={{ fontWeight:700, fontSize:14 }}>PsycheFlow</span></div>
           <p style={{ fontSize:12, color:S.textMuted, lineHeight:1.7 }}>AI-powered psychology platform for India.</p>
@@ -318,7 +318,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
           </div>
         ))}
       </div>
-      <div style={{ padding:'14px 48px', borderTop:`0.5px solid ${S.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+      <div style={{ padding: isMobile ? '14px 20px' : '14px 48px', borderTop:`0.5px solid ${S.border}`, display:'flex', flexWrap:'wrap', gap:8, justifyContent:'space-between', alignItems:'center' }}>
         <span style={{ fontSize:11, color:S.textMuted }}>© 2026 PsycheFlow. All rights reserved.</span>
         <span style={{ fontSize:11, color:S.textMuted }}>psycheflow.in</span>
         <span style={{ fontSize:11, color:S.textMuted }}>Made in India 🇮🇳</span>
