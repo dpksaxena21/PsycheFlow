@@ -2039,7 +2039,13 @@ export default function HospitalPortal({ user, onLogout }) {
                 )}
               </div>
             )}
-            <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+            <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(29,78,216,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(29,78,216,0.4); }
+      `}</style>
           </div>
         )}
 
