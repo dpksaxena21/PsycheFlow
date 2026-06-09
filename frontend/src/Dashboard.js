@@ -298,6 +298,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   const [moodSaved, setMoodSaved] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [hospitalRecords, setHospitalRecords] = useState([]);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -319,6 +320,23 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
     }
     if (journals.length > 0) notifs.push({ id:'jour_'+journals[0].id, type:'info', title:'Journal analyzed', body:journals[0].analysis?.emotions?.primary||'New entry recorded', time:journals[0].created_at });
     setNotifications(notifs);
+  };
+
+  const loadHospitalRecords = async () => {
+    if (!user) return;
+    const { data: patient } = await supabase.from('hospital_patients')
+      .select('*, hospitals(name, city)')
+      .eq('platform_user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (patient?.length > 0) {
+      const patientIds = patient.map(p => p.id);
+      const { data: ehr } = await supabase.from('ehr_records')
+        .select('*')
+        .in('patient_id', patientIds)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      setHospitalRecords({ patients: patient, ehr: ehr || [] });
+    }
   };
 
   const fetchAll = async () => {
@@ -569,7 +587,37 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                   </div>
                 </div>
 
-                {/* Care team */}
+                {/* Hospital Records */}
+            {hospitalRecords?.patients?.length > 0 && (
+              <div style={{ background: t.bg2, borderRadius:12, padding:16, border:`0.5px solid ${t.border}`, marginBottom:12 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:t.text3, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Hospital Records</div>
+                {hospitalRecords.patients.map(p=>(
+                  <div key={p.id} style={{ marginBottom:10 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                      <div style={{ width:28, height:28, borderRadius:7, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="#1D4ED8"/></svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:600, color:t.text }}>{p.hospitals?.name}</div>
+                        <div style={{ fontSize:10, color:t.text3 }}>{p.patient_uid} · {p.hospitals?.city}</div>
+                      </div>
+                    </div>
+                    {hospitalRecords.ehr?.filter(e=>e.patient_id===p.id).slice(0,2).map(e=>(
+                      <div key={e.id} style={{ background:t.bg, borderRadius:8, padding:'8px 12px', marginBottom:6 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                          <span style={{ fontSize:11, fontWeight:600, color:t.text, textTransform:'capitalize' }}>{e.record_type?.replace('_',' ')}</span>
+                          <span style={{ fontSize:10, color:t.text3 }}>{new Date(e.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
+                        </div>
+                        {e.chief_complaint && <div style={{ fontSize:11, color:t.text3 }}>{e.chief_complaint}</div>}
+                        {e.diagnosis && <div style={{ fontSize:11, color:'#1D4ED8', fontWeight:500 }}>Dx: {e.diagnosis}</div>}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Care team */}
                 <div style={{ background: t.bg2, borderRadius: 12, border: `0.5px solid ${t.border}`, padding: 16, boxShadow: t.card }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: t.text3, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Care team</div>

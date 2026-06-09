@@ -267,6 +267,14 @@ function CognitivePatternDetector({ journals }) {
     setLoading(false);
   };
 
+  const loadHospitalReferrals = async () => {
+    const { data } = await supabase.from('cross_referrals')
+      .select('*, hospital_patients(full_name, patient_uid, allergies, date_of_birth), hospitals(name, city)')
+      .eq('psychologist_id', user.id)
+      .order('created_at', { ascending: false });
+    setHospitalReferrals(data || []);
+  };
+
   useEffect(() => {
     if (journals.length >= 2) detect();
   }, [journals]);

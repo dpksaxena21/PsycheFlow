@@ -92,6 +92,14 @@ export default function HospitalPortal({ user, onLogout }) {
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [showRefundForm, setShowRefundForm] = useState(false);
   const [showDiscountForm, setShowDiscountForm] = useState(false);
+  // Cross-connections
+  const [crossReferrals, setCrossReferrals] = useState([]);
+  const [psychSearch, setPsychSearch] = useState('');
+  const [psychResults, setPsychResults] = useState([]);
+  const [refForm, setRefForm] = useState({ patient_id:'', psychologist_id:'', reason:'', priority:'normal', notes:'' });
+  const [showCrossRef, setShowCrossRef] = useState(false);
+  const [linkForm, setLinkForm] = useState({ patient_id:'', platform_email:'' });
+  const [showLinkForm, setShowLinkForm] = useState(false);
   const [hospital, setHospital] = useState(null);
   const [queue, setQueue] = useState([]);
   const [beds, setBeds] = useState([]);
@@ -259,6 +267,55 @@ export default function HospitalPortal({ user, onLogout }) {
     const { data } = await supabase.from('lab_orders').select('*, hospital_patients(full_name,patient_uid)').eq('hospital_id', hospital.id).order('ordered_at', { ascending:false });
     setLabOrders(data || []);
   };
+  const loadCrossReferrals = async () => {
+    if (!hospital) return;
+    const { data } = await supabase.from('cross_referrals')
+      .select('*, hospital_patients(full_name, patient_uid)')
+      .eq('hospital_id', hospital.id)
+      .order('created_at', { ascending: false });
+    setCrossReferrals(data || []);
+  };
+
+  const searchPsychologists = async (term) => {
+    if (term.length < 2) { setPsychResults([]); return; }
+    const { data } = await supabase.from('profiles')
+      .select('id, display_name, full_name, specialization')
+      .eq('is_psychologist', true)
+      .or(`display_name.ilike.%${term}%,full_name.ilike.%${term}%`)
+      .limit(5);
+    setPsychResults(data || []);
+  };
+
+  const sendCrossReferral = async () => {
+    if (!refForm.patient_id || !refForm.psychologist_id || !hospital) return;
+    await supabase.from('cross_referrals').insert({
+      hospital_id: hospital.id,
+      patient_id: refForm.patient_id,
+      psychologist_id: refForm.psychologist_id,
+      reason: refForm.reason,
+      priority: refForm.priority,
+      notes: refForm.notes,
+      status: 'pending'
+    });
+    setRefForm({ patient_id:'', psychologist_id:'', reason:'', priority:'normal', notes:'' });
+    setShowCrossRef(false);
+    await loadCrossReferrals();
+  };
+
+  const linkPatientToPlatform = async () => {
+    if (!linkForm.patient_id || !linkForm.platform_email) return;
+    const { data: platformUser } = await supabase.from('profiles')
+      .select('id').eq('email', linkForm.platform_email).single();
+    if (!platformUser) { alert('No PsycheFlow account found with that email.'); return; }
+    await supabase.from('hospital_patients')
+      .update({ platform_user_id: platformUser.id, platform_linked_at: new Date().toISOString() })
+      .eq('id', linkForm.patient_id);
+    setLinkForm({ patient_id:'', platform_email:'' });
+    setShowLinkForm(false);
+    await loadPatients();
+    alert('Patient linked to PsycheFlow account successfully.');
+  };
+
   const loadRCM = async () => {
     if (!hospital) return;
     const [{ data: ch }, { data: py }, { data: cl }, { data: rf }, { data: dc }] = await Promise.all([
@@ -460,6 +517,7 @@ export default function HospitalPortal({ user, onLogout }) {
     { id:'queue', label:'OPD Queue' },
     { id:'beds', label:'Bed Tracking' },
     { id:'referrals', label:'Referrals' },
+    { id:'connections', label:'Connections' },
     { id:'analytics', label:'Analytics' },
     { id:'staff', label:'Staff' },
   ];
@@ -2128,6 +2186,153 @@ export default function HospitalPortal({ user, onLogout }) {
               ))}
             </div>
           </div>
+          </div>
+        )}
+
+        {/* CONNECTIONS */}
+        {tab==='connections' && (
+          <div>
+            <div style={{ marginBottom:20 }}>
+              <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Cross-Platform Connections</h2>
+              <div style={{ fontSize:12, color:S.muted, marginTop:4 }}>Link hospital patients to PsycheFlow accounts · Refer patients to psychologists</div>
+            </div>
+
+            {/* KPI row */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Cross Referrals', value:crossReferrals.length, sub:'To psychologists', color:S.blue },
+                { label:'Pending', value:crossReferrals.filter(r=>r.status==='pending').length, sub:'Awaiting response', color:S.warning },
+                { label:'Accepted', value:crossReferrals.filter(r=>r.status==='accepted').length, sub:'Active connections', color:S.success },
+                { label:'Linked Patients', value:patients.filter(p=>p.platform_user_id).length, sub:'On PsycheFlow', color:'#7C3AED' },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px', borderLeft:`3px solid ${k.color}` }}>
+                  <div style={{ fontSize:24, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:12, fontWeight:600, color:S.navy, marginTop:2 }}>{k.label}</div>
+                  <div style={{ fontSize:10, color:S.muted }}>{k.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:16, marginBottom:20 }}>
+              {/* Refer to Psychologist */}
+              <div style={{ ...card }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:S.navy }}>Refer Patient to Psychologist</div>
+                  <button onClick={()=>setShowCrossRef(f=>!f)} style={{ padding:'6px 12px', background:S.blue, color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer' }}>{showCrossRef?'Cancel':'+ New Referral'}</button>
+                </div>
+                {showCrossRef && (
+                  <div style={{ background:S.bg, borderRadius:8, padding:14, marginBottom:14 }}>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Patient *</div>
+                      <select value={refForm.patient_id} onChange={e=>setRefForm({...refForm,patient_id:e.target.value})}
+                        style={{ width:'100%', padding:'8px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none' }}>
+                        <option value="">Select patient</option>
+                        {patients.map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
+                      </select>
+                    </div>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Search Psychologist</div>
+                      <input value={psychSearch} onChange={e=>{ setPsychSearch(e.target.value); searchPsychologists(e.target.value); }}
+                        placeholder="Type name to search..."
+                        style={{ width:'100%', padding:'8px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                      {psychResults.length>0 && (
+                        <div style={{ background:'#fff', border:`0.5px solid ${S.border}`, borderRadius:7, marginTop:4, overflow:'hidden' }}>
+                          {psychResults.map(p=>(
+                            <div key={p.id} onClick={()=>{ setRefForm({...refForm,psychologist_id:p.id}); setPsychSearch(p.display_name||p.full_name); setPsychResults([]); }}
+                              style={{ padding:'8px 12px', fontSize:12, color:S.navy, cursor:'pointer', borderBottom:`0.5px solid ${S.border}` }}
+                              onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue}
+                              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                              <div style={{ fontWeight:600 }}>{p.display_name||p.full_name}</div>
+                              <div style={{ fontSize:10, color:S.muted }}>{p.specialization||'Psychologist'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:10 }}>
+                      <div>
+                        <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Priority</div>
+                        <select value={refForm.priority} onChange={e=>setRefForm({...refForm,priority:e.target.value})}
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none' }}>
+                          {['normal','urgent','crisis'].map(p=><option key={p}>{p}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Reason</div>
+                        <input value={refForm.reason} onChange={e=>setRefForm({...refForm,reason:e.target.value})}
+                          placeholder="Depression, anxiety..."
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Clinical Notes</div>
+                      <textarea value={refForm.notes} onChange={e=>setRefForm({...refForm,notes:e.target.value})} rows={2}
+                        style={{ width:'100%', padding:'7px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}/>
+                    </div>
+                    <button onClick={sendCrossReferral} disabled={!refForm.patient_id||!refForm.psychologist_id}
+                      style={{ width:'100%', padding:'8px', background:S.blue, color:'#fff', border:'none', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>Send Referral</button>
+                  </div>
+                )}
+                {/* Referral list */}
+                {crossReferrals.length===0 ? <div style={{ textAlign:'center', padding:24, color:S.muted, fontSize:12 }}>No referrals sent yet.</div> :
+                  crossReferrals.slice(0,5).map(r=>(
+                    <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{r.hospital_patients?.full_name}</div>
+                        <div style={{ fontSize:10, color:S.muted }}>{r.reason||'No reason specified'} · {new Date(r.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                      </div>
+                      <Badge color={r.priority==='crisis'?'red':r.priority==='urgent'?'yellow':'blue'}>{r.priority}</Badge>
+                      <Badge color={r.status==='accepted'?'green':r.status==='rejected'?'red':'yellow'}>{r.status}</Badge>
+                    </div>
+                  ))
+                }
+              </div>
+
+              {/* Link to PsycheFlow account */}
+              <div style={{ ...card }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:S.navy }}>Link Patient to PsycheFlow Account</div>
+                  <button onClick={()=>setShowLinkForm(f=>!f)} style={{ padding:'6px 12px', background:'#7C3AED', color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer' }}>{showLinkForm?'Cancel':'+ Link Account'}</button>
+                </div>
+                <div style={{ fontSize:11, color:S.muted, marginBottom:12, padding:'8px 12px', background:S.lightBlue, borderRadius:7 }}>
+                  Linking allows patients to view their hospital records, prescriptions and lab results in their PsycheFlow patient dashboard.
+                </div>
+                {showLinkForm && (
+                  <div style={{ background:S.bg, borderRadius:8, padding:14, marginBottom:14 }}>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>Hospital Patient *</div>
+                      <select value={linkForm.patient_id} onChange={e=>setLinkForm({...linkForm,patient_id:e.target.value})}
+                        style={{ width:'100%', padding:'8px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none' }}>
+                        <option value="">Select patient</option>
+                        {patients.filter(p=>!p.platform_user_id).map(p=><option key={p.id} value={p.id}>{p.full_name} ({p.patient_uid})</option>)}
+                      </select>
+                    </div>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:600, color:S.navy, marginBottom:4, textTransform:'uppercase' }}>PsycheFlow Email *</div>
+                      <input value={linkForm.platform_email} onChange={e=>setLinkForm({...linkForm,platform_email:e.target.value})}
+                        placeholder="patient@email.com"
+                        style={{ width:'100%', padding:'8px 10px', borderRadius:7, border:`0.5px solid ${S.border}`, fontSize:12, background:'#fff', color:S.navy, outline:'none', boxSizing:'border-box' }}/>
+                    </div>
+                    <button onClick={linkPatientToPlatform} disabled={!linkForm.patient_id||!linkForm.platform_email}
+                      style={{ width:'100%', padding:'8px', background:'#7C3AED', color:'#fff', border:'none', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>Link Account</button>
+                  </div>
+                )}
+                {/* Linked patients */}
+                <div style={{ fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Linked Patients ({patients.filter(p=>p.platform_user_id).length})</div>
+                {patients.filter(p=>p.platform_user_id).length===0 ? <div style={{ textAlign:'center', padding:16, color:S.muted, fontSize:12 }}>No linked patients yet.</div> :
+                  patients.filter(p=>p.platform_user_id).map(p=>(
+                    <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                      <div style={{ width:28, height:28, borderRadius:'50%', background:'#F5F3FF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#7C3AED' }}>{p.full_name?.charAt(0)}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{p.full_name}</div>
+                        <div style={{ fontSize:10, color:S.muted }}>{p.patient_uid} · Linked {new Date(p.platform_linked_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                      </div>
+                      <Badge color="green">Linked</Badge>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
           </div>
         )}
 
