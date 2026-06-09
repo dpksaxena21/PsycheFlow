@@ -152,7 +152,7 @@ def root():
 
 @app.post("/predict")
 @limiter.limit("30/minute")
-def predict(data: ProfileInput):
+def predict(request: Request, data: ProfileInput):
     results = {}
     d = data.dict()
 
@@ -276,7 +276,7 @@ class InterviewInput(BaseModel):
 
 @app.post("/clinical-interview")
 @limiter.limit("10/minute")
-def clinical_interview(data: InterviewInput):
+def clinical_interview(request: Request, data: InterviewInput):
     messages = data.messages
     turn     = data.turn
 
@@ -969,7 +969,7 @@ class ChatbotInput(BaseModel):
 
 @app.post("/chatbot")
 @limiter.limit("20/minute")
-def chatbot(data: ChatbotInput):
+def chatbot(request: Request, data: ChatbotInput):
     import anthropic
     import os
     from datetime import datetime
@@ -1141,7 +1141,7 @@ class SMSInput(BaseModel):
 
 @app.post("/send-sms")
 @limiter.limit("10/minute")
-async def send_sms(data: SMSInput):
+async def send_sms(request: Request, data: SMSInput):
     auth_key    = _os.getenv("MSG91_AUTH_KEY", "")
     sender_id   = _os.getenv("MSG91_SENDER_ID", "PSYFLW")
     template_id = _os.getenv("MSG91_TEMPLATE_ID", "")
