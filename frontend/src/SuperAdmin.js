@@ -159,12 +159,12 @@ export default function SuperAdmin({ onLogout }) {
       {/* Header */}
       <div style={{ background:S.navy, padding:'0 32px', display:'flex', alignItems:'center', borderBottom:'0.5px solid rgba(255,255,255,0.08)', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 0', marginRight:24, borderRight:'0.5px solid rgba(255,255,255,0.1)', paddingRight:24, flexShrink:0 }}>
-          <div style={{ width:32, height:32, borderRadius:8, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ width:32, height:32, borderRadius:8, background:'linear-gradient(135deg,#1D4ED8,#0891B2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
           </div>
           <div>
-            <div style={{ fontSize:12, fontWeight:700, color:'#fff', letterSpacing:'-0.01em' }}>PsycheFlow HQ</div>
-            <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Super Admin</div>
+            <div style={{ fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.01em' }}><span style={{ color:'#93C5FD' }}>Psyche</span>Flow HQ</div>
+            <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.08em' }}>Super Admin · Restricted</div>
           </div>
         </div>
         <div style={{ display:'flex', gap:0, flex:1, overflowX:'auto', WebkitOverflowScrolling:'touch' }}>

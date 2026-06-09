@@ -596,12 +596,23 @@ export default function HospitalPortal({ user, onLogout }) {
       {/* Header */}
       <div style={{ background:S.card, borderBottom:'0.5px solid '+S.border, padding: isMobile ? '0 16px' : '0 32px', display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 0', marginRight: isMobile ? 0 : 32, borderRight: isMobile ? 'none' : '0.5px solid '+S.border, paddingRight: isMobile ? 0 : 32, borderBottom: isMobile ? '0.5px solid '+S.border : 'none', justifyContent:'space-between' }}>
-          <div style={{ width:28, height:28, borderRadius:7, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ width:28, height:28, borderRadius:7, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
             <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
           </div>
-          <div>
+          <div style={{ flexShrink:0 }}>
             <div style={{ fontSize:13, fontWeight:700, color:S.navy, letterSpacing:'-0.01em' }}>{hospital.name}</div>
-            <div style={{ fontSize:10, color:S.muted }}>{hospital.city} · {hospital.hospital_code}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:1 }}>
+              <span style={{ fontSize:9, color:S.hint }}>{hospital.city}</span>
+              <span style={{ fontSize:9, color:S.border }}>·</span>
+              <span style={{ fontSize:9, color:S.hint, fontFamily:'monospace' }}>{hospital.hospital_code}</span>
+              <span style={{ fontSize:9, color:S.border }}>·</span>
+              <span style={{ width:5, height:5, borderRadius:'50%', background: waiting>0?'#f59e0b':'#22c55e', display:'inline-block' }}/>
+              <span style={{ fontSize:9, color: waiting>0?S.warning:S.success, fontWeight:600 }}>{waiting} waiting</span>
+              <span style={{ fontSize:9, color:S.border }}>·</span>
+              <span style={{ fontSize:9, color:'#7C3AED', fontWeight:600 }}>{ipdList.filter(i=>i.status==='admitted').length} admitted</span>
+              <span style={{ fontSize:9, color:S.border }}>·</span>
+              <span style={{ fontSize:9, color:S.success, fontWeight:600 }}>₹{invoices.filter(i=>i.status==='paid'&&new Date(i.paid_at||i.created_at).toDateString()===new Date().toDateString()).reduce((s,i)=>s+parseFloat(i.total||0),0).toFixed(0)} today</span>
+            </div>
           </div>
           {isMobile && <button onClick={onLogout} style={{ padding:'6px 12px', background:'transparent', border:'0.5px solid '+S.border, borderRadius:8, fontSize:12, color:S.muted, cursor:'pointer' }}>Sign out</button>}
         </div>
