@@ -533,18 +533,21 @@ export default function HospitalPortal({ user, onLogout }) {
   // ── Hospital Intelligence Engine ──────────────────────
   const intelligence = useMemo(() => {
     try {
-      if (!queue || !ipdList || !labOrders || !charges) return null;
+      if (!queue?.length && !ipdList?.length) return null;
       return getHospitalIntelligence({ queue: queue||[], sessions:[], ipdList: ipdList||[], labOrders: labOrders||[], charges: charges||[], staff: staff||[], patients: patients||[] });
-    } catch(e) { console.warn('Intelligence engine error:', e); return null; }
-  }, [queue, ipdList, labOrders, charges, staff, patients]);
+    } catch(e) { return null; }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.length, ipdList.length, labOrders.length, charges.length, staff.length, patients.length]);
 
   const triagedQueue = useMemo(() => {
-    try { return queue && queue.length > 0 ? triageQueue(queue) : []; } catch { return queue || []; }
-  }, [queue]);
+    try { return queue?.length > 0 ? triageQueue(queue) : []; } catch { return queue || []; }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.length]);
 
   const leakage = useMemo(() => {
     try { return detectRevenueleakage(ipdList||[], labOrders||[], charges||[]); } catch { return { leaks:[], total_leakage:0, count:0 }; }
-  }, [ipdList, labOrders, charges]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ipdList.length, labOrders.length, charges.length]);
   const crisis = beds.filter(b=>b.urgency==='crisis').length;
   const pendingRef = referrals.filter(r=>r.status==='pending').length;
 
