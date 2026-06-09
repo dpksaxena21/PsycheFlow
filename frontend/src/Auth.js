@@ -4,7 +4,6 @@ import { supabase } from './supabase';
 import Logo from './Logo';
 
 export default function Auth({ onLogin }) {
-  const isMobile = window.innerWidth < 768;
   const isMobile = useIsMobile();
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
