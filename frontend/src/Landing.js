@@ -128,7 +128,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
           </p>
           <div style={{ display:'flex', gap:10 }}>
             <BtnPrimary onClick={onGetStarted}>Explore platform</BtnPrimary>
-            <BtnOutline onClick={onGetStarted}>Book a demo ↗</BtnOutline>
+
           </div>
         </div>
         <div style={{ background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', padding:40 }}>
@@ -296,7 +296,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
         <h2 style={{ fontSize:34, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.1 }}>Mental health support that actually fits<br/>how clinicians work.</h2>
         <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', marginBottom:28, lineHeight:1.6 }}>Join hospitals and psychologists transforming<br/>mental health outcomes across India.</p>
         <BtnPrimary onClick={onGetStarted} style={{ fontSize:14, padding:'12px 28px' }}>Get started free →</BtnPrimary>
-        <button onClick={onGetStarted} style={{ background:'transparent', color:'#93C5FD', border:'0.5px solid #93C5FD', padding:'11px 22px', borderRadius:100, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginLeft:10 }}>Book a demo</button>
+        
         <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:14 }}>No credit card · DPDP compliant · iCall 9152987821 · Vandrevala 1860-2662-345</div>
       </div>
 

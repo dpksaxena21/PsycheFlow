@@ -475,16 +475,17 @@ export default function HospitalPortal({ user, onLogout }) {
   // ── Hospital Intelligence Engine ──────────────────────
   const intelligence = useMemo(() => {
     try {
-      return getHospitalIntelligence({ queue, sessions:[], ipdList, labOrders, charges, staff, patients });
-    } catch { return null; }
+      if (!queue || !ipdList || !labOrders || !charges) return null;
+      return getHospitalIntelligence({ queue: queue||[], sessions:[], ipdList: ipdList||[], labOrders: labOrders||[], charges: charges||[], staff: staff||[], patients: patients||[] });
+    } catch(e) { console.warn('Intelligence engine error:', e); return null; }
   }, [queue, ipdList, labOrders, charges, staff, patients]);
 
   const triagedQueue = useMemo(() => {
-    try { return triageQueue(queue); } catch { return queue; }
+    try { return queue && queue.length > 0 ? triageQueue(queue) : []; } catch { return queue || []; }
   }, [queue]);
 
   const leakage = useMemo(() => {
-    try { return detectRevenueleakage(ipdList, labOrders, charges); } catch { return { leaks:[], total_leakage:0, count:0 }; }
+    try { return detectRevenueleakage(ipdList||[], labOrders||[], charges||[]); } catch { return { leaks:[], total_leakage:0, count:0 }; }
   }, [ipdList, labOrders, charges]);
   const crisis = beds.filter(b=>b.urgency==='crisis').length;
   const pendingRef = referrals.filter(r=>r.status==='pending').length;
