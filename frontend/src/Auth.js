@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 import Logo from './Logo';
 
 export default function Auth({ onLogin }) {
+  const isMobile = window.innerWidth < 768;
   const isMobile = useIsMobile();
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
@@ -44,7 +45,7 @@ export default function Auth({ onLogin }) {
 
   return (
     <div style={{
-      minHeight:'100vh', display:'flex',
+      minHeight:'100vh', display:'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row',
       fontFamily:"-apple-system, 'DM Sans', sans-serif",
       background:'#F8FAFF'
     }}>
@@ -87,7 +88,7 @@ export default function Auth({ onLogin }) {
           }}>
             AI-powered psychological intelligence platform for India's mental health ecosystem.
           </p>
-          <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+          <div style={{ display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection:'column', gap:'12px' }}>
             {[
               { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="6" rx="4" ry="3" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M4 6C4 7.8 3 9 3 9C3 10.5 5.2 11.5 8 11.5C10.8 11.5 13 10.5 13 9C13 9 12 7.8 12 6" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="6.8" r="1.4" fill="rgba(255,255,255,0.7)"/></svg>, text:'Clinically validated AI assessments' },
               { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="2.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M5 8H11M5 10.5H8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'Conversational therapy with Dr. PsycheFlow' },
@@ -113,7 +114,7 @@ export default function Auth({ onLogin }) {
 
       {/* Right Panel */}
       <div style={{
-        width:'50%', display:'flex', alignItems:'center',
+        width: window.innerWidth < 768 ? '100%' : '50%', display:'flex', alignItems:'center',
         justifyContent:'center', padding:'60px',
         background:'#ffffff',
       }}>
