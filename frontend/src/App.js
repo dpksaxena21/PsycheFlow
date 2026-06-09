@@ -20,7 +20,7 @@ import PsychologistLanding from './PsychologistLanding';
 import HospitalLanding from './HospitalLanding';
 import HospitalAuth from './HospitalAuth';
 import HospitalPortal from './HospitalPortal';
-import SuperAdmin from './SuperAdmin';
+import SuperAdmin from './SuperAdminShell';
 import SuperAdminAuth from './SuperAdminAuth';
 import PsychologistAuth from './PsychologistAuth';
 import Terms from './Terms';
