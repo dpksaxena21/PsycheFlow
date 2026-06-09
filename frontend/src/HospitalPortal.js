@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getHospitalIntelligence, triageQueue, detectRevenueleakage, predictLOS, checkDrugInteractions } from './hospitalAlgorithms';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabase';
 
 const useIsMobile = () => {
@@ -536,23 +535,53 @@ export default function HospitalPortal({ user, onLogout }) {
   const waiting = queue.filter(q=>q.status==='waiting').length;
 
   // ── Hospital Intelligence Engine ──────────────────────
-  const intelligence = useMemo(() => {
+  // Intelligence insights — inline safe implementation
+  const intelligence = (() => {
     try {
-      if (!queue?.length && !ipdList?.length) return null;
-      return getHospitalIntelligence({ queue: queue||[], sessions:[], ipdList: ipdList||[], labOrders: labOrders||[], charges: charges||[], staff: staff||[], patients: patients||[] });
-    } catch(e) { return null; }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queue.length, ipdList.length, labOrders.length, charges.length, staff.length, patients.length]);
+      const insights = [];
+      const criticalQ = (queue||[]).filter(q=>q.priority==='crisis'&&q.status==='waiting');
+      if (criticalQ.length > 0) insights.push({ type:'critical', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#DC2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="#DC2626" strokeWidth="1.8" strokeLinecap="round"/><circle cx="12" cy="17" r="1" fill="#DC2626"/></svg>', title:`${criticalQ.length} Crisis Patient(s) in Queue`, body:'Immediate attention required' });
+      const dischargeable = (ipdList||[]).filter(a=>{
+        if(a.status!=='admitted') return false;
+        const days = Math.floor((Date.now()-new Date(a.admission_date))/(24*60*60*1000));
+        return days >= 4;
+      });
+      if (dischargeable.length > 0) insights.push({ type:'info', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#1D4ED8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="8" x2="12" y2="14" stroke="#1D4ED8" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="11" x2="15" y2="11" stroke="#1D4ED8" strokeWidth="1.8" strokeLinecap="round"/></svg>', title:`${dischargeable.length} Patient(s) May Be Ready for Discharge`, body: dischargeable.map(d=>d.hospital_patients?.full_name||'Unknown').join(', ') });
+      const lowStock = (drugs||[]).filter(d=>d.stock_quantity<=d.reorder_level);
+      if (lowStock.length > 0) insights.push({ type:'warning', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#D97706" strokeWidth="1.8"/><path d="M12 8v4M12 16h.01" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round"/></svg>', title:`${lowStock.length} Drug(s) Low on Stock`, body: lowStock.slice(0,3).map(d=>d.drug_name).join(', ') });
+      return { insights, discharge_candidates: dischargeable };
+    } catch { return null; }
+  })();
 
-  const triagedQueue = useMemo(() => {
-    try { return queue?.length > 0 ? triageQueue(queue) : []; } catch { return queue || []; }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queue.length]);
+  const triagedQueue = (() => {
+    try {
+      if (!queue?.length) return [];
+      const priorityWeight = { crisis:0, urgent:10, normal:20 };
+      const now = Date.now();
+      return [...queue].filter(q=>q.status==='waiting').sort((a,b)=>{
+        const aScore = (priorityWeight[a.priority]||20) + Math.max(0, 30-Math.floor((now-new Date(a.created_at))/60000));
+        const bScore = (priorityWeight[b.priority]||20) + Math.max(0, 30-Math.floor((now-new Date(b.created_at))/60000));
+        return aScore - bScore;
+      });
+    } catch { return queue||[]; }
+  })();
 
-  const leakage = useMemo(() => {
-    try { return detectRevenueleakage(ipdList||[], labOrders||[], charges||[]); } catch { return { leaks:[], total_leakage:0, count:0 }; }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ipdList.length, labOrders.length, charges.length]);
+  const leakage = (() => {
+    try {
+      const leaks = [];
+      (ipdList||[]).filter(a=>a.status==='admitted').forEach(adm=>{
+        const patCharges = (charges||[]).filter(c=>c.patient_id===adm.patient_id);
+        const depts = new Set(patCharges.map(c=>c.department?.toLowerCase()));
+        const days = Math.floor((Date.now()-new Date(adm.admission_date))/(24*60*60*1000));
+        if(days>0 && !depts.has('room') && !depts.has('bed')) leaks.push({ patient_name:adm.hospital_patients?.full_name, message:`Room charges missing (${days} day${days>1?'s':''})`, estimated_loss:days*2000 });
+      });
+      (labOrders||[]).filter(l=>l.status==='resulted').forEach(lab=>{
+        const billed = (charges||[]).some(c=>c.patient_id===lab.patient_id&&c.department?.toLowerCase()==='lab');
+        if(!billed) leaks.push({ patient_name:lab.hospital_patients?.full_name, message:`Lab "${lab.test_name}" not billed`, estimated_loss:800 });
+      });
+      return { leaks, total_leakage:leaks.reduce((s,l)=>s+l.estimated_loss,0), count:leaks.length };
+    } catch { return { leaks:[], total_leakage:0, count:0 }; }
+  })();
   const crisis = beds.filter(b=>b.urgency==='crisis').length;
   const pendingRef = referrals.filter(r=>r.status==='pending').length;
 
