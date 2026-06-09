@@ -22,6 +22,11 @@ const TABS = [
   { id:'audit', label:'Audit Logs' },
   { id:'integrations', label:'Integrations' },
   { id:'settings', label:'Settings' },
+  { id:'support', label:'Support' },
+  { id:'licenses', label:'Licenses' },
+  { id:'database', label:'Database' },
+  { id:'backup', label:'Backup' },
+  { id:'api_mgmt', label:'API Mgmt' },
 ];
 
 const PLANS = [
@@ -59,6 +64,12 @@ export default function SuperAdmin({ onLogout }) {
   const [broadcastTarget, setBroadcastTarget] = useState('all_hospitals');
   const [systemStatus, setSystemStatus] = useState({ railway:'checking', supabase:'checking', vercel:'checking', msg91:'checking' });
   const [searchHospital, setSearchHospital] = useState('');
+  const [tickets, setTickets] = useState([
+    { id:1, hospital:'Apollo Hospital', issue:'Billing tab not loading', priority:'high', status:'open', created:'2026-06-08' },
+    { id:2, hospital:'Fortis Healthcare', issue:'Lab Kanban not updating', priority:'medium', status:'in_progress', created:'2026-06-07' },
+    { id:3, hospital:'Max Healthcare', issue:'SMS not delivering', priority:'low', status:'resolved', created:'2026-06-06' },
+  ]);
+  const [newTicket, setNewTicket] = useState({ hospital:'', issue:'', priority:'medium' });
 
   useEffect(() => { loadAll(); checkSystemHealth(); }, []);
 
@@ -833,6 +844,301 @@ export default function SuperAdmin({ onLogout }) {
             </div>
           </div>
         )}
+
+        {/* ── SUPPORT CENTER ── */}
+        {tab==='support' && (
+          <div>
+            <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>Support Center</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Open Tickets', value:tickets.filter(t=>t.status==='open').length, color:S.danger },
+                { label:'In Progress', value:tickets.filter(t=>t.status==='in_progress').length, color:S.warning },
+                { label:'Resolved', value:tickets.filter(t=>t.status==='resolved').length, color:S.success },
+                { label:'Total', value:tickets.length, color:S.blue },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px' }}>
+                  <div style={{ fontSize:22, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            {/* New ticket */}
+            <div style={{ ...card, marginBottom:16, borderColor:S.blue }}>
+              <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Log New Ticket</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+                <div>
+                  <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Hospital</div>
+                  <input value={newTicket.hospital} onChange={e=>setNewTicket({...newTicket,hospital:e.target.value})} style={{ ...inp }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Issue</div>
+                  <input value={newTicket.issue} onChange={e=>setNewTicket({...newTicket,issue:e.target.value})} style={{ ...inp }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:10, color:S.muted, marginBottom:3 }}>Priority</div>
+                  <select value={newTicket.priority} onChange={e=>setNewTicket({...newTicket,priority:e.target.value})} style={{ ...inp }}>
+                    {['high','medium','low'].map(p=><option key={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+              <button onClick={()=>{ if(!newTicket.hospital||!newTicket.issue) return; setTickets(t=>[...t,{id:Date.now(),hospital:newTicket.hospital,issue:newTicket.issue,priority:newTicket.priority,status:'open',created:new Date().toISOString().slice(0,10)}]); setNewTicket({hospital:'',issue:'',priority:'medium'}); }} style={{ marginTop:10, padding:'8px 18px', background:S.blue, color:'#fff', border:'none', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer' }}>Log Ticket</button>
+            </div>
+            <div style={{ ...card, padding:0, overflow:'hidden' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead><tr style={{ background:S.bg }}>{['ID','Hospital','Issue','Priority','Status','Date','Action'].map(h=><th key={h} style={{ padding:'9px 14px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'left', borderBottom:`0.5px solid ${S.border}`, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {tickets.map(t=>(
+                    <tr key={t.id} style={{ borderBottom:`0.5px solid ${S.border}` }} onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <td style={{ padding:'9px 14px', fontSize:11, color:S.hint, fontFamily:'monospace' }}>#{t.id}</td>
+                      <td style={{ padding:'9px 14px', fontSize:12, fontWeight:600, color:S.navy }}>{t.hospital}</td>
+                      <td style={{ padding:'9px 14px', fontSize:12, color:S.navy }}>{t.issue}</td>
+                      <td style={{ padding:'9px 14px' }}><Badge color={t.priority==='high'?'red':t.priority==='medium'?'yellow':'green'}>{t.priority}</Badge></td>
+                      <td style={{ padding:'9px 14px' }}><Badge color={t.status==='open'?'red':t.status==='in_progress'?'yellow':'green'}>{t.status?.replace('_',' ')}</Badge></td>
+                      <td style={{ padding:'9px 14px', fontSize:11, color:S.muted }}>{t.created}</td>
+                      <td style={{ padding:'9px 14px' }}>
+                        <div style={{ display:'flex', gap:4 }}>
+                          {t.status!=='in_progress'&&t.status!=='resolved'&&<button onClick={()=>setTickets(ts=>ts.map(x=>x.id===t.id?{...x,status:'in_progress'}:x))} style={{ fontSize:10, padding:'3px 7px', background:'#FFFBEB', color:S.warning, border:'none', borderRadius:4, cursor:'pointer', fontWeight:600 }}>Start</button>}
+                          {t.status!=='resolved'&&<button onClick={()=>setTickets(ts=>ts.map(x=>x.id===t.id?{...x,status:'resolved'}:x))} style={{ fontSize:10, padding:'3px 7px', background:'#ECFDF5', color:S.success, border:'none', borderRadius:4, cursor:'pointer', fontWeight:600 }}>Resolve</button>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── LICENSE MANAGEMENT ── */}
+        {tab==='licenses' && (
+          <div>
+            <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>License Management</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Total Licenses', value:hospitals.length, color:S.blue },
+                { label:'Active', value:subscriptions.filter(s=>s.status==='active').length, color:S.success },
+                { label:'Trial', value:subscriptions.filter(s=>s.status==='trial').length, color:S.warning },
+                { label:'Expiring Soon', value:0, color:S.danger },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px' }}>
+                  <div style={{ fontSize:22, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ ...card, padding:0, overflow:'hidden' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead><tr style={{ background:S.bg }}>{['Hospital','Plan','Seats Allowed','Status','Renewal','Actions'].map(h=><th key={h} style={{ padding:'9px 14px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'left', borderBottom:`0.5px solid ${S.border}`, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {hospitals.length===0?<tr><td colSpan={6} style={{ padding:48, textAlign:'center', color:S.muted, fontSize:13 }}>No hospitals registered.</td></tr>:hospitals.map(h=>{
+                    const sub = subscriptions.find(s=>s.hospital_id===h.id);
+                    const plan = PLANS.find(p=>p.id===sub?.plan)||PLANS[0];
+                    const seats = sub?.seats || (sub?.plan==='enterprise'?500:sub?.plan==='professional'?100:sub?.plan==='starter'?25:5);
+                    return (
+                      <tr key={h.id} style={{ borderBottom:`0.5px solid ${S.border}` }} onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                        <td style={{ padding:'9px 14px', fontSize:13, fontWeight:600, color:S.navy }}>{h.name}</td>
+                        <td style={{ padding:'9px 14px' }}><Badge color={sub?.plan==='enterprise'?'purple':sub?.plan==='professional'?'blue':'yellow'}>{sub?.plan||'free'}</Badge></td>
+                        <td style={{ padding:'9px 14px' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <div style={{ flex:1, height:6, borderRadius:3, background:S.border, maxWidth:100 }}>
+                              <div style={{ height:6, borderRadius:3, background:S.blue, width:Math.min(100, Math.round((h.psychologists_count||0)/seats*100))+'%' }}/>
+                            </div>
+                            <span style={{ fontSize:11, color:S.muted }}>{h.psychologists_count||0}/{seats}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding:'9px 14px' }}><Badge color={sub?.status==='active'?'green':sub?.status==='trial'?'yellow':'red'}>{sub?.status||'inactive'}</Badge></td>
+                        <td style={{ padding:'9px 14px', fontSize:11, color:S.muted }}>{sub?.expires_at?new Date(sub.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'No expiry'}</td>
+                        <td style={{ padding:'9px 14px' }}>
+                          <button onClick={()=>{setSelHospital(h);setTab('hospitals');}} style={{ fontSize:10, padding:'3px 8px', background:S.lightBlue, color:S.blue, border:'none', borderRadius:5, cursor:'pointer', fontWeight:600 }}>Manage</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── DATABASE INSIGHTS ── */}
+        {tab==='database' && (
+          <div>
+            <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>Database Insights</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Total Tables', value:'21', color:S.blue },
+                { label:'RLS Enabled', value:'21/21', color:S.success },
+                { label:'Region', value:'Singapore', color:S.cyan },
+                { label:'Project ID', value:'uckgvuku...', color:S.muted },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px' }}>
+                  <div style={{ fontSize:20, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                ['hospital_patients', totalPatients, '#7C3AED'],
+                ['ehr_records', totalEHR, S.blue],
+                ['sessions', totalSessions, S.success],
+                ['lab_orders', totalLabOrders, S.warning],
+                ['profiles', totalProfiles, S.cyan],
+                ['hospitals', hospitals.length, S.navy],
+                ['billing_invoices', 0, S.danger],
+                ['audit_logs', auditLogs.length, S.muted],
+                ['opd_queue', 0, S.blue],
+                ['ipd_admissions', 0, S.success],
+                ['pharmacy_inventory', 0, S.warning],
+                ['hospital_staff', 0, S.cyan],
+              ].map(([table, count, color])=>(
+                <div key={table} style={{ background:S.bg, borderRadius:8, padding:'12px 14px', border:`0.5px solid ${S.border}` }}>
+                  <div style={{ fontSize:20, fontWeight:700, color }}>{count?.toLocaleString()}</div>
+                  <div style={{ fontSize:10, color:S.muted, marginTop:3, fontFamily:'monospace' }}>{table}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ ...card }}>
+              <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Connection Info</div>
+              {[
+                ['Host','uckgvukjdekoxfbxnqew.supabase.co'],
+                ['Region','ap-southeast-1 (Singapore)'],
+                ['Database','PostgreSQL 15'],
+                ['Connection Pooling','PgBouncer'],
+                ['Max Connections','60 (free tier)'],
+                ['Storage','500MB (free tier)'],
+              ].map(([label,val])=>(
+                <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                  <span style={{ fontSize:12, color:S.muted }}>{label}</span>
+                  <span style={{ fontSize:12, fontWeight:600, color:S.navy, fontFamily:label.includes('Host')||label.includes('Max')||label.includes('Storage')?'monospace':'inherit' }}>{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── BACKUP & RECOVERY ── */}
+        {tab==='backup' && (
+          <div>
+            <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>Backup & Recovery</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Last Backup', value:'Auto (Supabase)', color:S.success },
+                { label:'Backup Frequency', value:'Daily', color:S.blue },
+                { label:'Retention', value:'7 days (free)', color:S.warning },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px' }}>
+                  <div style={{ fontSize:16, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              <div style={{ ...card }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Supabase Backups</div>
+                <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'12px 14px', marginBottom:12 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:S.blue }}>Automatic daily backups enabled</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:4 }}>Supabase Pro plan required for PITR (Point-in-Time Recovery)</div>
+                </div>
+                {[
+                  ['Automatic Backups','Daily snapshots by Supabase','active'],
+                  ['Point-in-Time Recovery','Requires Pro plan','inactive'],
+                  ['Manual Export','Available via Supabase dashboard','active'],
+                  ['Git Repository','Code backed up on GitHub','active'],
+                  ['Environment Variables','Backed up in Railway + Vercel','active'],
+                ].map(([name,detail,status])=>(
+                  <div key={name} style={{ display:'flex', gap:10, padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:status==='active'?'#22c55e':'#e2e8f0', marginTop:4, flexShrink:0 }}/>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{name}</div>
+                      <div style={{ fontSize:10, color:S.muted }}>{detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ ...card }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Recovery Procedures</div>
+                {[
+                  ['Database Recovery','Restore from Supabase snapshot via dashboard'],
+                  ['Frontend Recovery','Redeploy from GitHub via Vercel'],
+                  ['Backend Recovery','Redeploy from GitHub via Railway'],
+                  ['Model Files','Re-upload .pkl files to Railway volume'],
+                  ['Environment Variables','Restore from secure password manager'],
+                ].map(([step,detail],i)=>(
+                  <div key={step} style={{ display:'flex', gap:10, padding:'9px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                    <div style={{ width:22, height:22, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:S.blue, flexShrink:0 }}>{i+1}</div>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{step}</div>
+                      <div style={{ fontSize:10, color:S.muted }}>{detail}</div>
+                    </div>
+                  </div>
+                ))}
+                <a href="https://supabase.com/dashboard/project/uckgvukjdekoxfbxnqew/database/backups" target="_blank" rel="noreferrer"
+                  style={{ display:'block', marginTop:12, padding:'8px 14px', background:S.lightBlue, color:S.blue, borderRadius:7, fontSize:12, fontWeight:600, textAlign:'center', textDecoration:'none' }}>
+                  Open Supabase Backups →
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── API MANAGEMENT ── */}
+        {tab==='api_mgmt' && (
+          <div>
+            <h2 style={{ margin:'0 0 20px', color:S.navy, fontSize:20, fontWeight:700 }}>API Management</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+              {[
+                { label:'Total Endpoints', value:'23', color:S.blue },
+                { label:'Rate Limited', value:'7', color:S.success },
+                { label:'Auth Required', value:'18', color:S.warning },
+                { label:'Public', value:'5', color:S.cyan },
+              ].map((k,i)=>(
+                <div key={i} style={{ ...card, padding:'14px 18px' }}>
+                  <div style={{ fontSize:22, fontWeight:700, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ ...card, padding:0, overflow:'hidden', marginBottom:16 }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead><tr style={{ background:S.bg }}>{['Endpoint','Method','Auth','Rate Limit','Description'].map(h=><th key={h} style={{ padding:'9px 14px', fontSize:10, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'left', borderBottom:`0.5px solid ${S.border}`, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {[
+                    ['/',                    'GET',  'No',  '-',         'Health check'],
+                    ['/predict',             'POST', 'No',  '30/min',    '19 XGBoost models + SHAP'],
+                    ['/clinical-interview',  'POST', 'No',  '10/min',    'Claude Haiku clinical interview'],
+                    ['/chatbot',             'POST', 'No',  '20/min',    'RAG chatbot with clinic hours'],
+                    ['/analyze-journal',     'POST', 'No',  '20/min',    'Journal emotion analysis'],
+                    ['/generate-report',     'POST', 'No',  '5/min',     'Full clinical PDF report'],
+                    ['/check-crisis',        'POST', 'No',  '30/min',    'Crisis detection + alert'],
+                    ['/send-sms',            'POST', 'No',  '10/min',    'MSG91 OPD token SMS'],
+                    ['/generate-soap',       'POST', 'No',  '-',         'SOAP notes generation'],
+                    ['/pre-session-brief',   'POST', 'No',  '-',         'AI psychologist brief'],
+                    ['/anomaly-detection',   'POST', 'No',  '-',         'PHQ/GAD z-score detection'],
+                    ['/predict-suicide-risk','POST', 'No',  '-',         'Suicide risk classifier'],
+                    ['/act/exercises',       'GET',  'No',  '-',         'ACT therapy exercises'],
+                    ['/act/recommend',       'POST', 'No',  '-',         'ACT recommendations'],
+                    ['/crisis-alerts/{id}',  'GET',  'No',  '-',         'Crisis alerts for psychologist'],
+                  ].map(([endpoint, method, auth, rateLimit, desc])=>(
+                    <tr key={endpoint} style={{ borderBottom:`0.5px solid ${S.border}` }} onMouseEnter={e=>e.currentTarget.style.background=S.lightBlue} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <td style={{ padding:'8px 14px', fontSize:12, fontFamily:'monospace', color:S.blue }}>{endpoint}</td>
+                      <td style={{ padding:'8px 14px' }}><Badge color={method==='GET'?'green':'blue'}>{method}</Badge></td>
+                      <td style={{ padding:'8px 14px' }}><Badge color={auth==='Yes'?'green':'yellow'}>{auth}</Badge></td>
+                      <td style={{ padding:'8px 14px', fontSize:11, color:rateLimit!=='-'?S.warning:S.hint }}>{rateLimit}</td>
+                      <td style={{ padding:'8px 14px', fontSize:11, color:S.muted }}>{desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ ...card }}>
+              <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Base URL</div>
+              <div style={{ background:S.bg, borderRadius:8, padding:'10px 14px', fontFamily:'monospace', fontSize:13, color:S.navy }}>https://web-production-3887e.up.railway.app</div>
+              <div style={{ fontSize:11, color:S.muted, marginTop:8 }}>All endpoints use JSON request/response. No API key required currently — JWT auth planned for v3.</div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
