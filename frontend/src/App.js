@@ -147,6 +147,11 @@ export default function App() {
     });
     supabase.auth.onAuthStateChange((_event, session) => {
       if (!localStorage.getItem('psycheflow_hospital_user')) {
+        // On SIGNED_IN clear any stale state from previous user
+        if (_event === 'SIGNED_IN') {
+          // Reset psychologist flag — will be set correctly by checkOnboarding
+          setIsPsychologist(false);
+        }
         setUser(session?.user ?? null);
         if (session?.user) checkOnboarding(session.user.id);
       }
@@ -271,7 +276,7 @@ export default function App() {
   if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} /> : <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
-  if (isPsychologist) return <PsychologistPortal user={user} onLogout={handleLogout} />;
+  if (isPsychologist) return <PsychologistPortal user={user} profile={profile} onLogout={handleLogout} onPatientMode={() => setIsPsychologist(false)} />;
 
   if (showACT) return (
     <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'linear-gradient(135deg, #EFF6FF 0%, #fdf4ff 100%)', padding:40 }}>

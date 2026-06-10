@@ -41,6 +41,7 @@ export const useAuthStore = create(
 
           if (!data) return;
 
+          // Always derive isPsychologist from DB — never from cache
           set({
             profile: data,
             onboarded: data.onboarded === true,
@@ -56,6 +57,10 @@ export const useAuthStore = create(
 
         logout: async () => {
           await supabase.auth.signOut();
+          // Clear all persisted state
+          localStorage.removeItem('psycheflow-auth');
+          localStorage.removeItem('psycheflow_hospital_user');
+          localStorage.removeItem('psycheflow_superadmin');
           set({
             user: null,
             profile: null,
@@ -63,12 +68,12 @@ export const useAuthStore = create(
             consentGiven: null,
             onboarded: null,
             showLanding: true,
-        legalPage: null,
-        showPsychLanding: false,
-        showPsychAuth: false,
-        showHospitalLanding: false,
-        showHospitalAuth: false,
-        hospitalUser: null,
+            legalPage: null,
+            showPsychLanding: false,
+            showPsychAuth: false,
+            showHospitalLanding: false,
+            showHospitalAuth: false,
+            hospitalUser: null,
           });
         },
 
