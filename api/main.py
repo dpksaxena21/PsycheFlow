@@ -29,7 +29,7 @@ from crisis_escalation import check_and_escalate, get_unacknowledged_alerts, ack
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 app = FastAPI(
-    title="PsycheFlow API",
+    title="PsycheFlow Clinical API",
     version="2.0.0",
     description="AI-powered clinical psychology platform API",
     docs_url="/api/docs",
@@ -39,13 +39,22 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    # Never expose internal errors to client
+    return JSONResponse(
+        status_code=500,
+        content={"error": "An internal error occurred. Please try again.", "code": "INTERNAL_ERROR"}
+    )
+
+# Production: only allow real domains. Localhost only in dev.
+_is_dev = _os.getenv("ENVIRONMENT", "production") == "development"
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "https://psycheflow.in",
     "https://www.psycheflow.in",
-    _os.getenv("FRONTEND_URL", "http://localhost:3000"),
-]
+    _os.getenv("FRONTEND_URL", "https://psycheflow.in"),
+] + (["http://localhost:3000", "http://127.0.0.1:3000"] if _is_dev else [])
 
 app.add_middleware(
     CORSMiddleware,
@@ -148,7 +157,17 @@ class ReportInput(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────
 @app.get("/")
 def root():
-    return {"status": "PsycheFlow API v2 running", "models": targets}
+    return {
+        "status": "healthy",
+        "service": "PsycheFlow API",
+        "version": "2.0.0",
+        "models_loaded": len(targets),
+        "environment": _os.getenv("ENVIRONMENT", "production"),
+    }
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "timestamp": __import__("datetime").datetime.utcnow().isoformat()}
 
 @app.post("/predict")
 @limiter.limit("30/minute")

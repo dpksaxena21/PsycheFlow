@@ -1,17 +1,6 @@
 User-agent: *
+Disallow: /hospital
+Disallow: /superadmin
+Disallow: /psychologist
 Allow: /
-
-# Block auth and private routes from indexing
-Disallow: /dashboard
-Disallow: /portal
-Disallow: /hospital-portal
-Disallow: /assessment
-Disallow: /interview
-Disallow: /chat
-Disallow: /messages
-Disallow: /appointments
-Disallow: /consent
-Disallow: /onboarding
-
-# Sitemap
-Sitemap: https://psycheflow.in/sitemap.xml
+Sitemap: https://www.psycheflow.in/sitemap.xml
