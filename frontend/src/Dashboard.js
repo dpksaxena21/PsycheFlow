@@ -2,6 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from './supabase';
 import axios from 'axios';
 import { calcWellnessScore, calcRiskLevel, severity, ScoreChange, SparkLine, WellnessRing, AchievementBadge, ClinicalScoreCards } from './DashboardWidgets';
+import GlobalSearch from './GlobalSearch';
+import NotificationCenter from './NotificationCenter';
+import QuickCreate from './QuickCreate';
+import Breadcrumbs from './Breadcrumbs';
+import { useAutoSave, AutoSaveIndicator } from './useAutoSave';
+import { useKeyboardNav } from './useKeyboardNav';
 
 import { API_URL as API } from './config';
 
@@ -122,6 +128,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   const t = T(dark);
   const isMobile = useIsMobile();
   const [tab, setTab] = useState('overview');
+  useKeyboardNav(setTab, NAV_ITEMS);
   const [sessions, setSessions] = useState([]);
   const [journals, setJournals] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -138,6 +145,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   const [hospitalRecords, setHospitalRecords] = useState(null);
   const [journalText, setJournalText] = useState('');
   const [journalAnalysis, setJournalAnalysis] = useState(null);
+  const [journalDraft, setJournalDraft] = useState(() => localStorage.getItem('pf-journal-draft') || '');
   const [journalLoading, setJournalLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
@@ -302,42 +310,36 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       {/* Main */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Topbar */}
-        <div style={{ background: t.bg2, borderBottom: `0.5px solid ${t.border}`, padding: isMobile ? '12px 16px' : '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 9 }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', color: t.text }}>{greeting}, {name}</div>
-            <div style={{ fontSize: 10, color: t.text3, marginTop: 1 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Crisis button */}
-            <button onClick={onCrisis} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `0.5px solid ${t.danger}`, background: 'transparent', color: t.danger, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              {Icons.crisis(t.danger)} SOS
-            </button>
-            {/* Notification bell */}
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => setShowNotif(n => !n)} style={{ width: 36, height: 36, borderRadius: 9, background: t.bg3, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.text2 }}>
-                {Icons.bell(t.text2)}
-              </button>
-              {notifications.length > 0 && <div style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: t.danger }}/>}
-              {showNotif && (
-                <div style={{ position: 'absolute', top: 42, right: 0, width: 300, background: t.bg2, borderRadius: 12, border: `0.5px solid ${t.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
-                  <div style={{ padding: '10px 14px', borderBottom: `0.5px solid ${t.border}`, fontSize: 12, fontWeight: 700, color: t.text }}>Notifications</div>
-                  {notifications.length === 0 ? <div style={{ padding: 20, textAlign: 'center', fontSize: 12, color: t.text3 }}>No new notifications</div> :
-                    notifications.map(n => (
-                      <div key={n.id} style={{ padding: '10px 14px', borderBottom: `0.5px solid ${t.border}` }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: n.type === 'alert' ? t.danger : n.type === 'success' ? t.success : t.blue }}>{n.title}</div>
-                        <div style={{ fontSize: 11, color: t.text3, marginTop: 2 }}>{n.body}</div>
-                      </div>
-                    ))
-                  }
-                </div>
-              )}
+        <div style={{ background: t.bg2, borderBottom: `0.5px solid ${t.border}`, padding: isMobile ? '0 12px' : '0 24px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 9, height: 64, flexShrink: 0 }}>
+          {/* Logo on mobile */}
+          {isMobile && (
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: t.blue, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
             </div>
-            {onPsychologistMode && (
+          )}
+          {/* Global search */}
+          {!isMobile && <GlobalSearch user={user} t={t} onNavigate={setTab}/>}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* SOS - single floating action on mobile, button on desktop */}
+            {!isMobile && <button onClick={onCrisis} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `0.5px solid ${t.danger}`, background: 'transparent', color: t.danger, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              {Icons.crisis(t.danger)} SOS
+            </button>}
+            {/* Notifications */}
+            <NotificationCenter notifications={notifications.map(n => ({ ...n, category: n.type === 'alert' ? 'Clinical' : n.type === 'success' ? 'Clinical' : 'Appointments' }))} t={t} onNavigate={setTab}/>
+            {/* Quick create */}
+            {!isMobile && <QuickCreate t={t} actions={[
+              { label: 'Start Assessment', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke={t.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, onClick: onStartAssessment },
+              { label: 'Write in Journal', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke={t.blue} strokeWidth="1.5" strokeLinecap="round"/></svg>, onClick: () => setTab('journal') },
+              { label: 'Book Appointment', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke={t.blue} strokeWidth="1.5"/><path d="M3 10h18" stroke={t.blue} strokeWidth="1.5" strokeLinecap="round"/></svg>, onClick: () => setTab('appointments') },
+              { label: 'ACT Exercise', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78" stroke={t.blue} strokeWidth="1.5" strokeLinecap="round"/></svg>, onClick: onACTEngine },
+            ]}/>}
+            {onPsychologistMode && !isMobile && (
               <button onClick={onPsychologistMode} style={{ padding: '6px 12px', borderRadius: 8, border: `0.5px solid ${t.border}`, background: t.bg3, color: t.text2, fontSize: 11, fontWeight: 500, cursor: 'pointer' }}>Clinician view</button>
             )}
-            <button onClick={onStartAssessment} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: t.blue, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
-              {Icons.plus('#fff')} Assessment
-            </button>
+            {/* Profile avatar */}
+            <div onClick={onLogout} title="Sign out" style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${t.blue},${t.cyan})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}>
+              {name?.charAt(0).toUpperCase()}
+            </div>
           </div>
         </div>
 
@@ -347,6 +349,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           {/* ── OVERVIEW ─────────────────────────────── */}
           {tab === 'overview' && (
             <div>
+              <Breadcrumbs items={[{ label: 'Dashboard' }, { label: 'Overview' }]} t={t}/>
               {/* Hero: Wellness Command Center */}
               <div style={{ background: `linear-gradient(135deg, ${t.bg2}, ${dark ? '#0d2847' : '#EFF6FF'})`, borderRadius: 16, padding: isMobile ? '20px 16px' : '24px 28px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
@@ -523,6 +526,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           {/* ── WELLNESS ─────────────────────────────── */}
           {tab === 'wellness' && (
             <div>
+              <Breadcrumbs items={[{ label: 'Dashboard', onClick: () => setTab('overview') }, { label: 'Wellness' }]} t={t}/>
               <h2 style={{ margin: '0 0 20px', color: t.text, fontSize: 20, fontWeight: 700 }}>Wellness Center</h2>
               {/* Overall wellness */}
               <div style={{ background: t.bg2, borderRadius: 16, padding: '24px', marginBottom: 20, border: `0.5px solid ${t.border}`, display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -604,6 +608,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           {/* ── CLINICAL ─────────────────────────────── */}
           {tab === 'clinical' && (
             <div>
+              <Breadcrumbs items={[{ label: 'Dashboard', onClick: () => setTab('overview') }, { label: 'Clinical' }]} t={t}/>
               <h2 style={{ margin: '0 0 20px', color: t.text, fontSize: 20, fontWeight: 700 }}>Clinical Dashboard</h2>
               {!latest ? (
                 <div style={{ background: t.bg2, borderRadius: 12, padding: 40, textAlign: 'center', border: `0.5px solid ${t.border}` }}>
@@ -784,12 +789,16 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
               <h2 style={{ margin: '0 0 20px', color: t.text, fontSize: 20, fontWeight: 700 }}>Journal</h2>
               <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: t.text, marginBottom: 10 }}>New Entry</div>
-                <textarea value={journalText} onChange={e => setJournalText(e.target.value)} placeholder="How are you feeling today? What's on your mind?" rows={5}
+                <Breadcrumbs items={[{ label: 'Dashboard', onClick: () => setTab('overview') }, { label: 'Journal' }]} t={t}/>
+              <textarea value={journalDraft} onChange={e => { setJournalDraft(e.target.value); setJournalText(e.target.value); localStorage.setItem('pf-journal-draft', e.target.value); }} placeholder="How are you feeling today? What's on your mind?" rows={5}
                   style={{ width: '100%', padding: '12px', borderRadius: 10, border: `0.5px solid ${t.border}`, background: t.bg, color: t.text, fontSize: 13, lineHeight: 1.7, resize: 'vertical', outline: 'none', fontFamily: "'Satoshi',-apple-system,sans-serif", boxSizing: 'border-box' }}/>
-                <button onClick={analyzeJournal} disabled={journalLoading || journalText.trim().length < 20}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:10 }}>
+                  <span style={{ fontSize:11, color:t.text3 }}>{journalDraft.length} characters {journalDraft.length >= 20 ? '— ready to analyze' : '— write at least 20 characters'}</span>
+                  <button onClick={async()=>{ setJournalText(journalDraft); await analyzeJournal(); localStorage.removeItem('pf-journal-draft'); setJournalDraft(''); }} disabled={journalLoading || journalDraft.trim().length < 20}
                   style={{ marginTop: 10, padding: '9px 20px', background: t.blue, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                   {journalLoading ? 'Analyzing...' : 'Save & Analyze'}
-                </button>
+                  </button>
+                </div>
               </div>
               {journalAnalysis && (
                 <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>

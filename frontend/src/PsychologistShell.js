@@ -188,7 +188,7 @@ export default function PsychologistShell({ user, profile, onLogout, onPatientMo
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Topbar */}
-        <div style={{ background: S.card, borderBottom: `0.5px solid ${S.border}`, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ background: S.card, borderBottom: `0.5px solid ${S.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: S.navy }}>Dr. {name}</div>
             <div style={{ fontSize: 10, color: S.hint }}>{patients.length} patients · {crisisAlerts.length} alerts · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
