@@ -139,7 +139,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
               <button onClick={onHospitalLanding} style={{ padding:'13px 28px', background:'rgba(255,255,255,0.08)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>Book Hospital Demo</button>
             </div>
             <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
-              {[['14 Clinical Instruments','PHQ-9, GAD-7, Big Five & more'],['DPDP 2023 Compliant','India data law certified'],['AI + Human Care','Clinician always in control']].map(([title, sub]) => (
+              {[['16 Clinical Instruments','PHQ-9, GAD-7, Big Five & more'],['DPDP 2023 Compliant','India data law certified'],['AI + Human Care','Clinician always in control']].map(([title, sub]) => (
                 <div key={title} style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginTop:2, flexShrink:0 }}><circle cx="12" cy="12" r="10" fill="rgba(34,197,94,0.15)"/><path d="M7 12l4 4 6-6" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <div>
@@ -501,7 +501,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
             <div style={{ background:S.bg, borderRadius:14, padding:24, border:`0.5px solid ${S.border}` }}>
               <div style={{ fontSize:13, fontWeight:700, color:S.navy, marginBottom:16 }}>Validated Clinical Instruments</div>
               <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                {['PHQ-9','GAD-7','WHO-5','ISI','PCL-5','OCI-R','ASRS','MBI','DASS-21','C-SSRS','Big Five','Dark Triad','Burnout Scale','Workplace MH'].map(ins => (
+                {['PHQ-9','GAD-7','WHO-5','ISI-7','DASS-21','Big Five','Dark Triad','OCD Screening','PCL-5 PTSD','ADHD Screening','Burnout (MBI)','Bipolar (MDQ)','RSE Self-Esteem','C-SSRS Suicide Risk','AUDIT Alcohol Use','Workplace MH'].map(ins => (
                   <div key={ins} style={{ padding:'5px 12px', borderRadius:100, background:S.white, border:`0.5px solid ${S.border}`, fontSize:12, fontWeight:600, color:S.navy }}>{ins}</div>
                 ))}
               </div>

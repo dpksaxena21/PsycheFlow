@@ -198,7 +198,9 @@ export default function App() {
       if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
       if (user) {
         try {
-          await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers });
+          await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers,
+            cssrs_high_risk: assessment?.cssrs_high_risk || false,
+            audit_score: assessment?.audit_score || 0 });
         } catch(e) {
           // Crisis check failed — show crisis resources directly as safety net
           if (phq >= 20 || answers?.some?.(a => a.question?.includes('suicide') && a.answer > 0)) {

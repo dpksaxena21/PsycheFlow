@@ -62,6 +62,26 @@ const QUESTIONS = {
   P1:  { id:'P1', hint:"Remorse is a core component of empathy. This is a self-awareness question, not a moral judgment.",  text:'I tend to lack remorse', type:'agree5', section:'Personality (Advanced)' },
   P2:  { id:'P2', hint:"Moral reasoning varies widely. Your honest answer produces the most accurate personality profile.",  text:'I tend to not worry about the morality of my actions', type:'agree5', section:'Personality (Advanced)' },
 
+  // ── C-SSRS (Columbia Suicide Severity Rating Scale) ─────────
+  CSSRS1: { id:'CSSRS1', hint:"This question is about passive thoughts — wishing to be dead without any plan to act.", text:'Have you wished you were dead or wished you could go to sleep and not wake up?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
+  CSSRS2: { id:'CSSRS2', hint:"Having thoughts of killing yourself is different from passive death wishes and requires immediate attention.", text:'Have you had any actual thoughts of killing yourself?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
+  CSSRS3: { id:'CSSRS3', hint:"Having thoughts with some method in mind indicates higher risk than passive ideation.", text:'Have you been thinking about how you might kill yourself?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
+  CSSRS4: { id:'CSSRS4', hint:"An intent to act on thoughts of suicide is a serious clinical indicator requiring immediate intervention.", text:'Have you had any intention of acting on these thoughts?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
+  CSSRS5: { id:'CSSRS5', hint:"A specific plan with time, place, and method indicates the highest level of risk.", text:'Have you started to work out or worked out the details of how to kill yourself?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
+  CSSRS6: { id:'CSSRS6', hint:"Any past attempts are the strongest predictor of future risk.", text:'Have you ever made a suicide attempt in your lifetime?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
+
+  // ── AUDIT (Alcohol Use Disorders Identification Test) ──────
+  AUDIT1: { id:'AUDIT1', hint:"How often you drink sets the baseline for understanding alcohol use patterns.", text:'How often do you have a drink containing alcohol?', type:'choice', options:['Never','Monthly or less','2-4 times a month','2-3 times a week','4+ times a week'], section:'Alcohol Use (AUDIT)' },
+  AUDIT2: { id:'AUDIT2', hint:"Standard drinks help clinicians understand the quantity of alcohol consumed.", text:'How many standard drinks do you have on a typical drinking day?', type:'choice', options:['1-2','3-4','5-6','7-9','10 or more'], section:'Alcohol Use (AUDIT)' },
+  AUDIT3: { id:'AUDIT3', hint:"Heavy episodic drinking (binge drinking) is associated with significant health and mental health risks.", text:'How often do you have 6 or more drinks on one occasion?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
+  AUDIT4: { id:'AUDIT4', hint:"Inability to stop drinking once started is a key indicator of alcohol dependence.", text:'How often during the last year have you found that you were not able to stop drinking once you had started?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
+  AUDIT5: { id:'AUDIT5', hint:"Failing to meet normal expectations due to drinking affects relationships and work performance.", text:'How often during the last year have you failed to do what was normally expected from you because of drinking?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
+  AUDIT6: { id:'AUDIT6', hint:"Needing a drink in the morning is a classic sign of alcohol dependence.", text:'How often during the last year have you needed a first drink in the morning to get yourself going after a heavy drinking session?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
+  AUDIT7: { id:'AUDIT7', hint:"Guilt about drinking often indicates awareness that the behavior has become problematic.", text:'How often during the last year have you had a feeling of guilt or remorse after drinking?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
+  AUDIT8: { id:'AUDIT8', hint:"Blackouts indicate heavy drinking and potential neurological impact.", text:'How often during the last year have you been unable to remember what happened the night before because you had been drinking?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
+  AUDIT9: { id:'AUDIT9', hint:"When others express concern, it often means the drinking has become visible and impactful.", text:'Have you or someone else been injured as a result of your drinking?', type:'choice', options:['No','Yes, but not in the last year','Yes, during the last year'], section:'Alcohol Use (AUDIT)' },
+  AUDIT10: { id:'AUDIT10', hint:"Professional concern about your drinking is a significant indicator worth taking seriously.", text:'Has a relative, friend, doctor, or other health worker been concerned about your drinking or suggested you cut down?', type:'choice', options:['No','Yes, but not in the last year','Yes, during the last year'], section:'Alcohol Use (AUDIT)' },
+
   // ── OCD ───────────────────────────────────────────────────
   OCD1: { id:'OCD1', hint:"Hoarding behavior is one of the OCD spectrum presentations — difficulty letting go of objects.", text:'I have saved so many things that they get in the way', type:'severity5', section:'OCD Screening' },
   OCD2: { id:'OCD2', hint:"Checking compulsions — stove, locks, switches — are among the most common OCD behaviors.", text:'I check things more often than necessary', type:'severity5', section:'OCD Screening' },
@@ -141,6 +161,8 @@ const FLOW = [
   ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5'],
   ['RSE1','RSE2','RSE3','RSE4'],
   ['DASS1','DASS2','DASS3','DASS4','DASS5','DASS6','DASS7'],
+  ['CSSRS1','CSSRS2','CSSRS3','CSSRS4','CSSRS5','CSSRS6'],
+  ['AUDIT1','AUDIT2','AUDIT3','AUDIT4','AUDIT5','AUDIT6','AUDIT7','AUDIT8','AUDIT9','AUDIT10'],
 ];
 
 export default function AdaptiveQuestionnaire({ onComplete }) {
@@ -178,10 +200,19 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
     if (sectionIdx < totalSections - 1) setSectionIdx(s => s + 1);
     else {
       localStorage.removeItem('pf-assessment-draft');
+    // C-SSRS scoring: count yes answers — any yes on CSSRS2-5 = high risk
+    const cssrs_score = ['CSSRS1','CSSRS2','CSSRS3','CSSRS4','CSSRS5','CSSRS6'].filter(id => answers[id] === 1).length;
+    const cssrs_high_risk = answers['CSSRS2']===1||answers['CSSRS3']===1||answers['CSSRS4']===1||answers['CSSRS5']===1;
+    // AUDIT scoring: sum weighted scores
+    const audit_map = { AUDIT1:[0,1,2,3,4], AUDIT2:[0,1,2,3,4], AUDIT3:[0,1,2,3,4], AUDIT4:[0,1,2,3,4], AUDIT5:[0,1,2,3,4], AUDIT6:[0,1,2,3,4], AUDIT7:[0,1,2,3,4], AUDIT8:[0,1,2,3,4], AUDIT9:[0,2,4], AUDIT10:[0,2,4] };
+    const audit_score = Object.entries(audit_map).reduce((sum,[id,vals]) => sum + (vals[answers[id]]||0), 0);
     onComplete({
         answers, age: parseInt(age) || 25,
         gender: gender === 'Male' ? 1 : gender === 'Female' ? 0 : 2,
-        occupation, concern: ''
+        occupation, concern: '',
+        cssrs_score, cssrs_high_risk,
+        audit_score,
+        audit_risk: audit_score >= 16 ? 'high' : audit_score >= 8 ? 'moderate' : 'low',
       });
     }
   };
