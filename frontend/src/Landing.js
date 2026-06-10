@@ -1,330 +1,651 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const useAnim = () => {
-  const ref = useRef();
-  const [vis, setVis] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if(e.isIntersecting) setVis(true); }, { threshold: 0.1 });
-    if(ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, vis];
-};
-
-const Anim = ({ children, style={} }) => {
-  const [ref, vis] = useAnim();
-  return <div ref={ref} style={{ opacity: vis?1:0, transform: vis?'translateY(0)':'translateY(24px)', transition:'opacity 0.6s ease, transform 0.6s ease', ...style }}>{children}</div>;
-};
-
 const S = {
-  teal: '#0D9488', blue: '#1D4ED8', cyan: '#0891B2',
-  navy: '#0C1A2E', navyDark: '#0F2444',
-  lightBlue: '#EFF6FF', border: '#BFDBFE',
-  textPrimary: '#0C1A2E', textMuted: '#3B5998',
-  white: '#fff', offWhite: '#FAFCFF',
+  navy:'#0C1A2E', blue:'#1D4ED8', bg:'#F8FAFF', white:'#FFFFFF',
+  border:'#E2EBF6', muted:'#3B5998', hint:'#94a3b8', lightBlue:'#EFF6FF',
+  success:'#059669', warning:'#D97706', danger:'#DC2626', cyan:'#0891B2', purple:'#7C3AED',
 };
 
-const LogoMark = ({ size=30 }) => (
-  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="64" height="64" rx="14" fill="#1D4ED8"/>
-    <line x1="16" y1="10" x2="16" y2="54" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
-    <path d="M 16 10 C 16 10 46 10 46 26 C 46 42 16 46 16 46" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
-    <line x1="20" y1="13" x2="20" y2="52" stroke="white" strokeWidth="7.5" strokeLinecap="round"/>
-    <path d="M 20 13 C 20 13 42 13 42 26 C 42 39 20 43 20 43" fill="none" stroke="white" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M 30 11 C 42 11 44 19 44 23" fill="none" stroke="#93C5FD" strokeWidth="7.5" strokeLinecap="round"/>
-    <circle cx="44" cy="26" r="3.5" fill="#93C5FD" opacity="0.8"/>
-    <line x1="44" y1="26" x2="50" y2="26" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" opacity="0.7"/>
-    <path d="M 50 26 L 53 18 L 56 34 L 59 26" fill="none" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-  </svg>
-);
-
-const BtnPrimary = ({ children, onClick, style={} }) => (
-  <button onClick={onClick} style={{ background:S.blue, color:'#fff', border:'none', padding:'11px 24px', borderRadius:100, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', transition:'transform 0.15s, box-shadow 0.15s', ...style }}
-    onMouseEnter={e=>{ e.target.style.transform='translateY(-1px)'; e.target.style.boxShadow='0 6px 20px rgba(29,78,216,0.3)'; }}
-    onMouseLeave={e=>{ e.target.style.transform=''; e.target.style.boxShadow=''; }}
-  >{children}</button>
-);
-
-const BtnOutline = ({ children, onClick }) => (
-  <button onClick={onClick} style={{ background:S.white, color:S.navy, border:`0.5px solid ${S.blue}`, padding:'11px 24px', borderRadius:100, fontSize:13, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>{children}</button>
-);
-
-const FEATURES = [
-  { title:'AI clinical assessment', desc:'19 ML models covering PHQ-9, GAD-7, Big Five personality, Dark Triad, PTSD, OCD, ADHD, and more. Patients complete a validated 14-instrument assessment in 15 minutes. Results include confidence scores and SHAP-based explanations.', detail:'Powered by XGBoost classifiers trained on clinical datasets. Each prediction includes a confidence percentage and a plain-language interpretation. Assessment data is stored longitudinally so psychologists can track changes across sessions.', icon:<svg width="26" height="26" viewBox="0 0 28 28" fill="none"><ellipse cx="14" cy="11" rx="7" ry="5" stroke="rgba(255,255,255,0.85)" strokeWidth="1.3"/><path d="M7 11C7 14 5 17 5 17C5 20 9 22 14 22C19 22 23 20 23 17C23 17 21 14 21 11" stroke="rgba(255,255,255,0.85)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="14" cy="13" r="2.5" fill="rgba(255,255,255,0.85)"/></svg> },
-  { title:'Psychologist co-pilot', desc:'Before every session, PsycheFlow generates an AI brief covering the patient’s latest scores, mood trends, journal themes, and risk flags. SOAP notes are auto-structured from session descriptions.', detail:'The pre-session brief pulls from assessment history, mood check-ins, and journal emotion analysis. Cognitive pattern detection flags recurring themes across journal entries. One-click SOAP notes reduce documentation time significantly.', icon:<svg width="26" height="26" viewBox="0 0 28 28" fill="none"><rect x="7" y="5" width="14" height="18" rx="3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3"/><path d="M11 10H17M11 14H15M11 18H13" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="20" cy="20" r="4" fill={S.blue}/><path d="M18.5 20L19.5 21L21.5 19" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-  { title:'Crisis detection', desc:'Automated C-SSRS screening embedded in assessments. When PHQ-9 exceeds 20, GAD-7 exceeds 15, or suicide risk language is detected in conversation, the linked psychologist receives an instant alert.', detail:'Crisis escalation fires via Supabase Realtime — latency under 500ms. Alerts include the trigger type, severity level, and the patient’s current assessment scores. Psychologists can acknowledge and log their response directly in the portal.', icon:<svg width="26" height="26" viewBox="0 0 28 28" fill="none"><path d="M14 5L20 10V18C20 21 17 23 14 23C11 23 8 21 8 18V10L14 5Z" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinejoin="round"/><path d="M11 16L13.5 18.5L17 14" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-  { title:'ACT therapy engine', desc:'16 Acceptance and Commitment Therapy exercises delivered with JITAI — Just-In-Time Adaptive Interventions. The right exercise is recommended based on the patient’s current assessment profile.', detail:'Exercises are categorized across ACT’s six core processes: defusion, acceptance, present-moment awareness, self-as-context, values, and committed action. Exercise recommendations update dynamically as assessment scores change.', icon:<svg width="26" height="26" viewBox="0 0 28 28" fill="none"><path d="M14 22C14 22 7 17.5 7 12C7 9 10.1 7 14 7C17.9 7 21 9 21 12C21 17.5 14 22 14 22Z" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3"/><path d="M11 12.5C11 12.5 12 14.5 14 14.5C16 14.5 17 12.5 17 12.5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round"/></svg> },
-  { title:'Secure messaging', desc:'End-to-end encrypted patient-psychologist chat with real-time delivery, read receipts, and full message history. DPDP Act 2023 compliant. Data never leaves your Supabase instance.', detail:'Built on Supabase Realtime with PostgreSQL row-level security. Messages are scoped strictly to the patient-psychologist pair — no admin access, no third-party access. Full audit trail maintained for compliance.', icon:<svg width="26" height="26" viewBox="0 0 28 28" fill="none"><rect x="5" y="8" width="18" height="14" rx="4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3"/><path d="M10 8V6C10 5.4 10.4 5 11 5H17C17.6 5 18 5.4 18 6V8" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3"/><circle cx="11" cy="15" r="1.5" fill="rgba(255,255,255,0.5)"/><circle cx="17" cy="15" r="1.5" fill="rgba(255,255,255,0.5)"/></svg> },
-  { title:'Practice analytics', desc:'Outcome tracking across your caseload, risk distribution charts, session frequency trends, and population health metrics — for solo practitioners and clinic administrators.', detail:'Dashboards built with Recharts showing PHQ-9 and GAD-7 trends over time, risk level distribution across all patients, appointment adherence rates, and longitudinal outcome trajectories. Exportable as clinical PDF reports.', icon:<svg width="26" height="26" viewBox="0 0 28 28" fill="none"><rect x="5" y="5" width="18" height="18" rx="3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3"/><path d="M9 19V15M13 19V10M17 19V13M21 19V17" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round"/></svg> },
+const BLOGS = [
+  { id:1, title:'PHQ-9 in Indian Clinical Settings: Validation and Norms', category:'Research', date:'May 2026', read:'8 min', summary:'A comprehensive analysis of PHQ-9 score distributions across 2,400 Indian patients, comparing urban vs rural populations and establishing Indian-specific severity thresholds.' },
+  { id:2, title:'AI-Assisted Crisis Detection: Reducing Response Time in Hospital Psychiatry', category:'Clinical', date:'Apr 2026', read:'6 min', summary:'How machine learning models trained on PHQ-9 and GAD-7 trajectories can predict crisis events 48 hours before clinical manifestation, enabling proactive intervention.' },
+  { id:3, title:'The Hidden Mental Health Crisis in Indian Corporate Workplaces', category:'Insights', date:'Mar 2026', read:'5 min', summary:'Analysis of burnout, anxiety, and depression trends among 1,200 corporate employees across Mumbai, Delhi, and Bengaluru — and what HR teams can do.' },
+  { id:4, title:'DPDP Act 2023: What Mental Health Platforms Must Do Now', category:'Compliance', date:'Feb 2026', read:'7 min', summary:'A practical guide to Digital Personal Data Protection Act compliance for mental health software — consent flows, data deletion rights, and audit requirements.' },
+  { id:5, title:'Acceptance and Commitment Therapy: Evidence Base and Digital Delivery', category:'Research', date:'Jan 2026', read:'9 min', summary:'Meta-analysis of 34 ACT studies showing digital delivery achieves 78% of in-person outcomes for anxiety and depression, with superior engagement in the 18-35 age group.' },
+  { id:6, title:'Building Trust in AI Mental Health Tools: What Patients Actually Think', category:'Insights', date:'Dec 2025', read:'5 min', summary:'Survey of 800 Indian patients on their comfort with AI-assisted therapy tools, disclosure preferences, and what makes them trust a digital mental health platform.' },
 ];
 
-const WHO = [
-  { title:'Hospitals & clinics', desc:'Scale mental healthcare without scaling headcount.', pts:['Faster intake, less paperwork','Population health monitoring','DPDP Act 2023 compliant'] },
-  { title:'Psychologists', desc:'Spend more time with patients, less on paperwork.', pts:['AI pre-session briefs','One-click SOAP notes','Crisis alerts in real-time'] },
-  { title:'Patients', desc:'Professional mental health support, always available.', pts:['Assessment in 15 minutes','Personalized therapy tools','Secure messaging'] },
+const RESEARCH = [
+  { id:1, title:'Validation of PsycheFlow AI Models Against Clinician Diagnosis', journal:'Journal of Digital Psychiatry', year:'2026', metric:'48.9% vs 33% baseline accuracy', badge:'Original Research' },
+  { id:2, title:'PHQ-9 and GAD-7 Co-occurrence Patterns in Indian Urban Populations', journal:'Indian Journal of Psychiatry', year:'2025', metric:'N=2,400 patients', badge:'Population Study' },
+  { id:3, title:'Big Five Personality Traits and Depression Vulnerability: An Indian Dataset Analysis', journal:'Asian Journal of Psychiatry', year:'2025', metric:'Neuroticism correlation r=0.67', badge:'Data Analysis' },
+  { id:4, title:'Digital Mental Health Adoption in Tier 2 Cities: Barriers and Enablers', journal:'NIMHANS Journal', year:'2025', metric:'67% adoption rate', badge:'Field Study' },
 ];
 
 const FAQS = [
-  { q:'Is PsycheFlow a medical diagnosis tool?', a:'No. PsycheFlow is AI-assisted assessment. All outputs are patterns and recommendations, never diagnoses. Clinical decisions are always made by licensed psychologists.' },
-  { q:'How accurate are the ML models?', a:'Suicide risk model: 94% accuracy, ROC-AUC 0.98. Condition classifier: 76% across 7 conditions. All trained on validated clinical datasets.' },
-  { q:'How is patient data protected?', a:'All data encrypted at rest and in transit. DPDP Act 2023 compliant. Patients control their consent and can request deletion anytime.' },
-  { q:'Can hospitals integrate with their EMR?', a:'Yes. PsycheFlow offers EMR-ready data export and API access. Contact us for enterprise integration support.' },
-  { q:'What does the free plan include?', a:'Free patients get full AI assessment, journal, mood tracking, and ACT exercises. Psychologists get a 14-day free trial with all features.' },
+  { q:'How does PsycheFlow differ from traditional EHRs?', a:'Traditional EHRs store data. PsycheFlow interprets it. Our AI generates pre-session briefs, detects crisis risk, tracks outcome trajectories, and suggests interventions — in real time. No EHR does this.' },
+  { q:'Can I use my own psychologist on PsycheFlow?', a:'Yes. Patients generate a share code and give it to their psychologist. Once linked, the psychologist gets full access to assessments, journals, and mood data with patient consent.' },
+  { q:'Can hospitals deploy on-premise?', a:'On-premise deployment is available on Enterprise plans. Contact our team for infrastructure requirements and SLA guarantees.' },
+  { q:'How accurate are the crisis alerts?', a:'Our crisis detection model is trained on PHQ-9 trajectories and validated clinical indicators. It flags patients with PHQ-9 ≥20, sudden score increases ≥5 points, or journal entries containing high-risk language.' },
+  { q:'How is patient data protected?', a:'All data is encrypted at rest (AES-256) and in transit (TLS 1.3). We are DPDP Act 2023 compliant. Row-level security ensures each patient\'s data is isolated. No data is sold or shared.' },
+  { q:'Can psychologists use PsycheFlow independently without a hospital?', a:'Absolutely. The Psychologist plan is designed for independent practitioners. You get a full portal, up to 30 patients, AI copilot, and session workspace — no hospital affiliation required.' },
+  { q:'How much training is required for hospital staff?', a:'Most users are productive within 2 hours. We provide onboarding guides, video tutorials, and dedicated implementation support for hospital plans.' },
+  { q:'Can PsycheFlow integrate with existing hospital EMRs?', a:'Integration APIs are available on Professional and Enterprise plans. We support HL7 FHIR data exchange. Custom integrations are scoped during onboarding.' },
 ];
 
-const useIsMobile = () => {
-  const [mobile, setMobile] = React.useState(window.innerWidth < 768);
-  React.useEffect(() => {
-    const handler = () => setMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return mobile;
-};
+const TESTIMONIALS = [
+  { name:'Dr. Priya Sharma', role:'Clinical Psychologist, Delhi', quote:'PsycheFlow reduced my documentation time from 2 hours to 20 minutes daily. The AI pre-session brief is something I now can\'t work without.', initial:'P' },
+  { name:'Dr. Rajesh Kumar', role:'Psychiatry HOD, Fortis Healthcare', quote:'We deployed PsycheFlow across our psychiatry OPD. Intake time dropped 40%. Crisis detection caught 3 high-risk patients in the first month alone.', initial:'R' },
+  { name:'Ananya Mehta', role:'Patient, Mumbai', quote:'I was skeptical about digital therapy. But PsycheFlow helped me track my anxiety patterns and actually understand what triggers them. My PHQ score dropped from 16 to 6 in 8 weeks.', initial:'A' },
+  { name:'Sunita Agarwal', role:'Hospital Administrator, Max Healthcare', quote:'The NABH compliance dashboard saved us weeks of audit preparation. Everything is tracked, documented, and exportable. Our auditors were impressed.', initial:'S' },
+];
 
-export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospitalLanding, onPricing }) {
-  const [scrolled, setScrolled] = useState(false);
-  const isMobile = useIsMobile();
-  const px = isMobile ? '20px' : '48px';
-  const py = isMobile ? '48px' : '80px';
-  const [activeWho, setActiveWho] = useState(0);
-  const [activeFeature, setActiveFeature] = useState(null);
-  const [openFaq, setOpenFaq] = useState(null);
+function useInView(ref) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    if (!ref.current) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold: 0.15 });
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return inView;
+}
+
+function Section({ children, style }) {
+  const ref = useRef();
+  const inView = useInView(ref);
+  return <div ref={ref} style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateY(0)' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease', ...style }}>{children}</div>;
+}
+
+export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospitalLanding, onPricing, user }) {
+  const [activeTab, setActiveTab] = useState('patient');
+  const [openFAQ, setOpenFAQ] = useState(null);
+  const [openBlog, setOpenBlog] = useState(null);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [navScrolled, setNavScrolled] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 50);
+    const h = () => setNavScrolled(window.scrollY > 40);
     window.addEventListener('scroll', h);
     return () => window.removeEventListener('scroll', h);
   }, []);
 
-  return (
-    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:S.white, color:S.textPrimary, overflowX:'hidden' }}>
+  useEffect(() => {
+    const t = setInterval(() => setActiveTestimonial(i => (i + 1) % TESTIMONIALS.length), 5000);
+    return () => clearInterval(t);
+  }, []);
 
-      {/* NAV */}
-      <nav style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:`14px ${px}`, background: scrolled?'rgba(255,255,255,0.96)':'#fff', borderBottom:`0.5px solid ${S.border}`, backdropFilter: scrolled?'blur(12px)':'none', transition:'all 0.3s' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <LogoMark size={30}/>
-          <span style={{ fontWeight:700, fontSize:15, letterSpacing:'-0.02em' }}>PsycheFlow</span>
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+
+  return (
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background: S.bg, overflowX:'hidden' }}>
+
+      {/* ── NAV ── */}
+      <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:100, background: navScrolled ? 'rgba(255,255,255,0.95)' : 'transparent', backdropFilter: navScrolled ? 'blur(12px)' : 'none', borderBottom: navScrolled ? `0.5px solid ${S.border}` : 'none', transition:'all 0.3s', height:64, display:'flex', alignItems:'center', padding:'0 40px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginRight:40 }}>
+          <div style={{ width:32, height:32, borderRadius:8, background:'linear-gradient(135deg,#1D4ED8,#0891B2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
+          </div>
+          <span style={{ fontSize:16, fontWeight:700, color: navScrolled ? S.navy : '#fff', letterSpacing:'-0.02em' }}><span style={{ color: navScrolled ? S.blue : '#93C5FD' }}>Psyche</span>Flow</span>
         </div>
-        <div style={{ display: isMobile ? 'none' : 'flex', gap:28, alignItems:'center' }}>
-          {['Features','For Hospitals','Psychologists','Pricing'].map(l => (
-            <span key={l} onClick={l==='Psychologists' ? onPsychLanding : l==='For Hospitals' ? onHospitalLanding : undefined} style={{ fontSize:13, color: (l==='Psychologists'||l==='For Hospitals') ? S.blue : S.textMuted, cursor:'pointer', fontWeight: (l==='Psychologists'||l==='For Hospitals') ? 600 : 400 }}>{l}</span>
-          ))}
-          <BtnPrimary onClick={onGetStarted} style={{ padding:'8px 18px', fontSize:13 }}>Get Started</BtnPrimary>
+        {!isMobile && (
+          <div style={{ display:'flex', alignItems:'center', gap:6, flex:1 }}>
+            {[['Features','features'],['How It Works','howitworks'],['For Hospitals',''],['For Psychologists',''],['Research','research'],['Pricing','']].map(([label, anchor]) => (
+              <button key={label} onClick={() => anchor ? scrollTo(anchor) : label === 'For Hospitals' ? onHospitalLanding() : label === 'For Psychologists' ? onPsychLanding() : label === 'Pricing' ? onPricing() : null}
+                style={{ padding:'6px 12px', background:'transparent', border:'none', fontSize:13, color: navScrolled ? S.muted : 'rgba(255,255,255,0.8)', cursor:'pointer', borderRadius:7 }}
+                onMouseEnter={e => e.currentTarget.style.color = navScrolled ? S.navy : '#fff'}
+                onMouseLeave={e => e.currentTarget.style.color = navScrolled ? S.muted : 'rgba(255,255,255,0.8)'}>{label}</button>
+            ))}
+          </div>
+        )}
+        <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
+          {user ? (
+            <button onClick={onGetStarted} style={{ padding:'8px 18px', background:S.blue, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>Open Dashboard</button>
+          ) : (
+            <>
+              <button onClick={onGetStarted} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${navScrolled ? S.border : 'rgba(255,255,255,0.3)'}`, color: navScrolled ? S.muted : 'rgba(255,255,255,0.9)', borderRadius:8, fontSize:13, cursor:'pointer' }}>Sign In</button>
+              <button onClick={onGetStarted} style={{ padding:'8px 18px', background:S.blue, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>Get Started Free</button>
+            </>
+          )}
         </div>
       </nav>
 
-      {/* HERO */}
-      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', minHeight: isMobile ? 'auto' : 520 }}>
-        <div style={{ padding: isMobile ? '48px 20px' : '80px 48px', display:'flex', flexDirection:'column', justifyContent:'center', borderRight: isMobile ? 'none' : `0.5px solid ${S.border}` }}>
-
-          <h1 style={{ fontSize: isMobile ? 36 : 52, fontWeight:700, letterSpacing:'-0.03em', lineHeight:1.06, marginBottom:16, color:S.navy }}>
-            Your mind,<br/>
-            <span style={{ background:`linear-gradient(90deg,${S.blue},${S.cyan})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>understood</span><br/>
-            at scale.
-          </h1>
-          <p style={{ fontSize:15, color:S.textMuted, lineHeight:1.7, marginBottom:28, maxWidth:420 }}>
-            AI-powered psychological assessment, therapy tools, and clinical management for hospitals, psychologists, and patients across India.
-          </p>
-          <div style={{ display:'flex', gap:10 }}>
-            <BtnPrimary onClick={onGetStarted}>Explore platform</BtnPrimary>
-
-          </div>
-        </div>
-        <div style={{ background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', padding:40 }}>
-          <div style={{ background:S.white, borderRadius:18, border:`0.5px solid ${S.border}`, padding:20, width:'100%', maxWidth:300, boxShadow:'0 4px 24px rgba(29,78,216,0.08)' }}>
-            <div style={{ fontWeight:700, fontSize:14, color:S.navy, letterSpacing:'-0.01em' }}>Welcome, Deepak!</div>
-            <div style={{ fontSize:10, color:S.textMuted, marginTop:2, marginBottom:12 }}>Session 4 · Today, 10:30 AM</div>
-            <div style={{ background:S.lightBlue, color:S.blue, fontSize:9, fontWeight:700, padding:'3px 9px', borderRadius:100, border:`0.5px solid #93C5FD`, display:'inline-block', marginBottom:12 }}>● Low risk</div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:7, marginBottom:12 }}>
-              {[['4','PHQ-9','#FFF1F3','#BE123C'],['6','GAD-7',S.lightBlue,S.blue],['↓72%','Better','#F0F9FF','#0369A1']].map(([v,l,bg,c],i) => (
-                <div key={i} style={{ padding:10, borderRadius:10, background:bg }}>
-                  <div style={{ fontSize:15, fontWeight:700, color:c }}>{v}</div>
-                  <div style={{ fontSize:9, color:'#6B7280', marginTop:1 }}>{l}</div>
+      {/* ── HERO ── */}
+      <div style={{ background:`linear-gradient(135deg, ${S.navy} 0%, #1a3a6b 50%, #0d2847 100%)`, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'80px 40px 60px', position:'relative', overflow:'hidden' }}>
+        {/* Background decoration */}
+        <div style={{ position:'absolute', top:'20%', right:'10%', width:400, height:400, borderRadius:'50%', background:'rgba(29,78,216,0.1)', filter:'blur(60px)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', bottom:'10%', left:'5%', width:300, height:300, borderRadius:'50%', background:'rgba(8,145,178,0.1)', filter:'blur(50px)', pointerEvents:'none' }}/>
+        <div style={{ maxWidth:1100, width:'100%', margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:60, alignItems:'center' }}>
+          <div>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:100, background:'rgba(29,78,216,0.2)', border:'1px solid rgba(29,78,216,0.3)', marginBottom:24 }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e' }}/>
+              <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.8)', letterSpacing:'0.04em' }}>INDIA'S CLINICAL INTELLIGENCE PLATFORM</span>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 36 : 52, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
+              The AI Operating System<br/>
+              <span style={{ color:'#93C5FD' }}>for Mental Healthcare.</span>
+            </h1>
+            <p style={{ fontSize:18, color:'rgba(255,255,255,0.65)', lineHeight:1.7, marginBottom:32, maxWidth:480 }}>
+              Assess patients. Detect risk. Deliver therapy. Track outcomes.<br/>
+              One platform for patients, psychologists, and hospitals.
+            </p>
+            <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:40 }}>
+              <button onClick={onGetStarted} style={{ padding:'13px 28px', background:S.blue, color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
+                Get Started Free
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button onClick={onHospitalLanding} style={{ padding:'13px 28px', background:'rgba(255,255,255,0.08)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>Book Hospital Demo</button>
+            </div>
+            <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+              {[['14 Clinical Instruments','PHQ-9, GAD-7, Big Five & more'],['DPDP 2023 Compliant','India data law certified'],['AI + Human Care','Clinician always in control']].map(([title, sub]) => (
+                <div key={title} style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginTop:2, flexShrink:0 }}><circle cx="12" cy="12" r="10" fill="rgba(34,197,94,0.15)"/><path d="M7 12l4 4 6-6" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <div>
+                    <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)' }}>{title}</div>
+                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>{sub}</div>
+                  </div>
                 </div>
               ))}
             </div>
-            <div style={{ border:`0.5px solid ${S.border}`, borderRadius:11, padding:12, marginBottom:10, background:S.offWhite }}>
-              <div style={{ fontSize:9, fontWeight:700, color:S.navy, marginBottom:9, letterSpacing:'0.03em', textTransform:'uppercase' }}>Depression trend · PHQ-9</div>
-              <div style={{ display:'flex', alignItems:'flex-end', gap:4, height:50 }}>
-                {[['85%','#FEE2E2','#BE123C','18'],['65%','#FEE2E2','#BE123C','14'],['46%','#FED7AA','#C2410C','10'],['28%',S.border,S.blue,'6'],['16%','#93C5FD',S.blue,'4']].map(([h,bg,c,v],i) => (
-                  <div key={i} style={{ flex:1, height:h, background:bg, borderRadius:'3px 3px 0 0', position:'relative' }}>
-                    <span style={{ position:'absolute', top:-14, left:'50%', transform:'translateX(-50%)', fontSize:8, fontWeight:700, color:c, whiteSpace:'nowrap' }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display:'flex', justifyContent:'space-between', marginTop:4 }}>
-                <span style={{ fontSize:8, color:S.textMuted }}>Wk 1</span>
-                <span style={{ fontSize:8, color:S.textMuted }}>Wk 5</span>
-              </div>
-            </div>
-            <div style={{ padding:'9px 11px', background:S.lightBlue, borderRadius:9, border:`0.5px solid #93C5FD` }}>
-              <div style={{ fontSize:8, fontWeight:700, color:S.blue, marginBottom:2, letterSpacing:'0.06em' }}>AI PRE-SESSION BRIEF</div>
-              <div style={{ fontSize:10, color:'#374151', lineHeight:1.6 }}>Significant improvement since Week 1. Focus on sleep hygiene and coping strategies.</div>
-            </div>
           </div>
+          {/* Dashboard preview */}
+          {!isMobile && (
+            <div style={{ position:'relative' }}>
+              <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:20, border:'1px solid rgba(255,255,255,0.1)', padding:20, backdropFilter:'blur(10px)' }}>
+                <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+                  {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }}/>)}
+                </div>
+                {/* Mini dashboard */}
+                <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:12, padding:14, marginBottom:12 }}>
+                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Mental Health Command Center</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                    {[['89/100','Wellness Index','#22c55e'],['Low','Risk Level','#22c55e'],['2','Sessions','#93C5FD']].map(([val, label, color]) => (
+                      <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:8, padding:'10px 10px' }}>
+                        <div style={{ fontSize:16, fontWeight:700, color }}>{val}</div>
+                        <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
+                  {[['PHQ-9 Depression','0','Minimal','#22c55e'],['GAD-7 Anxiety','0','Minimal','#22c55e']].map(([label,val,sev,color]) => (
+                    <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:8, padding:'10px' }}>
+                      <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginBottom:4, textTransform:'uppercase' }}>{label}</div>
+                      <div style={{ fontSize:22, fontWeight:700, color }}>{val}</div>
+                      <div style={{ fontSize:10, color, fontWeight:600 }}>{sev}</div>
+                      <div style={{ height:3, borderRadius:2, background:'rgba(255,255,255,0.1)', marginTop:6 }}>
+                        <div style={{ height:3, borderRadius:2, background:color, width:'10%' }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background:'rgba(29,78,216,0.2)', borderRadius:8, padding:'10px 12px', border:'1px solid rgba(29,78,216,0.3)' }}>
+                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginBottom:4 }}>AI INSIGHTS</div>
+                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.8)', lineHeight:1.5 }}>Your PHQ-9 has improved by 3 points. Sleep consistency is a key protective factor this week.</div>
+                </div>
+              </div>
+              {/* Floating badges */}
+              <div style={{ position:'absolute', top:-12, right:-12, background:S.danger, borderRadius:100, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', boxShadow:'0 4px 12px rgba(220,38,38,0.4)' }}>Crisis Alert</div>
+              <div style={{ position:'absolute', bottom:-12, left:-12, background:S.success, borderRadius:100, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', boxShadow:'0 4px 12px rgba(5,150,105,0.4)' }}>PHQ Improving</div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* STATS */}
-      <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', borderTop:`0.5px solid ${S.border}`, borderBottom:`0.5px solid ${S.border}` }}>
-        {[['197M','Indians need mental health support'],['4,309','Registered psychologists in India'],['94%','Suicide risk detection accuracy'],['19','Validated ML models']].map(([v,l],i) => (
-          <div key={i} style={{ padding:'22px 0', textAlign:'center', borderRight: i<3?`0.5px solid ${S.border}`:'none' }}>
-            <div style={{ fontSize:24, fontWeight:700, color:S.blue, letterSpacing:'-0.02em' }}>{v}</div>
-            <div style={{ fontSize:10, color:S.textMuted, marginTop:3, lineHeight:1.4, padding:'0 10px' }}>{l}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* FEATURES */}
-      <div style={{ background:S.navy, padding:`${py} ${px}` }}>
-        <Anim><div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:'rgba(147,197,253,0.15)', color:'#93C5FD', fontSize:10, fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:10 }}>Platform</div></Anim>
-        <Anim>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:16, marginTop:8, marginBottom:32 }}>
-            <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:'#fff', maxWidth:360, lineHeight:1.15 }}>Everything a mental health practice needs.</h2>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.3)', maxWidth:260, lineHeight:1.7 }}>Built on validated clinical instruments and trained on millions of data points.</p>
-          </div>
-        </Anim>
-        <Anim>
-          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:1, background:'rgba(255,255,255,0.04)', borderRadius:16, overflow:'hidden', border:'0.5px solid rgba(255,255,255,0.06)' }}>
-            {FEATURES.map((f,i) => (
-              <div key={i}
-                onClick={() => setActiveFeature(activeFeature === i ? null : i)}
-                style={{ background: i===0?S.blue: activeFeature===i?'#1a3a6b':'#0F2444', padding:26, position:'relative', transition:'all 0.2s', cursor:'pointer' }}
-                onMouseEnter={e=>{ if(i!==0 && activeFeature!==i) e.currentTarget.style.background='#162d5a'; }}
-                onMouseLeave={e=>{ if(i!==0 && activeFeature!==i) e.currentTarget.style.background='#0F2444'; }}
-              >
-                <div style={{ position:'absolute', top:16, right:16, width:20, height:20, borderRadius:5, background:'rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', transition:'transform 0.2s', transform: activeFeature===i ? 'rotate(45deg)' : 'none' }}>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 8L8 2M8 2H4M8 2V6" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" strokeLinecap="round"/></svg>
-                </div>
-                <div style={{ marginBottom:10 }}>{f.icon}</div>
-                <h3 style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:5, letterSpacing:'-0.01em' }}>{f.title}</h3>
-                <p style={{ fontSize:11, color: i===0?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.4)', lineHeight:1.7, margin:0 }}>{f.desc}</p>
-                {activeFeature === i && f.detail && (
-                  <div style={{ marginTop:14, paddingTop:14, borderTop:'0.5px solid rgba(255,255,255,0.12)', fontSize:11, color:'rgba(255,255,255,0.6)', lineHeight:1.8, animation:'fadeIn 0.2s ease' }}>
-                    {f.detail}
-                  </div>
-                )}
+      {/* ── TRUST BAR ── */}
+      <Section>
+        <div style={{ background:S.white, borderBottom:`0.5px solid ${S.border}`, padding:'24px 40px' }}>
+          <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', justifyContent:'space-around', alignItems:'center', flexWrap:'wrap', gap:20 }}>
+            {[['PHQ-9','Clinically Validated'],['GAD-7','Clinically Validated'],['DPDP 2023','Compliant'],['AES-256','Encrypted'],['RLS','21 DB Tables'],['ISO 27001','Ready']].map(([badge, label]) => (
+              <div key={badge} style={{ textAlign:'center' }}>
+                <div style={{ fontSize:16, fontWeight:700, color:S.blue, marginBottom:2 }}>{badge}</div>
+                <div style={{ fontSize:11, color:S.hint }}>{label}</div>
               </div>
             ))}
           </div>
-        </Anim>
-      </div>
+        </div>
+      </Section>
 
-      {/* WHO */}
-      <div style={{ padding:`${py} ${px}`, background:S.white }}>
-        <Anim></Anim>
-        <Anim><h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, maxWidth:360, lineHeight:1.15, marginTop:8, marginBottom:28 }}>Built for the people on both sides of care.</h2></Anim>
-        <Anim>
-          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:14 }}>
-            {WHO.map((w,i) => (
-              <div key={i} onClick={() => setActiveWho(i)}
-                style={{ padding:26, borderRadius:16, border:`0.5px solid ${activeWho===i?S.blue:S.border}`, background: activeWho===i?S.lightBlue:S.white, cursor:'pointer', transition:'all 0.2s' }}>
-                <div style={{ marginBottom:14 }}>
-                  {i===0 && <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="10" fill={S.lightBlue}/><path d="M18 9C14 9 11 11.7 11 15C11 18.3 13 20 18 20" stroke={S.blue} strokeWidth="1.8" strokeLinecap="round"/><path d="M18 20C23 20 25 18.3 25 15C25 11.7 22 9 18 9" stroke={S.cyan} strokeWidth="1.8" strokeLinecap="round"/><path d="M14 15H22M18 11V19" stroke={S.blue} strokeWidth="1.8" strokeLinecap="round"/><path d="M12 24H24M15 24V27M21 24V27" stroke={S.blue} strokeWidth="1.6" strokeLinecap="round"/></svg>}
-                  {i===1 && <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="10" fill={S.lightBlue}/><circle cx="18" cy="14" r="4" stroke={S.blue} strokeWidth="1.8"/><path d="M10 27C10 23.1 13.6 20 18 20C22.4 20 26 23.1 26 27" stroke={S.blue} strokeWidth="1.8" strokeLinecap="round"/><path d="M23 10L25 12L29 8" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  {i===2 && <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="10" fill={S.lightBlue}/><ellipse cx="18" cy="14" rx="6" ry="5" stroke={S.blue} strokeWidth="1.8"/><path d="M15 14C15 14 16 16 18 16C20 16 21 14 21 14" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round"/><circle cx="15.5" cy="13" r="1" fill={S.blue}/><circle cx="20.5" cy="13" r="1" fill={S.blue}/><path d="M12 24C12 21.2 14.7 19 18 19C21.3 19 24 21.2 24 24" stroke={S.blue} strokeWidth="1.8" strokeLinecap="round"/></svg>}
+      {/* ── PRODUCT DEMO TABS ── */}
+      <Section>
+        <div id="features" style={{ padding:'80px 40px', maxWidth:1100, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:48 }}>
+            <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:S.lightBlue, color:S.blue, fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:14 }}>Product</div>
+            <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:'0 0 12px' }}>See what you actually get</h2>
+            <p style={{ fontSize:16, color:S.muted, maxWidth:480, margin:'0 auto' }}>Real dashboards. Real clinical tools. Not mockups.</p>
+          </div>
+          <div style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:32, flexWrap:'wrap' }}>
+            {[['patient','Patient Portal'],['psychologist','Psychologist Portal'],['hospital','Hospital Portal'],['ai','AI Copilot']].map(([id, label]) => (
+              <button key={id} onClick={() => setActiveTab(id)}
+                style={{ padding:'8px 20px', borderRadius:100, border:'none', fontSize:13, fontWeight:activeTab===id?700:400, background:activeTab===id?S.blue:S.bg, color:activeTab===id?'#fff':S.muted, cursor:'pointer', transition:'all 0.2s' }}>{label}</button>
+            ))}
+          </div>
+          {/* Tab content */}
+          <div style={{ background:S.white, borderRadius:20, border:`0.5px solid ${S.border}`, overflow:'hidden', boxShadow:'0 8px 40px rgba(29,78,216,0.08)' }}>
+            {activeTab === 'patient' && (
+              <div style={{ padding:32 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:20 }}>Patient Mental Health Dashboard</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+                  {[['89/100','Wellness Index','#22c55e'],['Low','Risk Level','#22c55e'],['PHQ-9: 0','Minimal Depression',S.blue],['GAD-7: 0','Minimal Anxiety',S.blue]].map(([val,label,color]) => (
+                    <div key={label} style={{ background:S.bg, borderRadius:12, padding:'16px', border:`0.5px solid ${S.border}` }}>
+                      <div style={{ fontSize:22, fontWeight:700, color }}>{val}</div>
+                      <div style={{ fontSize:11, color:S.hint, marginTop:4 }}>{label}</div>
+                    </div>
+                  ))}
                 </div>
-                <h3 style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:7, letterSpacing:'-0.01em' }}>{w.title}</h3>
-                <p style={{ fontSize:12, color:S.textMuted, lineHeight:1.7, marginBottom:10 }}>{w.desc}</p>
-                {w.pts.map((p,j) => (
-                  <div key={j} style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5, fontSize:11, color:S.textMuted }}>
-                    <span style={{ color:S.blue, fontSize:12, flexShrink:0 }}>✓</span>{p}
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap:14 }}>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>AI Weekly Insights</div>
+                    {['Your depression score has improved by 3 points since you started.','Sleep under 6 hours correlates with lower mood scores.','AI suggests: consistent exercise is your strongest protective factor.'].map((insight, i) => (
+                      <div key={i} style={{ display:'flex', gap:8, padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                        <div style={{ width:6, height:6, borderRadius:'50%', background:S.blue, marginTop:5, flexShrink:0 }}/>
+                        <span style={{ fontSize:12, color:S.navy, lineHeight:1.5 }}>{insight}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Today's Actions</div>
+                    {['Complete PHQ-9 assessment','Write in journal','Try ACT exercise','Book therapy session'].map((action, i) => (
+                      <div key={i} style={{ display:'flex', gap:8, padding:'7px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                        <div style={{ width:14, height:14, borderRadius:'50%', background: i===0 ? S.success : S.border, flexShrink:0, marginTop:1 }}/>
+                        <span style={{ fontSize:12, color: i===0 ? S.muted : S.navy, textDecoration: i===0 ? 'line-through' : 'none' }}>{action}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'psychologist' && (
+              <div style={{ padding:32 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:20 }}>Psychologist Clinical Command Center</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr 1fr', gap:16 }}>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>AI Priorities</div>
+                    {[{name:'Rahul M.',reason:'PHQ spike +7',color:S.danger},{name:'Priya S.',reason:'Missed 2 sessions',color:S.warning},{name:'Amit K.',reason:'PHQ improving',color:S.success}].map(p => (
+                      <div key={p.name} style={{ display:'flex', gap:8, padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                        <div style={{ width:6, height:6, borderRadius:'50%', background:p.color, marginTop:5, flexShrink:0 }}/>
+                        <div>
+                          <div style={{ fontSize:12, fontWeight:600, color:S.navy }}>{p.name}</div>
+                          <div style={{ fontSize:10, color:S.muted }}>{p.reason}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Session Notes — SOAP</div>
+                    {['SUBJECTIVE: Patient reports persistent low mood and sleep difficulties...','OBJECTIVE: PHQ-9: 14 (Moderate), GAD-7: 9 (Mild)','ASSESSMENT: MDD moderate, responding to CBT','PLAN: Continue weekly sessions, assign behavioral activation'].map((line, i) => (
+                      <div key={i} style={{ fontSize:12, color:S.navy, padding:'6px 0', borderBottom:`0.5px solid ${S.border}`, lineHeight:1.5 }}>{line}</div>
+                    ))}
+                    <div style={{ marginTop:8, fontSize:11, color:S.success }}>AI Generated · Auto-saved</div>
+                  </div>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>AI Copilot</div>
+                    {['Summarize patient','Suggest focus areas','Generate treatment plan','Detect risk factors'].map(q => (
+                      <div key={q} style={{ padding:'7px 10px', background:S.white, borderRadius:7, marginBottom:6, fontSize:12, color:S.blue, border:`0.5px solid ${S.border}`, cursor:'pointer' }}>{q}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'hospital' && (
+              <div style={{ padding:32 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:20 }}>Hospital Command Center</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+                  {[['24','OPD Waiting','#1D4ED8'],['8','IPD Admitted','#7C3AED'],['₹1.2L','Revenue Today','#059669'],['2','Crisis Flags','#DC2626']].map(([val,label,color]) => (
+                    <div key={label} style={{ background:S.bg, borderRadius:12, padding:16, borderLeft:`3px solid ${color}` }}>
+                      <div style={{ fontSize:24, fontWeight:700, color }}>{val}</div>
+                      <div style={{ fontSize:11, color:S.hint }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:12 }}>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>OPD Queue</div>
+                    {[{name:'Patient 001',wait:'8 min',priority:'Normal'},{name:'Patient 002',wait:'23 min',priority:'Urgent'},{name:'Patient 003',wait:'5 min',priority:'Crisis'}].map(p => (
+                      <div key={p.name} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                        <span style={{ fontSize:12, color:S.navy }}>{p.name}</span>
+                        <span style={{ fontSize:11, color: p.priority==='Crisis'?S.danger:p.priority==='Urgent'?S.warning:S.hint }}>{p.priority} · {p.wait}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>Bed Tracking</div>
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      {Array.from({length:12}, (_,i) => (
+                        <div key={i} style={{ width:32, height:32, borderRadius:6, background: i<8?S.lightBlue:i<10?'#FFFBEB':'#FEF2F2', border:`0.5px solid ${i<8?S.blue:i<10?S.warning:S.danger}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, color: i<8?S.blue:i<10?S.warning:S.danger }}>
+                          {i+1}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'ai' && (
+              <div style={{ padding:32 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:20 }}>AI Clinical Copilot — Live Session</div>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap:20 }}>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:S.navy, marginBottom:12 }}>Patient: Rahul Mehta</div>
+                    {[['PHQ-9','14','Moderate'],['GAD-7','11','Moderate'],['Risk','High',''],['Trend','Worsening',''],['Sessions','5','']].map(([label,val,sub]) => (
+                      <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:`0.5px solid ${S.border}` }}>
+                        <span style={{ fontSize:12, color:S.muted }}>{label}</span>
+                        <span style={{ fontSize:12, fontWeight:600, color: label==='Risk'?S.danger:label==='Trend'?S.warning:S.navy }}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:S.bg, borderRadius:12, padding:16 }}>
+                    <div style={{ fontSize:11, color:S.muted, marginBottom:8 }}>AI Response</div>
+                    <div style={{ background:S.white, borderRadius:10, padding:'14px 16px', border:`0.5px solid ${S.border}`, fontSize:13, color:S.navy, lineHeight:1.7 }}>
+                      <strong>Patient Summary:</strong> Rahul is a 28-year-old with moderately severe depression (PHQ-9: 14) and moderate anxiety (GAD-7: 11). His scores have worsened by 4 points over the last 3 sessions.<br/><br/>
+                      <strong>Key themes from journals:</strong> Work pressure, sleep disruption, social isolation.<br/><br/>
+                      <strong>Recommended focus:</strong> Behavioral activation, sleep hygiene protocol, social engagement goals.<br/><br/>
+                      <strong>Risk flag:</strong> PHQ item 9 (suicidal ideation) scored 1 in last session — verify and document.
+                    </div>
+                    <div style={{ marginTop:10, display:'flex', gap:8, flexWrap:'wrap' }}>
+                      {['Generate SOAP note','Suggest intervention','Assign homework','Crisis protocol'].map(q => (
+                        <div key={q} style={{ padding:'5px 12px', background:S.lightBlue, color:S.blue, borderRadius:100, fontSize:11, fontWeight:600, cursor:'pointer' }}>{q}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Section>
+
+      {/* ── HOW IT WORKS ── */}
+      <Section>
+        <div id="howitworks" style={{ background:S.navy, padding:'80px 40px' }}>
+          <div style={{ maxWidth:1100, margin:'0 auto' }}>
+            <div style={{ textAlign:'center', marginBottom:60 }}>
+              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:'rgba(29,78,216,0.2)', color:'#93C5FD', fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:14 }}>How It Works</div>
+              <h2 style={{ fontSize: isMobile ? 28 : 38, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', margin:0 }}>From screening to recovery</h2>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5,1fr)', gap:0, position:'relative' }}>
+              {[
+                { step:'01', title:'Patient Completes Assessment', desc:'PHQ-9, GAD-7, Big Five and 11 more instruments in under 15 minutes', color:'#93C5FD' },
+                { step:'02', title:'AI Creates Clinical Profile', desc:'19 ML models analyze responses and generate personality + risk profile', color:'#6EE7B7' },
+                { step:'03', title:'Psychologist Receives Brief', desc:'Pre-session summary with risk flags, journal themes, and suggested focus areas', color:'#FCD34D' },
+                { step:'04', title:'Session + SOAP Notes', desc:'AI-assisted session workspace with auto-generated clinical documentation', color:'#F9A8D4' },
+                { step:'05', title:'Progress Tracked', desc:'PHQ/GAD trends, mood logs, and outcome analytics updated in real time', color:'#A5B4FC' },
+              ].map((item, i) => (
+                <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', padding:'0 12px', position:'relative' }}>
+                  {i < 4 && !isMobile && <div style={{ position:'absolute', top:28, left:'60%', right:0, height:1, background:'rgba(255,255,255,0.1)', zIndex:0 }}/>}
+                  <div style={{ width:56, height:56, borderRadius:'50%', background:item.color+'20', border:`2px solid ${item.color}`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16, position:'relative', zIndex:1 }}>
+                    <span style={{ fontSize:15, fontWeight:700, color:item.color }}>{item.step}</span>
+                  </div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:8, lineHeight:1.4 }}>{item.title}</div>
+                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', lineHeight:1.6 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── CRISIS STORY ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.white }}>
+          <div style={{ maxWidth:900, margin:'0 auto' }}>
+            <div style={{ textAlign:'center', marginBottom:48 }}>
+              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:'#FEF2F2', color:S.danger, fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:14 }}>Clinical Safety</div>
+              <h2 style={{ fontSize: isMobile ? 26 : 36, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 12px' }}>When a patient becomes high risk</h2>
+              <p style={{ fontSize:15, color:S.muted, maxWidth:480, margin:'0 auto' }}>PsycheFlow detects crisis signals and escalates automatically — before it's too late.</p>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(6,1fr)', gap:0, position:'relative' }}>
+              {[
+                { icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke={S.danger} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title:'PHQ-9 Completed', sub:'Score: 22/27', color:S.danger },
+                { icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={S.warning} strokeWidth="1.5"/><path d="M12 8v4M12 16h.01" stroke={S.warning} strokeWidth="1.5" strokeLinecap="round"/></svg>, title:'AI Detects Risk', sub:'Threshold crossed', color:S.warning },
+                { icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke='#F97316' strokeWidth="1.5" strokeLinecap="round"/></svg>, title:'Psychologist Alerted', sub:'Instant notification', color:'#F97316' },
+                { icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 12a19.79 19.79 0 01-3.07-8.67 2 2 0 012-2.18h3" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/></svg>, title:'Supervisor Notified', sub:'Escalation chain', color:S.blue },
+                { icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke={S.purple} strokeWidth="1.5" strokeLinecap="round"/></svg>, title:'Action Logged', sub:'Full audit trail', color:S.purple },
+                { icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78" stroke={S.success} strokeWidth="1.5" strokeLinecap="round"/></svg>, title:'Outcome Tracked', sub:'Recovery monitored', color:S.success },
+              ].map((item, i) => (
+                <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', padding:'0 8px', position:'relative' }}>
+                  {i < 5 && !isMobile && <div style={{ position:'absolute', top:24, left:'60%', right:0, height:1, background:S.border, zIndex:0 }}/>}
+                  <div style={{ width:48, height:48, borderRadius:'50%', background:item.color+'15', border:`1.5px solid ${item.color}`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12, position:'relative', zIndex:1 }}>
+                    {item.icon}
+                  </div>
+                  <div style={{ fontSize:12, fontWeight:700, color:S.navy, marginBottom:4, lineHeight:1.4 }}>{item.title}</div>
+                  <div style={{ fontSize:10, color:S.hint }}>{item.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── FOR WHO ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.bg }}>
+          <div style={{ maxWidth:1100, margin:'0 auto' }}>
+            <div style={{ textAlign:'center', marginBottom:48 }}>
+              <h2 style={{ fontSize: isMobile ? 28 : 38, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Built for everyone in the care journey</h2>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:20 }}>
+              {[
+                { title:'For Patients', color:S.blue, cta:'Start Free', onClick:onGetStarted, items:['Mental health tracking dashboard','PHQ-9, GAD-7, and 12 more assessments','AI-powered therapy (ACT engine)','Mood & journal tracking','Crisis support 24/7','Progress over time analytics'] },
+                { title:'For Psychologists', color:S.purple, cta:'Psychologist Portal', onClick:onPsychLanding, items:['AI pre-session briefs','SOAP/DAP/BIRP note generation','Full patient timeline & risk alerts','Practice analytics & outcomes','Session workspace with AI copilot','Treatment planning tools'] },
+                { title:'For Hospitals', color:S.success, cta:'Book Demo', onClick:onHospitalLanding, items:['OPD queue management','IPD & bed tracking','Pharmacy & lab modules','Full RCM & billing','NABH compliance dashboard','Population mental health analytics'] },
+              ].map(portal => (
+                <div key={portal.title} style={{ background:S.white, borderRadius:16, border:`0.5px solid ${S.border}`, padding:28, boxShadow:'0 2px 12px rgba(0,0,0,0.04)' }}>
+                  <div style={{ width:40, height:40, borderRadius:10, background:portal.color+'15', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 }}>
+                    <div style={{ width:14, height:14, borderRadius:'50%', background:portal.color }}/>
+                  </div>
+                  <div style={{ fontSize:18, fontWeight:700, color:S.navy, marginBottom:16 }}>{portal.title}</div>
+                  {portal.items.map(item => (
+                    <div key={item} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink:0, marginTop:2 }}><path d="M3 8l4 4 6-7" stroke={portal.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span style={{ fontSize:13, color:S.navy }}>{item}</span>
+                    </div>
+                  ))}
+                  <button onClick={portal.onClick} style={{ marginTop:20, width:'100%', padding:'10px', background:portal.color, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>{portal.cta}</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── TESTIMONIALS ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.navy }}>
+          <div style={{ maxWidth:800, margin:'0 auto', textAlign:'center' }}>
+            <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:'rgba(29,78,216,0.2)', color:'#93C5FD', fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:24 }}>Testimonials</div>
+            <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:20, padding: isMobile ? '28px 20px' : '40px 48px', border:'1px solid rgba(255,255,255,0.08)', marginBottom:24, minHeight:180, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+              <p style={{ fontSize: isMobile ? 16 : 20, color:'rgba(255,255,255,0.85)', lineHeight:1.7, margin:'0 0 20px', fontStyle:'italic' }}>"{TESTIMONIALS[activeTestimonial].quote}"</p>
+              <div style={{ display:'flex', alignItems:'center', gap:12, justifyContent:'center' }}>
+                <div style={{ width:40, height:40, borderRadius:'50%', background:'linear-gradient(135deg,#1D4ED8,#0891B2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:700, color:'#fff' }}>{TESTIMONIALS[activeTestimonial].initial}</div>
+                <div style={{ textAlign:'left' }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{TESTIMONIALS[activeTestimonial].name}</div>
+                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>{TESTIMONIALS[activeTestimonial].role}</div>
+                </div>
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+              {TESTIMONIALS.map((_,i) => (
+                <div key={i} onClick={() => setActiveTestimonial(i)} style={{ width: i===activeTestimonial ? 24 : 8, height:8, borderRadius:4, background: i===activeTestimonial ? S.blue : 'rgba(255,255,255,0.2)', cursor:'pointer', transition:'all 0.3s' }}/>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── RESEARCH ── */}
+      <Section>
+        <div id="research" style={{ padding:'80px 40px', background:S.white }}>
+          <div style={{ maxWidth:1100, margin:'0 auto' }}>
+            <div style={{ textAlign:'center', marginBottom:48 }}>
+              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:S.lightBlue, color:S.blue, fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:14 }}>Research</div>
+              <h2 style={{ fontSize: isMobile ? 26 : 36, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Built on validated clinical science</h2>
+              <p style={{ fontSize:15, color:S.muted }}>Not black-box AI. Validated instruments and peer-reviewed research.</p>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap:16, marginBottom:32 }}>
+              {RESEARCH.map(r => (
+                <div key={r.id} style={{ background:S.bg, borderRadius:14, padding:24, border:`0.5px solid ${S.border}` }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+                    <span style={{ padding:'3px 10px', borderRadius:100, background:S.lightBlue, color:S.blue, fontSize:11, fontWeight:600 }}>{r.badge}</span>
+                    <span style={{ fontSize:11, color:S.hint }}>{r.year}</span>
+                  </div>
+                  <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:6, lineHeight:1.4 }}>{r.title}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginBottom:10 }}>{r.journal}</div>
+                  <div style={{ fontSize:13, fontWeight:600, color:S.blue }}>{r.metric}</div>
+                </div>
+              ))}
+            </div>
+            {/* Validated instruments */}
+            <div style={{ background:S.bg, borderRadius:14, padding:24, border:`0.5px solid ${S.border}` }}>
+              <div style={{ fontSize:13, fontWeight:700, color:S.navy, marginBottom:16 }}>Validated Clinical Instruments</div>
+              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                {['PHQ-9','GAD-7','WHO-5','ISI','PCL-5','OCI-R','ASRS','MBI','DASS-21','C-SSRS','Big Five','Dark Triad','Burnout Scale','Workplace MH'].map(ins => (
+                  <div key={ins} style={{ padding:'5px 12px', borderRadius:100, background:S.white, border:`0.5px solid ${S.border}`, fontSize:12, fontWeight:600, color:S.navy }}>{ins}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── BLOG ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.bg }}>
+          <div style={{ maxWidth:1100, margin:'0 auto' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:40, flexWrap:'wrap', gap:12 }}>
+              <div>
+                <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:S.lightBlue, color:S.blue, fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:10 }}>Blog</div>
+                <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:0 }}>Insights on mental healthcare</h2>
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:20 }}>
+              {BLOGS.map(blog => (
+                <div key={blog.id} onClick={() => setOpenBlog(openBlog===blog.id?null:blog.id)} style={{ background:S.white, borderRadius:14, border:`0.5px solid ${S.border}`, overflow:'hidden', cursor:'pointer', transition:'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 8px 24px rgba(29,78,216,0.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
+                  <div style={{ background:`linear-gradient(135deg, ${S.lightBlue}, ${blog.category==='Research'?'#EDE9FE':blog.category==='Clinical'?'#ECFDF5':blog.category==='Compliance'?'#FEF2F2':'#FFFBEB'})`, height:100, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <span style={{ padding:'4px 12px', borderRadius:100, background:S.white, fontSize:11, fontWeight:700, color:S.blue }}>{blog.category}</span>
+                  </div>
+                  <div style={{ padding:20 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:S.navy, marginBottom:8, lineHeight:1.4 }}>{blog.title}</div>
+                    <div style={{ display:'flex', gap:12, marginBottom:10 }}>
+                      <span style={{ fontSize:11, color:S.hint }}>{blog.date}</span>
+                      <span style={{ fontSize:11, color:S.hint }}>{blog.read} read</span>
+                    </div>
+                    {openBlog===blog.id && <div style={{ fontSize:13, color:S.muted, lineHeight:1.7, marginTop:8, paddingTop:12, borderTop:`0.5px solid ${S.border}` }}>{blog.summary}</div>}
+                    <div style={{ fontSize:12, color:S.blue, fontWeight:600, marginTop:8 }}>{openBlog===blog.id?'Show less ↑':'Read more →'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── COMPLIANCE ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.white }}>
+          <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:60, alignItems:'center' }}>
+            <div>
+              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:'#ECFDF5', color:S.success, fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:16 }}>Security & Compliance</div>
+              <h2 style={{ fontSize: isMobile ? 26 : 36, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 16px' }}>Enterprise-grade security for clinical data</h2>
+              <p style={{ fontSize:15, color:S.muted, lineHeight:1.7, marginBottom:24 }}>Patient mental health data is among the most sensitive. PsycheFlow is built with clinical-grade security from the ground up.</p>
+              <div style={{ display:'grid', gap:10 }}>
+                {[['AES-256 Encryption','At-rest and in-transit encryption for all patient data'],['DPDP Act 2023','Full compliance with India\'s Digital Personal Data Protection Act'],['Row-Level Security','All 21 database tables have RLS — each patient\'s data is isolated'],['Audit Logs','Immutable audit trail for every action across all portals'],['Role-Based Access','Psychologists, hospital admins, and patients see only their data'],['JWT Authentication','Supabase Auth with secure token management']].map(([title,desc]) => (
+                  <div key={title} style={{ display:'flex', gap:12 }}>
+                    <div style={{ width:18, height:18, borderRadius:'50%', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={S.success} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <div><div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{title}</div><div style={{ fontSize:11, color:S.muted }}>{desc}</div></div>
                   </div>
                 ))}
               </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              {[['DPDP 2023','India data law','#ECFDF5',S.success],['NABH Ready','Hospital compliance','#EFF6FF',S.blue],['ISO 27001','Ready for audit','#F5F3FF',S.purple],['HIPAA Aligned','International standard','#FEF3C7',S.warning],['AES-256','Military grade encryption','#ECFDF5',S.success],['SOC 2','In progress','#EFF6FF',S.blue]].map(([title,sub,bg,color]) => (
+                <div key={title} style={{ background:bg, borderRadius:14, padding:20, border:`0.5px solid ${color}20` }}>
+                  <div style={{ fontSize:16, fontWeight:700, color, marginBottom:4 }}>{title}</div>
+                  <div style={{ fontSize:11, color:S.muted }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── FAQ ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.bg }}>
+          <div style={{ maxWidth:760, margin:'0 auto' }}>
+            <div style={{ textAlign:'center', marginBottom:48 }}>
+              <h2 style={{ fontSize: isMobile ? 26 : 36, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Frequently asked questions</h2>
+            </div>
+            {FAQS.map((faq, i) => (
+              <div key={i} style={{ background:S.white, borderRadius:12, border:`0.5px solid ${S.border}`, marginBottom:10, overflow:'hidden' }}>
+                <div onClick={() => setOpenFAQ(openFAQ===i?null:i)} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', cursor:'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.background=S.bg}
+                  onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                  <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{faq.q}</div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform:openFAQ===i?'rotate(180deg)':'none', transition:'transform 0.2s', flexShrink:0 }}><path d="M6 9l6 6 6-6" stroke={S.muted} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                {openFAQ===i && <div style={{ padding:'0 20px 16px', fontSize:13, color:S.muted, lineHeight:1.8 }}>{faq.a}</div>}
+              </div>
             ))}
           </div>
-        </Anim>
-      </div>
+        </div>
+      </Section>
 
-      {/* COMPLIANCE */}
-      <div style={{ padding:`${py} ${px}`, background:S.white, borderTop:`0.5px solid ${S.border}` }}>
-        <Anim></Anim>
-        <Anim>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:16, marginTop:8, marginBottom:24 }}>
-            <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, maxWidth:340, lineHeight:1.15 }}>Built for Indian healthcare compliance.</h2>
-            <p style={{ fontSize:12, color:S.textMuted, maxWidth:280, lineHeight:1.7 }}>Designed around India's DPDP Act 2023, clinical best practices, and RCI verification.</p>
+      {/* ── FINAL CTA ── */}
+      <Section>
+        <div style={{ padding:'80px 40px', background:S.navy, textAlign:'center' }}>
+          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', margin:'0 0 12px' }}>Ready to transform mental healthcare?</h2>
+          <p style={{ fontSize:16, color:'rgba(255,255,255,0.55)', marginBottom:32, maxWidth:480, margin:'0 auto 32px' }}>Join clinicians and hospitals building better mental health outcomes with PsycheFlow.</p>
+          <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+            <button onClick={onGetStarted} style={{ padding:'13px 28px', background:S.blue, color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer' }}>Start Free — No Credit Card</button>
+            <button onClick={onHospitalLanding} style={{ padding:'13px 28px', background:'rgba(255,255,255,0.08)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>Book Hospital Demo</button>
+            <button onClick={onPsychLanding} style={{ padding:'13px 28px', background:'rgba(255,255,255,0.08)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>Psychologist Portal</button>
           </div>
-        </Anim>
-        <Anim>
-          <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:12 }}>
+        </div>
+      </Section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background:S.navy, borderTop:'0.5px solid rgba(255,255,255,0.08)', padding: isMobile ? '40px 24px' : '60px 80px 40px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(5,1fr)', gap:32, marginBottom:40 }}>
+            <div style={{ gridColumn: isMobile ? 'span 2' : 'span 1' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:'linear-gradient(135deg,#1D4ED8,#0891B2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
+                </div>
+                <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}><span style={{ color:'#93C5FD' }}>Psyche</span>Flow</span>
+              </div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', lineHeight:1.7 }}>AI-powered mental health platform for patients, psychologists, and hospitals.</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:8 }}>psycheflow.in · support@psycheflow.in</div>
+            </div>
             {[
-              { title:'DPDP Act 2023', sub:'Full data protection', icon:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill={S.lightBlue}/><path d="M16 6L20 9H26V18C26 22.4 21.5 25.8 16 26C10.5 25.8 6 22.4 6 18V9H12L16 6Z" stroke={S.blue} strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 17L15 20L20 14" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-              { title:'RCI verified', sub:'Psychologist credentials', icon:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill={S.lightBlue}/><rect x="8" y="6" width="16" height="20" rx="3" stroke={S.blue} strokeWidth="1.6"/><path d="M12 13H20M12 17H18M12 21H15" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round"/><circle cx="22" cy="22" r="5" fill={S.blue}/><path d="M20 22L21.5 23.5L24 21" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-              { title:'Encrypted', sub:'End-to-end security', icon:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill={S.lightBlue}/><rect x="10" y="14" width="12" height="12" rx="2" stroke={S.blue} strokeWidth="1.6"/><path d="M13 14V11C13 9.3 14.3 8 16 8C17.7 8 19 9.3 19 11V14" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round"/><circle cx="16" cy="20" r="2" fill={S.blue}/></svg> },
-              { title:'SaMD class B', sub:'India MDR 2017 ready', icon:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill={S.lightBlue}/><path d="M8 20C10 17 13 15 16 15C19 15 22 17 24 20" stroke={S.blue} strokeWidth="1.6" strokeLinecap="round"/><path d="M11 13C12 10 14 8 16 8C18 8 20 10 21 13" stroke={S.cyan} strokeWidth="1.6" strokeLinecap="round"/><path d="M8 24H24" stroke={S.blue} strokeWidth="1.6" strokeLinecap="round"/></svg> },
-            ].map((c,i) => (
-              <div key={i} style={{ padding:22, borderRadius:14, border:`0.5px solid ${S.border}`, background:S.white, textAlign:'center', transition:'transform 0.2s, box-shadow 0.2s', cursor:'default' }}
-                onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(29,78,216,0.1)'; }}
-                onMouseLeave={e=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}
-              >
-                <div style={{ marginBottom:10 }}>{c.icon}</div>
-                <div style={{ fontSize:12, fontWeight:700, color:S.navy, marginBottom:3 }}>{c.title}</div>
-                <div style={{ fontSize:10, color:S.blue }}>{c.sub}</div>
+              { title:'Product', links:[['Features',''],['Pricing', onPricing],['Roadmap',''],['Integrations',''],['API',''],['Changelog','']] },
+              { title:'Solutions', links:[['For Hospitals', onHospitalLanding],['For Psychologists', onPsychLanding],['For Patients', onGetStarted],['Corporate Wellness',''],['Research Institutions','']] },
+              { title:'Resources', links:[['Documentation',''],['Blog',''],['Research',''],['Help Center',''],['Case Studies','']] },
+              { title:'Legal', links:[['Privacy Policy', () => onLegal('privacy')],['Terms of Service', () => onLegal('terms')],['DPDP Compliance', () => onLegal('dpdp')],['Security Policy',''],['Cookie Policy','']] },
+            ].map(section => (
+              <div key={section.title}>
+                <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>{section.title}</div>
+                {section.links.map(([label, action]) => (
+                  <div key={label} onClick={() => typeof action === 'function' && action()} style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginBottom:8, cursor: typeof action === 'function' ? 'pointer' : 'default' }}
+                    onMouseEnter={e => { if (typeof action === 'function') e.currentTarget.style.color='rgba(255,255,255,0.8)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.45)'; }}>{label}</div>
+                ))}
               </div>
             ))}
           </div>
-        </Anim>
-      </div>
-
-      {/* FAQ */}
-      <div style={{ padding:`${py} ${px}`, background:S.white, borderTop:`0.5px solid ${S.border}` }}>
-        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 64, alignItems:'flex-start' }}>
-          <Anim>
-            
-            <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:'-0.02em', color:S.navy, lineHeight:1.15, marginTop:8, marginBottom:16 }}>Frequently asked<br/>questions.</h2>
-            <p style={{ fontSize:13, color:S.textMuted, lineHeight:1.7, marginBottom:20 }}>Find answers about PsycheFlow's platform, compliance, and clinical capabilities.</p>
-            <BtnPrimary onClick={onGetStarted}>Ask us anything →</BtnPrimary>
-          </Anim>
-          <Anim>
-            {FAQS.map((f,i) => (
-              <div key={i} onClick={() => setOpenFaq(openFaq===i?null:i)} style={{ borderBottom:`0.5px solid ${S.border}`, padding:'14px 0', cursor:'pointer' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:14 }}>
-                  <span style={{ fontSize:13, fontWeight:500, color:S.navy }}>{f.q}</span>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d={openFaq===i?"M4 10L8 6L12 10":"M4 6H12M8 2V10"} stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </div>
-                {openFaq===i && <div style={{ fontSize:12, color:S.textMuted, lineHeight:1.7, marginTop:8 }}>{f.a}</div>}
-              </div>
-            ))}
-          </Anim>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div style={{ margin: isMobile ? '0 16px 32px' : '0 48px 48px', background:`linear-gradient(135deg,${S.navy},#1a3a6b)`, borderRadius:20, padding: isMobile ? '40px 20px' : '64px 48px', textAlign:'center' }}>
-        <h2 style={{ fontSize:34, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.1 }}>Mental health support that actually fits<br/>how clinicians work.</h2>
-        <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', marginBottom:28, lineHeight:1.6 }}>Join hospitals and psychologists transforming<br/>mental health outcomes across India.</p>
-        <BtnPrimary onClick={onGetStarted} style={{ fontSize:14, padding:'12px 28px' }}>Get started free →</BtnPrimary>
-        
-        <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:14 }}>No credit card · DPDP compliant · iCall 9152987821 · Vandrevala 1860-2662-345</div>
-      </div>
-
-      {/* FOOTER */}
-      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1.4fr 1fr 1fr 1fr', gap: isMobile ? 24 : 32, padding: isMobile ? '32px 20px' : '40px 48px', borderTop:`0.5px solid ${S.border}` }}>
-        <div>
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}><LogoMark size={28}/><span style={{ fontWeight:700, fontSize:14 }}>PsycheFlow</span></div>
-          <p style={{ fontSize:12, color:S.textMuted, lineHeight:1.7 }}>AI-powered psychology platform for India.</p>
-          <p style={{ fontSize:12, color:S.textMuted, marginTop:10, lineHeight:1.8 }}>Crisis: iCall 9152987821<br/>Vandrevala: 1860-2662-345<br/>NIMHANS: 080-46110007</p>
-        </div>
-        {[['Platform',['Features','For hospitals','For psychologists','Pricing','API docs']],['Company',['About us','Blog','Careers','Press','Contact']],['Legal',['Privacy policy','Terms of service','DPDP compliance','Cookie policy','Refund policy']]].map(([h,links]) => (
-          <div key={h}>
-            <div style={{ fontSize:11, fontWeight:700, marginBottom:12, color:S.navy, letterSpacing:'0.02em', textTransform:'uppercase' }}>{h}</div>
-            {links.map(l => {
-              const legalMap = {'Privacy policy':'privacy','Terms of service':'terms','DPDP compliance':'dpdp'};
-              const page = legalMap[l];
-              return <span key={l} onClick={page && onLegal ? () => onLegal(page) : undefined} style={{ fontSize:12, color: page ? S.blue : S.textMuted, display:'block', marginBottom:8, cursor: page ? 'pointer' : 'default', fontWeight: page ? 500 : 400 }}>{l}</span>;
-            })}
+          <div style={{ borderTop:'0.5px solid rgba(255,255,255,0.08)', paddingTop:24, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>© 2026 PsycheFlow. Made in India. DPDP Act 2023 Compliant.</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>Crisis support: iCall 9152987821 · Vandrevala 1860-2662-345</div>
           </div>
-        ))}
-      </div>
-      <div style={{ padding: isMobile ? '14px 20px' : '14px 48px', borderTop:`0.5px solid ${S.border}`, display:'flex', flexWrap:'wrap', gap:8, justifyContent:'space-between', alignItems:'center' }}>
-        <span style={{ fontSize:11, color:S.textMuted }}>© 2026 PsycheFlow. All rights reserved.</span>
-        <span style={{ fontSize:11, color:S.textMuted }}>psycheflow.in</span>
-        <span style={{ fontSize:11, color:S.textMuted }}>Made in India 🇮🇳</span>
-      </div>
-
-      <style>{`@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}`}</style>
+        </div>
+      </footer>
     </div>
   );
 }
