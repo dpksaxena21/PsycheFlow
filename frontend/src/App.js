@@ -25,6 +25,7 @@ import SuperAdminAuth from './SuperAdminAuth';
 import PsychologistAuth from './PsychologistAuth';
 import Terms from './Terms';
 import DPDP from './DPDP';
+import Pricing from './Pricing';
 
 import { IconJournal, IconAnalyze, IconAlert, IconCheck, IconWarning } from './icons';
 import LoadingScreen from './LoadingScreen';
@@ -278,7 +279,6 @@ export default function App() {
   if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
   if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
   if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} /> : <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} onPricing={() => setShowPricing(true)}/>;
-  if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false && !isPsychologist) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
   if (isPsychologist) return <PsychologistPortal user={user} profile={profile} onLogout={handleLogout} onPatientMode={() => setIsPsychologist(false)} />;
