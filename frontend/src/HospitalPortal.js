@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabase';
+import HospitalAppointments from './HospitalAppointments';
+import HospitalNursing from './HospitalNursing';
+import HospitalClinicalOrders from './HospitalClinicalOrders';
+import HospitalDischarge from './HospitalDischarge';
 
 const useIsMobile = () => {
   const [m, setM] = React.useState(window.innerWidth < 768);
@@ -523,6 +527,10 @@ export default function HospitalPortal({ user, onLogout }) {
     { id:'referrals', label:'Referrals' },
     { id:'connections', label:'Connections' },
     { id:'analytics', label:'Analytics' },
+    { id:'appointments', label:'Appointments' },
+    { id:'nursing', label:'Nursing' },
+    { id:'orders', label:'Clinical Orders' },
+    { id:'discharge', label:'Discharge' },
     { id:'nabh', label:'NABH' },
     { id:'staff', label:'Staff' },
   ];
@@ -2467,6 +2475,19 @@ export default function HospitalPortal({ user, onLogout }) {
         )}
 
         {/* STAFF */}
+        {tab==='appointments' && (
+          <HospitalAppointments hospital={hospital} patients={patients} staff={staff} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
+        )}
+        {tab==='nursing' && (
+          <HospitalNursing hospital={hospital} patients={patients} ipdList={ipdList} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
+        )}
+        {tab==='orders' && (
+          <HospitalClinicalOrders hospital={hospital} patients={patients} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
+        )}
+        {tab==='discharge' && (
+          <HospitalDischarge hospital={hospital} ipdList={ipdList} patients={patients} reload={fetchAll} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
+        )}
+
         {tab==='nabh' && (
           <div>
             <div style={{ marginBottom:20 }}>
