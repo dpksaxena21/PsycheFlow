@@ -10,7 +10,7 @@ import Auth from './Auth';
 import AdaptiveQuestionnaire from './AdaptiveQuestionnaire';
 import ClinicalInterview from './ClinicalInterview';
 import Dashboard from './Dashboard';
-import PsychologistPortal from './PsychologistPortal';
+import PsychologistPortal from './PsychologistShell';
 import ACTEngine from './ACTEngine';
 import CrisisManagement from './CrisisManagement';
 import Consent from './Consent';
