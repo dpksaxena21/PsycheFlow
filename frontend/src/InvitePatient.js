@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 
-const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+import { API_URL as API } from './config';
 
 
 function generateToken() {

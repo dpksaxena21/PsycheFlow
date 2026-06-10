@@ -236,7 +236,7 @@ export default function HospitalPortal({ user, onLogout }) {
     setAiLoading(true);
     setAiSummary('');
     try {
-      const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+      const API = 'https://web-production-3887e.up.railway.app';
       const res = await fetch(API + '/chatbot', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -464,7 +464,7 @@ export default function HospitalPortal({ user, onLogout }) {
             priority: qForm.priority
           })
         });
-      } catch (e) { console.warn('SMS failed:', e); }
+      } catch (e) {  }
     }
     setQForm({ patient_name:'', patient_phone:'', patient_age:'', priority:'normal', notes:'' });
     await loadAll();

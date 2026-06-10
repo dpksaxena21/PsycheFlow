@@ -2,7 +2,7 @@ import { IconBrain, IconTarget, IconStar, IconChart, IconWarning, IconCheck, Ico
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+import { API_URL as API } from './config';
 
 
 const processInfo = {
@@ -296,7 +296,7 @@ export default function ACTEngine({ user, phqScore, gadScore, condition }) {
       setExercises(exRes.data);
       setRecommended(recRes.data);
     } catch (e) {
-      console.error(e);
+      
     }
     setLoading(false);
   };

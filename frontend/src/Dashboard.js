@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import axios from 'axios';
 import { calcWellnessScore, calcRiskLevel, severity, ScoreChange, SparkLine, WellnessRing, AchievementBadge } from './DashboardWidgets';
 
-const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+import { API_URL as API } from './config';
 
 // ── Theme ──────────────────────────────────────────────
 const useIsMobile = () => {
@@ -187,7 +187,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
         setMessages(msgs || []);
       }
       buildNotifications(s || [], a || [], j || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {  }
     setLoading(false);
   }, [user.id, buildNotifications]);
 
@@ -418,7 +418,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                   {[
                     { label: 'PHQ-9 Depression', score: latest.phq_score, max: 27, prev: sessions[1]?.phq_score },
                     { label: 'GAD-7 Anxiety', score: latest.gad_score, max: 21, prev: sessions[1]?.gad_score },
-                    { label: 'Wellbeing', score: Math.round((latest.wellbeing_score || 0.75) * 100), max: 100, prev: null },
+                    { label: 'Wellbeing', score: Math.round((latest.wellbeing_score || 0.75) * 100), max: null, prev: null },
                     { label: 'Sessions Done', score: sessions.length, max: null, prev: null },
                   ].map((item, i) => {
                     const sev = item.max ? severity(item.score, item.max) : null;

@@ -8,7 +8,7 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 import InvitePatient from './InvitePatient';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+import { API_URL as API } from './config';
 const useIsMobile = () => {
   const [m, setM] = React.useState(window.innerWidth < 768);
   React.useEffect(() => {
@@ -577,7 +577,7 @@ export default function PsychologistPortal({ user, onLogout }) {
       if (res.data.alerts && res.data.alerts.length > 0) {
         setCrisisAlerts(res.data.alerts);
       }
-    } catch(e) { console.log("Crisis alerts fetch error:", e); }
+    } catch(e) {  }
   };
   useEffect(() => { fetchPatients(); fetchCrisisAlerts(); }, []);
 

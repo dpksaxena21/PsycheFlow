@@ -28,7 +28,7 @@ import DPDP from './DPDP';
 
 import { IconJournal, IconAnalyze, IconAlert, IconCheck, IconWarning } from './icons';
 import LoadingScreen from './LoadingScreen';
-const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+import { API_URL as API } from './config';
 
 
 const bigFive   = ['Extraversion','Neuroticism','Agreeableness','Conscientiousness','Openness'];
@@ -190,7 +190,7 @@ export default function App() {
       const res = await axios.post(API + '/predict', payload);
       const predictions = res.data.predictions;
       if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
-      if (user) { try { await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers }); } catch(e) { console.log('Crisis check error:', e); } }
+      if (user) { try { await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers }); } catch(e) {  } }
       setResults({ predictions, phq, gad, age, gender, occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
     } catch { alert('API error — is FastAPI running?'); setScreen('home'); }
