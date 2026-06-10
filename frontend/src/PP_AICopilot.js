@@ -19,7 +19,7 @@ export default function PP_AICopilot({ patients, user, S, card }) {
     setInput('');
     setLoading(true);
     try {
-      const res = await axios.post(API+'/chatbot', { message: q+ctx, user_id:user.id, context:{ role:'psychologist' } });
+      const res = await axios.post(API+'/chatbot', { messages: [{ role: 'user', content: q+ctx }], user_id:user.id, context:{ role:'psychologist' } });
       setMsgs(m => [...m, { role:'assistant', content:res.data.response }]);
     } catch { setMsgs(m => [...m, { role:'assistant', content:'Connection error. Please try again.' }]); }
     setLoading(false);

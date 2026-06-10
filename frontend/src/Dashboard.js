@@ -89,7 +89,7 @@ function Chatbot({ user, t }) {
     setInput('');
     setLoading(true);
     try {
-      const res = await axios.post(API + '/chatbot', { message: input, user_id: user.id, context: {} });
+      const res = await axios.post(API + '/chatbot', { messages: [{ role: 'user', content: input }], user_id: user.id, context: {} });
       setMsgs(m => [...m, { role: 'assistant', content: res.data.response }]);
     } catch { setMsgs(m => [...m, { role: 'assistant', content: 'Sorry, I\'m having trouble connecting.' }]); }
     setLoading(false);

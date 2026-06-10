@@ -247,11 +247,11 @@ export default function HospitalPortal({ user, onLogout }) {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          message: type === 'summarize'
+          messages: [{ role: 'user', content: type === 'summarize'
             ? `Summarize this patient: ${selPatient.full_name}, ${selPatient.date_of_birth?Math.floor((new Date()-new Date(selPatient.date_of_birth))/(365.25*24*60*60*1000)):'?'}y, ${selPatient.gender||''}. Allergies: ${selPatient.allergies||'none'}. EHR records: ${ehrRecords.length}. Latest diagnosis: ${ehrRecords[0]?.diagnosis||'none'}. Be brief and clinical.`
             : type === 'progress'
             ? `Generate a clinical progress note for: ${selPatient.full_name}. Latest vitals: ${ehrRecords[0]?.vitals ? JSON.stringify(ehrRecords[0].vitals) : 'not recorded'}. Diagnosis: ${ehrRecords[0]?.diagnosis||'unknown'}. Keep it professional and brief.`
-            : `Generate a discharge summary for: ${selPatient.full_name}. Diagnosis: ${ehrRecords[0]?.diagnosis||'unknown'}. Include follow-up instructions. Be concise.`,
+            : `Generate a discharge summary for: ${selPatient.full_name}. Diagnosis: ${ehrRecords[0]?.diagnosis||'unknown'}. Include follow-up instructions. Be concise.` }],
           user_id: 'hospital_admin',
           context: {}
         })

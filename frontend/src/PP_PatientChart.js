@@ -13,7 +13,7 @@ export default function PP_PatientChart({ patient: p, onBack, setTab, S, card, B
     setAiResponse('');
     try {
       const patientContext = `Patient: ${p.display_name || p.full_name}, PHQ-9: ${p.latest?.phq_score}, GAD-7: ${p.latest?.gad_score}, Risk: ${p.riskLevel}, Sessions: ${p.sessions.length}, Journals: ${p.journals.length}, Trend: ${p.phqTrend}`;
-      const res = await axios.post(API + '/chatbot', { message: `${query}\n\nPatient context: ${patientContext}`, user_id: user.id, context: { role: 'psychologist', patient_id: p.id } });
+      const res = await axios.post(API + '/chatbot', { messages: [{ role: 'user', content: `${query}\n\nPatient context: ${patientContext}` }], user_id: user.id, context: { role: 'psychologist', patient_id: p.id } });
       setAiResponse(res.data.response);
     } catch { setAiResponse('AI Copilot temporarily unavailable.'); }
     setAiLoading(false);

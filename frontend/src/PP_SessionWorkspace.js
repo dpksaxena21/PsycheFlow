@@ -54,7 +54,7 @@ export default function PP_SessionWorkspace({ patients, user, S, card, Badge }) 
     setAiResponse('');
     try {
       const ctx = selectedPatient ? `Patient: ${selectedPatient.display_name||selectedPatient.full_name}, PHQ-9: ${selectedPatient.latest?.phq_score}, GAD-7: ${selectedPatient.latest?.gad_score}, Risk: ${selectedPatient.riskLevel}, Sessions: ${selectedPatient.sessions?.length}` : '';
-      const res = await axios.post(API + '/chatbot', { message: q + (ctx ? `\n\nPatient context: ${ctx}` : ''), user_id: user.id, context: { role: 'psychologist_session' } });
+      const res = await axios.post(API + '/chatbot', { messages: [{ role: 'user', content: q + (ctx ? `\n\nPatient context: ${ctx}` : '') }], user_id: user.id, context: { role: 'psychologist_session' } });
       setAiResponse(res.data.response);
     } catch { setAiResponse('AI unavailable. Check connection.'); }
     setAiLoading(false);
