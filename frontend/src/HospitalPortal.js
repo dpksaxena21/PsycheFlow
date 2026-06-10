@@ -4,6 +4,8 @@ import HospitalAppointments from './HospitalAppointments';
 import HospitalNursing from './HospitalNursing';
 import HospitalClinicalOrders from './HospitalClinicalOrders';
 import HospitalDischarge from './HospitalDischarge';
+import HospitalPrescriptions from './HospitalPrescriptions';
+import HospitalTelemedicine from './HospitalTelemedicine';
 
 const useIsMobile = () => {
   const [m, setM] = React.useState(window.innerWidth < 768);
@@ -531,6 +533,8 @@ export default function HospitalPortal({ user, onLogout }) {
     { id:'nursing', label:'Nursing' },
     { id:'orders', label:'Clinical Orders' },
     { id:'discharge', label:'Discharge' },
+    { id:'prescriptions', label:'Prescriptions' },
+    { id:'telemedicine', label:'Telemedicine' },
     { id:'nabh', label:'NABH' },
     { id:'staff', label:'Staff' },
   ];
@@ -2486,6 +2490,13 @@ export default function HospitalPortal({ user, onLogout }) {
         )}
         {tab==='discharge' && (
           <HospitalDischarge hospital={hospital} ipdList={ipdList} patients={patients} reload={fetchAll} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
+        )}
+
+        {tab==='prescriptions' && (
+          <HospitalPrescriptions hospital={hospital} patients={patients} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
+        )}
+        {tab==='telemedicine' && (
+          <HospitalTelemedicine hospital={hospital} patients={patients} staff={staff} user={user} S={S} card={card} Badge={Badge} isMobile={isMobile}/>
         )}
 
         {tab==='nabh' && (
