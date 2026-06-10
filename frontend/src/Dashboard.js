@@ -38,7 +38,7 @@ const Icons = {
   overview: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   wellness: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.335 4.198 1 7.5 1c1.988 0 4.063.992 4.5 2.5C12.437 1.992 14.512 1 16.5 1 19.8 1 23 3.335 23 7.191c0 4.105-5.369 8.863-11 14.402z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   clinical: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  insights: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={c} strokeWidth="1.5"/><path d="M12 8v4l3 3" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 7.5A4.5 4.5 0 0112 6" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  insights: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="6" r="2" stroke={c} strokeWidth="1.5"/><circle cx="4" cy="18" r="2" stroke={c} strokeWidth="1.5"/><circle cx="20" cy="18" r="2" stroke={c} strokeWidth="1.5"/><path d="M12 8v3M12 11l-6 5M12 11l6 5" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill={c}/></svg>,
   journal: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 7h6M9 11h4" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
   therapy: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   assessment: c => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
@@ -353,7 +353,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: t.text3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Mental Health Command Center</div>
                     <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', marginBottom: 16 }}>
-                      {greeting}, {name} 👋
+                      {greeting}, {name}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
                       {[
@@ -387,7 +387,13 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                 <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: t.text, marginBottom: 12 }}>How are you feeling right now?</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {[{ id: 'great', label: 'Great', emoji: '😄' }, { id: 'good', label: 'Good', emoji: '🙂' }, { id: 'okay', label: 'Okay', emoji: '😐' }, { id: 'low', label: 'Low', emoji: '😔' }, { id: 'anxious', label: 'Anxious', emoji: '😰' }].map(m => (
+                    {[
+      { id: 'great', label: 'Great', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M10 20c1.5 2.5 4 4 6 4s4.5-1.5 6-4" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/><path d="M9 11c1-1.5 2.5-2 3.5-1.5M23 11c-1-1.5-2.5-2-3.5-1.5" stroke="#92400E" strokeWidth="1.2" strokeLinecap="round"/></svg> },
+      { id: 'good', label: 'Good', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M11 20c1 2 3 3 5 3s4-1 5-3" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+      { id: 'okay', label: 'Okay', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M11 21h10" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+      { id: 'low', label: 'Low', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#93C5FD"/><circle cx="11" cy="13" r="2" fill="#1E3A5F"/><circle cx="21" cy="13" r="2" fill="#1E3A5F"/><path d="M11 22c1-2 3-3 5-3s4 1 5 3" stroke="#1E3A5F" strokeWidth="1.8" strokeLinecap="round"/><path d="M10 11c1-1 2.5-1.2 3.5-.5M22 11c-1-1-2.5-1.2-3.5-.5" stroke="#1E3A5F" strokeWidth="1.2" strokeLinecap="round"/></svg> },
+      { id: 'anxious', label: 'Anxious', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#C4B5FD"/><circle cx="11" cy="13" r="2.5" fill="#4C1D95"/><circle cx="21" cy="13" r="2.5" fill="#4C1D95"/><path d="M10 21c1.5-1 3-1.5 6-1.5s4.5.5 6 1.5" stroke="#4C1D95" strokeWidth="1.8" strokeLinecap="round"/><path d="M8 10c2-2 4-2.5 5-1.5M24 10c-2-2-4-2.5-5-1.5" stroke="#4C1D95" strokeWidth="1.2" strokeLinecap="round"/></svg> },
+    ].map(m => (
                       <button key={m.id} onClick={() => saveMood(m.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 14px', borderRadius: 10, border: `0.5px solid ${t.border}`, background: mood === m.id ? t.blue2 : t.bg, cursor: 'pointer', minWidth: 60 }}>
                         <span style={{ fontSize: 22 }}>{m.emoji}</span>
                         <span style={{ fontSize: 10, color: mood === m.id ? t.blue : t.text3, fontWeight: mood === m.id ? 600 : 400 }}>{m.label}</span>
@@ -400,7 +406,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                 <div style={{ background: t.bg2, borderRadius: 12, padding: '12px 16px', marginBottom: 20, border: `0.5px solid ${t.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 20 }}>✅</span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Mood logged: {mood}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Mood logged — feeling {mood} today</div>
                     <div style={{ fontSize: 11, color: t.text3 }}>Your psychologist can see this</div>
                   </div>
                 </div>
