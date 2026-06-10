@@ -368,7 +368,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
             <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5,1fr)', gap:0, position:'relative' }}>
               {[
                 { step:'01', title:'Patient Completes Assessment', desc:'PHQ-9, GAD-7, Big Five and 11 more instruments in under 15 minutes', color:'#93C5FD' },
-                { step:'02', title:'AI Creates Clinical Profile', desc:'19 ML models analyze responses and generate personality + risk profile', color:'#6EE7B7' },
+                { step:'02', title:'AI Creates Clinical Profile', desc:'30 ML models analyze responses and generate personality + risk profile', color:'#6EE7B7' },
                 { step:'03', title:'Psychologist Receives Brief', desc:'Pre-session summary with risk flags, journal themes, and suggested focus areas', color:'#FCD34D' },
                 { step:'04', title:'Session + SOAP Notes', desc:'AI-assisted session workspace with auto-generated clinical documentation', color:'#F9A8D4' },
                 { step:'05', title:'Progress Tracked', desc:'PHQ/GAD trends, mood logs, and outcome analytics updated in real time', color:'#A5B4FC' },
