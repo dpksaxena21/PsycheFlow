@@ -28,6 +28,7 @@ export default function HospitalAuth({ onLogin, onBack }) {
 
   const handleSignup = async () => {
     if (!form.email||!form.password||!form.hospitalName||!form.city||!form.adminName) { setError('Please fill all required fields.'); return; }
+    if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true); setError('');
     const { data, error:err } = await supabase.auth.signUp({ email:form.email, password:form.password });
     if (err) { setError(err.message); setLoading(false); return; }

@@ -190,7 +190,16 @@ export default function App() {
       const res = await axios.post(API + '/predict', payload);
       const predictions = res.data.predictions;
       if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
-      if (user) { try { await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers }); } catch(e) {  } }
+      if (user) {
+        try {
+          await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers });
+        } catch(e) {
+          // Crisis check failed — show crisis resources directly as safety net
+          if (phq >= 20 || answers?.some?.(a => a.question?.includes('suicide') && a.answer > 0)) {
+            if (typeof onCrisisAlert === 'function') onCrisisAlert();
+          }
+        }
+      }
       setResults({ predictions, phq, gad, age, gender, occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
     } catch { alert('API error — is FastAPI running?'); setScreen('home'); }

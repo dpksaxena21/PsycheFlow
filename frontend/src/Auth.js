@@ -32,6 +32,7 @@ export default function Auth({ onLogin }) {
         return;
       }
       setAgeBlocked(false);
+      if (password.length < 8) { setError('Password must be at least 8 characters.'); setLoading(false); return; }
       const { data, error: err } = await supabase.auth.signUp({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
       if (data?.user) {
