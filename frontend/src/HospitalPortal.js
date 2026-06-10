@@ -1915,10 +1915,10 @@ export default function HospitalPortal({ user, onLogout }) {
             {/* KPI Row 1 — Primary metrics */}
             <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:16 }}>
               {[
-                { label:'OPD Waiting', value:waiting, sub:`${queue.filter(q=>q.status==='in_consultation').length} in consultation`, color:S.blue, action:'queue', icon:'🏥' },
-                { label:'Registered Patients', value:patients.length, sub:'Total in registry', color:S.cyan, action:'patients', icon:'👥' },
+                { label:'OPD Waiting', value:waiting, sub:`${queue.filter(q=>q.status==='in_consultation').length} in consultation`, color:S.blue, action:'queue', icon:'hospital' },
+                { label:'Registered Patients', value:patients.length, sub:'Total in registry', color:S.cyan, action:'patients', icon:'patients' },
                 { label:'IPD Admitted', value:ipdList.filter(i=>i.status==='admitted').length, sub:`${ipdList.filter(i=>i.status==='discharged').length} discharged today`, color:'#7C3AED', action:'ipd', icon:'🛏' },
-                { label:'Crisis Flags', value:crisis + beds.filter(b=>b.urgency==='crisis').length, sub:'Needs immediate review', color:crisis>0?S.danger:S.success, action:'beds', icon:'🚨' },
+                { label:'Crisis Flags', value:crisis + beds.filter(b=>b.urgency==='crisis').length, sub:'Needs immediate review', color:crisis>0?S.danger:S.success, action:'beds', icon:'crisis' },
               ].map((s,i)=>(
                 <div key={i} onClick={()=>setTab(s.action)} style={{ ...card, cursor:'pointer', borderLeft:`3px solid ${s.color}`, padding:'16px 20px' }}
                   onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
@@ -2171,7 +2171,7 @@ export default function HospitalPortal({ user, onLogout }) {
                       {(wardMap[ward]||[]).map(b=>(
                         <div key={b.id} title={`${b.patient_name} — ${b.urgency} — ${b.flag_reason}`}
                           style={{ width:64, height:64, borderRadius:8, background:b.urgency==='crisis'?'#FEF2F2':b.urgency==='urgent'?'#FEF3C7':'#FFF7ED', border:`1.5px solid ${b.urgency==='crisis'?'#FECACA':b.urgency==='urgent'?'#FDE68A':'#FED7AA'}`, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:10, fontWeight:600, textAlign:'center', padding:4 }}>
-                          <div style={{ fontSize:14 }}>{b.urgency==='crisis'?'🚨':b.urgency==='urgent'?'⚠️':'🔔'}</div>
+                          <div style={{ width:14, height:14, borderRadius:'50%', background:b.urgency==='crisis'?S.danger:b.urgency==='urgent'?S.warning:'#22c55e' }}/>
                           <div style={{ fontSize:9, fontWeight:700, color:b.urgency==='crisis'?S.danger:S.warning }}>{b.bed_number}</div>
                           <div style={{ fontSize:8, color:S.muted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', width:'100%', textAlign:'center' }}>{b.patient_name?.split(' ')[0]}</div>
                         </div>

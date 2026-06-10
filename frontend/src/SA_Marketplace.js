@@ -1,19 +1,19 @@
 import React from 'react';
 const INTEGRATIONS = [
-  { name:'MSG91', category:'SMS', status:'connected', detail:'DLT registration pending', icon:'📱' },
-  { name:'Resend', category:'Email', status:'connected', detail:'Transactional emails active', icon:'📧' },
-  { name:'Supabase', category:'Database', status:'connected', detail:'PostgreSQL + Realtime + Auth', icon:'🗄️' },
-  { name:'Railway', category:'Infrastructure', status:'connected', detail:'FastAPI backend', icon:'🚂' },
-  { name:'Vercel', category:'Frontend', status:'connected', detail:'React CRA deployed', icon:'▲' },
-  { name:'Google Analytics', category:'Analytics', status:'connected', detail:'G-VCZP0QCEVZ', icon:'📊' },
-  { name:'Anthropic Claude', category:'AI', status:'connected', detail:'claude-haiku-4-5', icon:'🤖' },
-  { name:'Razorpay', category:'Payments', status:'planned', detail:'Payment gateway integration', icon:'💳' },
-  { name:'WhatsApp Business', category:'Messaging', status:'planned', detail:'WABA approval required', icon:'💬' },
-  { name:'Zoom', category:'Telemedicine', status:'planned', detail:'Video consultations', icon:'📹' },
-  { name:'Google Calendar', category:'Scheduling', status:'planned', detail:'Appointment sync', icon:'📅' },
-  { name:'Tally', category:'Accounting', status:'planned', detail:'GST billing integration', icon:'🧾' },
-  { name:'Insurance APIs', category:'Insurance', status:'planned', detail:'TPA claim automation', icon:'🏥' },
-  { name:'ABHA/ABDM', category:'Gov. Health', status:'planned', detail:'Ayushman Bharat integration', icon:'🇮🇳' },
+  { name:'MSG91', category:'SMS', status:'connected', detail:'DLT registration pending', icon:'sms' },
+  { name:'Resend', category:'Email', status:'connected', detail:'Transactional emails active', icon:'email' },
+  { name:'Supabase', category:'Database', status:'connected', detail:'PostgreSQL + Realtime + Auth', icon:'db' },
+  { name:'Railway', category:'Infrastructure', status:'connected', detail:'FastAPI backend', icon:'railway' },
+  { name:'Vercel', category:'Frontend', status:'connected', detail:'React CRA deployed', icon:'vercel' },
+  { name:'Google Analytics', category:'Analytics', status:'connected', detail:'G-VCZP0QCEVZ', icon:'analytics' },
+  { name:'Anthropic Claude', category:'AI', status:'connected', detail:'claude-haiku-4-5', icon:'ai' },
+  { name:'Razorpay', category:'Payments', status:'planned', detail:'Payment gateway integration', icon:'payments' },
+  { name:'WhatsApp Business', category:'Messaging', status:'planned', detail:'WABA approval required', icon:'whatsapp' },
+  { name:'Zoom', category:'Telemedicine', status:'planned', detail:'Video consultations', icon:'video' },
+  { name:'Google Calendar', category:'Scheduling', status:'planned', detail:'Appointment sync', icon:'calendar' },
+  { name:'Tally', category:'Accounting', status:'planned', detail:'GST billing integration', icon:'tally' },
+  { name:'Insurance APIs', category:'Insurance', status:'planned', detail:'TPA claim automation', icon:'insurance' },
+  { name:'ABHA/ABDM', category:'Gov. Health', status:'planned', detail:'Ayushman Bharat integration', icon:'abdm' },
 ];
 export default function SAMarketplace({ S, card, Badge, KPICard }) {
   const connected = INTEGRATIONS.filter(i=>i.status==='connected');
@@ -32,7 +32,7 @@ export default function SAMarketplace({ S, card, Badge, KPICard }) {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
           {connected.map(i=>(
             <div key={i.name} style={{ ...card, display:'flex', gap:12, alignItems:'flex-start' }}>
-              <div style={{ width:36, height:36, borderRadius:8, background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>{i.icon}</div>
+              <div style={{ width:36, height:36, borderRadius:8, background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:11, fontWeight:700, color:S.blue }}>{i.icon.slice(0,2).toUpperCase()}</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{i.name}</div>
                 <div style={{ fontSize:10, color:S.muted, marginTop:2 }}>{i.detail}</div>
@@ -50,7 +50,7 @@ export default function SAMarketplace({ S, card, Badge, KPICard }) {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
           {planned.map(i=>(
             <div key={i.name} style={{ ...card, display:'flex', gap:12, alignItems:'flex-start', opacity:0.7 }}>
-              <div style={{ width:36, height:36, borderRadius:8, background:S.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>{i.icon}</div>
+              <div style={{ width:36, height:36, borderRadius:8, background:S.bg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:11, fontWeight:700, color:S.muted }}>{i.icon.slice(0,2).toUpperCase()}</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{i.name}</div>
                 <div style={{ fontSize:10, color:S.muted, marginTop:2 }}>{i.detail}</div>

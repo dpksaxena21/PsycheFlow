@@ -468,7 +468,7 @@ function SessionComparison({ sessions }) {
   return (
     <div style={{ background:'#fff', borderRadius:16, padding:24,
       border:'1px solid #e2e8f0', marginBottom:20 }}>
-      <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>📈 Session Comparison</h3>
+      <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Session Comparison</h3>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
         {[
           { label:'Depression (PHQ-9)', curr:curr.phq_score, prev:prev.phq_score, diff:phqDiff },
@@ -675,11 +675,11 @@ export default function PsychologistPortal({ user, onLogout }) {
       .maybeSingle();
 
     if (error || !data) {
-      setLinkMsg('❌ Invalid share code.');
+      setLinkMsg('Invalid share code.');
       return;
     }
     if (data.psychologist_id && data.psychologist_id !== user.id) {
-      setLinkMsg('❌ This patient is already linked to another psychologist.');
+      setLinkMsg('This patient is already linked to another psychologist.');
       return;
     }
 
@@ -687,7 +687,7 @@ export default function PsychologistPortal({ user, onLogout }) {
       .update({ psychologist_id: user.id, active: true })
       .eq('share_code', shareCode.trim().toUpperCase());
     if (updateError) {
-      setLinkMsg('❌ Failed to link: ' + updateError.message);
+      setLinkMsg('Failed to link: ' + updateError.message);
       return;
     }
     setLinkMsg('Patient linked successfully!');
@@ -755,7 +755,7 @@ export default function PsychologistPortal({ user, onLogout }) {
             ) : patients.length === 0 ? (
               <div style={{ background:'#fff', borderRadius:16, padding:48,
                 textAlign:'center', border:'1px solid #e2e8f0' }}>
-                <div style={{ fontSize:48, marginBottom:16 }}>👥</div>
+                <div style={{ width:64, height:64, borderRadius:'50%', background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="#1D4ED8" strokeWidth="1.5"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
                 <h3 style={{ color:'#1e293b' }}>No patients yet</h3>
                 <p style={{ color:'#94a3b8' }}>
                   Ask patients to generate a Share Code from their dashboard.

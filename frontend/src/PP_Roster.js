@@ -71,7 +71,7 @@ export default function PP_Roster({ patients, selectedPatient, setSelectedPatien
                     {/* AI alerts */}
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {p.riskLevel === 'critical' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#FEF2F2', color: S.danger, fontWeight: 600 }}>⚠ Critical Risk</span>}
-                      {p.phqTrend === 'deteriorating' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#FFFBEB', color: S.warning, fontWeight: 600 }}>📉 Deteriorating</span>}
+                      {p.phqTrend === 'deteriorating' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#FFFBEB', color: S.warning, fontWeight: 600 }}>↓ Deteriorating</span>}
                       {p.daysSinceSession > 14 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#F5F3FF', color: S.purple, fontWeight: 600 }}>🕐 Missed Session</span>}
                       {p.journals.length === 0 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: S.bg, color: S.hint, fontWeight: 600 }}>No journals</span>}
                       {p.phqTrend === 'improving' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#ECFDF5', color: S.success, fontWeight: 600 }}>✓ Improving</span>}

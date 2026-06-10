@@ -144,7 +144,7 @@ export default function PP_PatientChart({ patient: p, onBack, setTab, S, card, B
         {/* Right: AI Copilot */}
         <div>
           <div style={{ ...card, position: 'sticky', top: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12 }}>🤖 AI Clinical Copilot</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12, display:'flex', alignItems:'center', gap:6 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="#1D4ED8" strokeWidth="1.5"/><path d="M9 11V7a3 3 0 016 0v4" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/><circle cx="9" cy="16" r="1" fill="#1D4ED8"/><circle cx="15" cy="16" r="1" fill="#1D4ED8"/></svg>AI Clinical Copilot</div>
             <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
               {['Summarize this patient', 'What changed this month?', 'Generate session plan', 'Find risk factors', 'Suggest intervention', 'Predict dropout risk'].map(q => (
                 <button key={q} onClick={() => { setAiQuery(q); askCopilot(q); }} style={{ padding: '7px 10px', background: S.bg, color: S.muted, border: `0.5px solid ${S.border}`, borderRadius: 7, fontSize: 11, cursor: 'pointer', textAlign: 'left' }}

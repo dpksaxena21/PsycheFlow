@@ -13,7 +13,7 @@ export default function PP_CommandCenter({ patients, crisisAlerts, appointments,
       {/* Hero */}
       <div style={{ background: `linear-gradient(135deg, ${S.navy}, #1a3a6b)`, borderRadius: 16, padding: '24px 28px', marginBottom: 24, color: '#fff' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Clinical Intelligence Platform</div>
-        <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 16 }}>{greeting}, Dr. {name} 👋</div>
+        <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 16 }}>{greeting}, Dr. {name}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
           {[
             { label: 'Total Patients', value: patients.length, color: '#93C5FD', onClick: () => setTab('roster') },
