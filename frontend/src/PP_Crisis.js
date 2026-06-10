@@ -24,7 +24,7 @@ export default function PP_Crisis({ crisisAlerts, patients, openPatient, S, card
       </div>
       {filtered.length === 0 ? (
         <div style={{ ...card, textAlign: 'center', padding: 48 }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+          <div style={{ width:48, height:48, borderRadius:'50%', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
           <div style={{ fontSize: 15, fontWeight: 600, color: S.navy, marginBottom: 8 }}>No Active Crisis Alerts</div>
           <div style={{ fontSize: 13, color: S.hint }}>All patients are within safe risk thresholds.</div>
         </div>

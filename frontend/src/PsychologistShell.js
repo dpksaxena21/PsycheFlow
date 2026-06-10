@@ -26,20 +26,35 @@ export const S = {
 export const card = { background: S.card, borderRadius: 12, border: `0.5px solid ${S.border}`, boxShadow: '0 1px 4px rgba(29,78,216,0.06)', padding: 20 };
 export const Badge = ({ color, children }) => <span style={{ padding: '2px 10px', borderRadius: 100, fontSize: 11, fontWeight: 600, background: color === 'red' ? '#FEF2F2' : color === 'yellow' ? '#FFFBEB' : color === 'green' ? '#ECFDF5' : color === 'purple' ? '#F5F3FF' : color === 'cyan' ? '#ECFEFF' : '#EFF6FF', color: color === 'red' ? S.danger : color === 'yellow' ? S.warning : color === 'green' ? S.success : color === 'purple' ? S.purple : color === 'cyan' ? S.cyan : S.blue }}>{children}</span>;
 
+const TAB_ICONS = {
+  command: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  roster: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke={c} strokeWidth="1.5"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  crisis: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="17" r="1" fill={c}/></svg>,
+  appointments: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke={c} strokeWidth="1.5"/><path d="M16 2v4M8 2v4M3 10h18" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="15" r="1" fill={c}/><circle cx="12" cy="15" r="1" fill={c}/></svg>,
+  session: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2" stroke={c} strokeWidth="1.5"/><circle cx="5" cy="19" r="2" stroke={c} strokeWidth="1.5"/><circle cx="19" cy="19" r="2" stroke={c} strokeWidth="1.5"/><path d="M12 7v4M12 11l-5 6M12 11l5 6" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  treatment: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  analytics: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  journals: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><path d="M9 7h6M9 11h4" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  assessments: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  copilot: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke={c} strokeWidth="1.5"/><path d="M9 11V7a3 3 0 016 0v4" stroke={c} strokeWidth="1.5" strokeLinecap="round"/><circle cx="9" cy="16" r="1" fill={c}/><circle cx="15" cy="16" r="1" fill={c}/></svg>,
+  messages: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  referrals: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  link: c => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+};
 const TABS = [
-  { id: 'command', label: 'Command Center', icon: '⚡' },
-  { id: 'roster', label: 'Patient Roster', icon: '👥' },
-  { id: 'crisis', label: 'Crisis Center', icon: '🚨' },
-  { id: 'appointments', label: 'Appointments', icon: '📅' },
-  { id: 'session', label: 'Session Workspace', icon: '🧠' },
-  { id: 'treatment', label: 'Treatment Plans', icon: '📋' },
-  { id: 'analytics', label: 'Analytics', icon: '📊' },
-  { id: 'journals', label: 'Journal Intelligence', icon: '📓' },
-  { id: 'assessments', label: 'Assessments', icon: '📝' },
-  { id: 'copilot', label: 'AI Copilot', icon: '🤖' },
-  { id: 'messages', label: 'Messages', icon: '💬' },
-  { id: 'referrals', label: 'Hospital Referrals', icon: '🏥' },
-  { id: 'link', label: 'Link Patient', icon: '🔗' },
+  { id: 'command', label: 'Command Center' },
+  { id: 'roster', label: 'Patient Roster' },
+  { id: 'crisis', label: 'Crisis Center' },
+  { id: 'appointments', label: 'Appointments' },
+  { id: 'session', label: 'Session Workspace' },
+  { id: 'treatment', label: 'Treatment Plans' },
+  { id: 'analytics', label: 'Analytics' },
+  { id: 'journals', label: 'Journal Intelligence' },
+  { id: 'assessments', label: 'Assessments' },
+  { id: 'copilot', label: 'AI Copilot' },
+  { id: 'messages', label: 'Messages' },
+  { id: 'referrals', label: 'Hospital Referrals' },
+  { id: 'link', label: 'Link Patient' },
 ];
 
 export default function PsychologistShell({ user, profile, onLogout, onPatientMode }) {
@@ -150,7 +165,7 @@ export default function PsychologistShell({ user, profile, onLogout, onPatientMo
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: sideExpanded ? '9px 16px' : '9px 14px', cursor: 'pointer', background: tab === t.id ? 'rgba(29,78,216,0.3)' : 'transparent', borderLeft: tab === t.id ? '2px solid #1D4ED8' : '2px solid transparent', position: 'relative' }}
                 onMouseEnter={e => e.currentTarget.style.background = tab === t.id ? 'rgba(29,78,216,0.3)' : 'rgba(255,255,255,0.05)'}
                 onMouseLeave={e => e.currentTarget.style.background = tab === t.id ? 'rgba(29,78,216,0.3)' : 'transparent'}>
-                <span style={{ fontSize: 16, flexShrink: 0 }}>{t.icon}</span>
+                <div style={{ flexShrink: 0, display:'flex', alignItems:'center' }}>{TAB_ICONS[t.id] ? TAB_ICONS[t.id](tab === t.id ? '#fff' : 'rgba(255,255,255,0.45)') : null}</div>
                 {sideExpanded && <span style={{ fontSize: 12, fontWeight: tab === t.id ? 600 : 400, color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>{t.label}</span>}
                 {badge > 0 && <div style={{ position: 'absolute', top: 6, left: sideExpanded ? 'auto' : 32, right: sideExpanded ? 12 : 'auto', minWidth: 16, height: 16, borderRadius: 8, background: S.danger, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', padding: '0 3px' }}>{badge}</div>}
               </div>
@@ -160,11 +175,11 @@ export default function PsychologistShell({ user, profile, onLogout, onPatientMo
         {/* Footer */}
         <div style={{ padding: '12px', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
           {onPatientMode && <div onClick={onPatientMode} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', cursor: 'pointer', borderRadius: 6 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-            <span style={{ fontSize: 14 }}>👤</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>
             {sideExpanded && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Patient view</span>}
           </div>}
           <div onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', cursor: 'pointer', borderRadius: 6 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-            <span style={{ fontSize: 14 }}>🚪</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             {sideExpanded && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Sign out</span>}
           </div>
         </div>

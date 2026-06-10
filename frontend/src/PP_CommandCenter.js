@@ -33,7 +33,7 @@ export default function PP_CommandCenter({ patients, crisisAlerts, appointments,
 
       {/* AI Priority Queue */}
       <div style={{ ...card, marginBottom: 20, borderLeft: `3px solid ${S.blue}` }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 14 }}>🤖 AI Recommended Priorities Today</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 14, display:'flex', alignItems:'center', gap:6 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="#1D4ED8" strokeWidth="1.5"/><path d="M9 11V7a3 3 0 016 0v4" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/><circle cx="9" cy="16" r="1" fill="#1D4ED8"/><circle cx="15" cy="16" r="1" fill="#1D4ED8"/></svg>AI Recommended Priorities Today</div>
         <div style={{ display: 'grid', gap: 8 }}>
           {[
             ...crisisAlerts.filter(p => p.riskLevel === 'critical').map(p => ({ patient: p.display_name || p.full_name, reason: `PHQ-9: ${p.latest?.phq_score} — Critical risk`, type: 'critical', onClick: () => openPatient(p) })),
@@ -54,7 +54,7 @@ export default function PP_CommandCenter({ patients, crisisAlerts, appointments,
           {patients.length === 0 && <div style={{ textAlign: 'center', padding: 24, color: S.hint, fontSize: 13 }}>No patients linked yet. Link patients to see AI priorities.</div>}
           {patients.length > 0 && improving.length > 0 && crisisAlerts.length === 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, background: '#ECFDF5', border: '0.5px solid #A7F3D0' }}>
-              <span style={{ fontSize: 16 }}>🎉</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <span style={{ fontSize: 13, color: S.success, fontWeight: 600 }}>{improving.length} patient{improving.length > 1 ? 's are' : ' is'} improving — great clinical outcomes!</span>
             </div>
           )}
@@ -64,7 +64,7 @@ export default function PP_CommandCenter({ patients, crisisAlerts, appointments,
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
         {/* Today's sessions */}
         <div style={{ ...card }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12 }}>📅 Today's Sessions ({todaySessions.length})</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12, display:'flex', alignItems:'center', gap:6 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#1D4ED8" strokeWidth="1.5"/><path d="M16 2v4M8 2v4M3 10h18" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/></svg>Today's Sessions ({todaySessions.length})</div>
           {todaySessions.length === 0 ? <div style={{ fontSize: 12, color: S.hint, padding: '12px 0' }}>No sessions scheduled today.</div> :
             todaySessions.slice(0, 4).map(a => (
               <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `0.5px solid ${S.border}` }}>
@@ -79,7 +79,7 @@ export default function PP_CommandCenter({ patients, crisisAlerts, appointments,
 
         {/* Risk distribution */}
         <div style={{ ...card }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12 }}>🎯 Risk Distribution</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12, display:'flex', alignItems:'center', gap:6 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#1D4ED8" strokeWidth="1.5"/><circle cx="12" cy="12" r="6" stroke="#1D4ED8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#1D4ED8"/></svg>Risk Distribution</div>
           {[['critical', S.danger], ['high', S.warning], ['moderate', '#F59E0B'], ['low', S.success]].map(([level, color]) => {
             const count = patients.filter(p => p.riskLevel === level).length;
             const pct = patients.length > 0 ? Math.round(count / patients.length * 100) : 0;
@@ -100,7 +100,7 @@ export default function PP_CommandCenter({ patients, crisisAlerts, appointments,
 
         {/* Quick stats */}
         <div style={{ ...card }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12 }}>📈 Caseload Stats</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 12, display:'flex', alignItems:'center', gap:6 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/></svg>Caseload Stats</div>
           {[
             ['Improving', improving.length, S.success],
             ['Deteriorating', deteriorating.length, S.danger],
