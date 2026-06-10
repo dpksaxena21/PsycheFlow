@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from './supabase';
 import axios from 'axios';
-import { calcWellnessScore, calcRiskLevel, severity, ScoreChange, SparkLine, WellnessRing, AchievementBadge } from './DashboardWidgets';
+import { calcWellnessScore, calcRiskLevel, severity, ScoreChange, SparkLine, WellnessRing, AchievementBadge, ClinicalScoreCards } from './DashboardWidgets';
 
 import { API_URL as API } from './config';
 
@@ -357,14 +357,17 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
                       {[
-                        { label: 'Wellness Score', value: wellnessScore ? `${wellnessScore}/100` : '—', color: wellnessScore >= 70 ? t.success : wellnessScore >= 40 ? t.warning : t.danger },
-                        { label: 'Risk Level', value: riskLevel.level, color: riskLevel.color },
-                        { label: 'Assessments', value: sessions.length, color: t.blue },
-                        { label: 'Journal Entries', value: journals.length, color: t.cyan },
+                        { label: 'Wellness Score', value: wellnessScore ? `${wellnessScore}/100` : '—', color: wellnessScore >= 70 ? t.success : wellnessScore >= 40 ? t.warning : t.danger, tab: 'wellness' },
+                        { label: 'Risk Level', value: riskLevel.level, color: riskLevel.color, tab: 'clinical' },
+                        { label: 'Assessments', value: sessions.length, color: t.blue, tab: 'assessment' },
+                        { label: 'Journal Entries', value: journals.length, color: t.cyan, tab: 'journal' },
                       ].map((stat, i) => (
-                        <div key={i} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)', borderRadius: 10, padding: '10px 14px', backdropFilter: 'blur(4px)' }}>
+                        <div key={i} onClick={() => setTab(stat.tab)} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)', borderRadius: 10, padding: '10px 14px', backdropFilter: 'blur(4px)', cursor: 'pointer', transition: 'transform 0.15s' }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = ''}>
                           <div style={{ fontSize: 18, fontWeight: 700, color: stat.color }}>{stat.value}</div>
                           <div style={{ fontSize: 10, color: t.text3, marginTop: 2 }}>{stat.label}</div>
+                          <div style={{ fontSize: 9, color: t.text3, marginTop: 3, opacity: 0.7 }}>Tap to explore →</div>
                         </div>
                       ))}
                     </div>
@@ -395,7 +398,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       { id: 'anxious', label: 'Anxious', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#C4B5FD"/><circle cx="11" cy="13" r="2.5" fill="#4C1D95"/><circle cx="21" cy="13" r="2.5" fill="#4C1D95"/><path d="M10 21c1.5-1 3-1.5 6-1.5s4.5.5 6 1.5" stroke="#4C1D95" strokeWidth="1.8" strokeLinecap="round"/><path d="M8 10c2-2 4-2.5 5-1.5M24 10c-2-2-4-2.5-5-1.5" stroke="#4C1D95" strokeWidth="1.2" strokeLinecap="round"/></svg> },
     ].map(m => (
                       <button key={m.id} onClick={() => saveMood(m.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 14px', borderRadius: 10, border: `0.5px solid ${t.border}`, background: mood === m.id ? t.blue2 : t.bg, cursor: 'pointer', minWidth: 60 }}>
-                        <span style={{ fontSize: 22 }}>{m.emoji}</span>
+                        {m.face}
                         <span style={{ fontSize: 10, color: mood === m.id ? t.blue : t.text3, fontWeight: mood === m.id ? 600 : 400 }}>{m.label}</span>
                       </button>
                     ))}
@@ -413,26 +416,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
               )}
 
               {/* Clinical scores row */}
-              {latest && (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
-                  {[
-                    { label: 'PHQ-9 Depression', score: latest.phq_score, max: 27, prev: sessions[1]?.phq_score },
-                    { label: 'GAD-7 Anxiety', score: latest.gad_score, max: 21, prev: sessions[1]?.gad_score },
-                    { label: 'Wellbeing', score: Math.round((latest.wellbeing_score || 0.75) * 100), max: null, prev: null },
-                    { label: 'Sessions Done', score: sessions.length, max: null, prev: null },
-                  ].map((item, i) => {
-                    const sev = item.max ? severity(item.score, item.max) : null;
-                    return (
-                      <div key={i} style={{ background: t.bg2, borderRadius: 12, padding: '14px 16px', border: `0.5px solid ${t.border}` }}>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: t.text3, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{item.label}</div>
-                        <div style={{ fontSize: 24, fontWeight: 700, color: sev?.color || t.blue, marginBottom: 4 }}>{item.score !== undefined ? item.score : '—'}</div>
-                        {sev && <div style={{ fontSize: 11, color: sev.color, fontWeight: 600, marginBottom: 4 }}>{sev.label}</div>}
-                        {item.prev !== undefined && item.prev !== null && <ScoreChange current={item.score} previous={item.prev}/>}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {latest && <ClinicalScoreCards latest={latest} sessions={sessions} t={t} isMobile={isMobile} setTab={setTab} severity={severity} ScoreChange={ScoreChange} SparkLine={SparkLine}/>}
 
               {/* Today's recommendations */}
               <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
