@@ -207,7 +207,7 @@ export default function App() {
       }
       setResults({ predictions, phq, gad, age, gender, occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
-    } catch { alert('API error — is FastAPI running?'); setScreen('home'); }
+    } catch(err) { setScreen('results'); setResults({ error: true, message: 'Assessment could not be processed. Please try again.' }); }
   };
 
   const handleGenerateReport = async () => {
@@ -261,21 +261,22 @@ export default function App() {
   // Route guards
   // Check URL for superadmin route
   if (window.location.pathname === '/superadmin' || showSuperAdminAuth) {
-    if (superAdminUser) return <SuperAdmin onLogout={() => { setSuperAdminUser(null); localStorage.removeItem('psycheflow_superadmin'); window.location.href = '/'; }} />;
+    if (superAdminUser) return <SuperAdmin onLogout={() => { setSuperAdminUser(null); localStorage.removeItem('psycheflow_superadmin'); setSuperAdminUser(null); }} />;
     return <SuperAdminAuth onLogin={(u) => { setSuperAdminUser(u); localStorage.setItem('psycheflow_superadmin', JSON.stringify(u)); setShowSuperAdminAuth(false); }} />;
   }
 
-  if (hospitalUser) return <HospitalPortal user={hospitalUser} onLogout={() => { setHospitalUser(null); setShowHospitalLanding(true); localStorage.removeItem('psycheflow_hospital_user'); }} />;
+  if (hospitalUser) return <HospitalPortal user={hospitalUser} onLogout={() => { setHospitalUser(null); localStorage.removeItem('psycheflow_hospital_user'); setShowHospitalLanding(false); setShowLanding(true); }} />;
   if (showHospitalAuth) return <HospitalAuth onBack={() => { setShowHospitalAuth(false); setShowHospitalLanding(true); }} onLogin={(u) => { setHospitalUser(u); setShowHospitalAuth(false); localStorage.setItem('psycheflow_hospital_user', JSON.stringify(u)); }} />;
   if (showHospitalLanding) return <HospitalLanding onBack={() => setShowHospitalLanding(false)} onContact={() => setShowHospitalLanding(false)} onGetStarted={() => { setShowHospitalLanding(false); setShowHospitalAuth(true); }} />;
   if (showPsychLanding) return <PsychologistLanding onBack={() => setShowPsychLanding(false)} onGetStarted={() => { setShowPsychLanding(false); setShowPsychAuth(true); }} />;
-  if (showPsychAuth) return <PsychologistAuth onBack={() => { setShowPsychAuth(false); setShowPsychLanding(true); }} onLogin={(u) => { setShowPsychAuth(false); setUser(u); checkOnboarding(u.id); }} />;
+  if (showPsychAuth) return <PsychologistAuth onBack={() => { setShowPsychAuth(false); setShowPsychLanding(true); }} onLogin={(u) => { setShowPsychAuth(false); setUser(u); checkOnboarding(u.id); setShowPsychLanding(false); }} />;
   if (legalPage === 'privacy') return <Privacy onBack={() => setLegalPage(null)} />;
   if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
   if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
   if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} /> : <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
-  if (user && onboarded === false) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
+  if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
+  if (user && onboarded === false && !isPsychologist) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
   if (isPsychologist) return <PsychologistPortal user={user} profile={profile} onLogout={handleLogout} onPatientMode={() => setIsPsychologist(false)} />;
 
   if (showACT) return (
@@ -301,7 +302,7 @@ export default function App() {
   if (screen === 'home') return (
     <Dashboard user={user} profile={profile}
       onStartAssessment={() => { setAssessMode(null); setScreen('questionnaire'); }}
-      onLogout={handleLogout} onPsychologistMode={() => { useAuthStore.getState().setIsPsychologist(true); }}
+      onLogout={handleLogout} onPsychologistMode={async () => { await import('./supabase').then(({supabase}) => supabase.from('profiles').update({role:'psychologist'}).eq('id',user.id)); setIsPsychologist(true); }}
       onACTEngine={() => setShowACT(true)} onCrisis={() => setShowCrisis(true)} />
   );
 
@@ -368,6 +369,22 @@ export default function App() {
 
   if (screen === 'loading') return (
     <LoadingScreen message="Running 19 psychological models..." />
+  );
+
+  if (screen === 'results' && results?.error) return (
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:'#F8FAFF', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ textAlign:'center', maxWidth:400, padding:24 }}>
+        <div style={{ width:56, height:56, borderRadius:'50%', background:'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#DC2626" strokeWidth="1.5"/><line x1="12" y1="9" x2="12" y2="13" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="17" r="1" fill="#DC2626"/></svg>
+        </div>
+        <div style={{ fontSize:18, fontWeight:700, color:'#0C1A2E', marginBottom:8 }}>Assessment Error</div>
+        <div style={{ fontSize:13, color:'#94a3b8', marginBottom:24 }}>{results.message}</div>
+        <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+          <button onClick={() => { setScreen('questionnaire'); setResults(null); }} style={{ padding:'9px 20px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>Try Again</button>
+          <button onClick={() => setScreen('home')} style={{ padding:'9px 20px', background:'transparent', color:'#1D4ED8', border:'1px solid #1D4ED8', borderRadius:8, fontSize:13, cursor:'pointer' }}>Dashboard</button>
+        </div>
+      </div>
+    </div>
   );
 
   if (screen === 'results' && results) {

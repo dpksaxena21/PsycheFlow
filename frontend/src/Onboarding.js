@@ -38,7 +38,7 @@ const STEPS = [
   },
 ];
 
-export default function Onboarding({ user, onComplete }) {
+export default function Onboarding({ user, onComplete, onLogout }) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState({ display_name:'', concerns:[], urgency:'', goals:[] });
   const [loading, setLoading] = useState(false);

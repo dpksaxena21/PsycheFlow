@@ -4,6 +4,14 @@ import { supabase } from './supabase';
 import Logo from './Logo';
 
 export default function Auth({ onLogin }) {
+  const handleReset = async () => {
+    if (!email) { setError('Enter your email to reset password.'); return; }
+    setLoading(true);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://psycheflow.in' });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setResetSent(true);
+  };
   const isMobile = useIsMobile();
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
