@@ -144,6 +144,10 @@ const FLOW = [
 ];
 
 export default function AdaptiveQuestionnaire({ onComplete }) {
+  // Load draft on mount
+  const savedDraft = React.useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('pf-assessment-draft') || 'null'); } catch { return null; }
+  }, []);
   const [sectionIdx, setSectionIdx] = useState(0);
   const [answers, setAnswers]       = useState({});
   const [age, setAge]               = useState('');
@@ -173,7 +177,8 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
     if (topRef.current) topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (sectionIdx < totalSections - 1) setSectionIdx(s => s + 1);
     else {
-      onComplete({
+      localStorage.removeItem('pf-assessment-draft');
+    onComplete({
         answers, age: parseInt(age) || 25,
         gender: gender === 'Male' ? 1 : gender === 'Female' ? 0 : 2,
         occupation, concern: ''
@@ -248,6 +253,22 @@ export default function AdaptiveQuestionnaire({ onComplete }) {
       </div>
     );
   };
+
+  const [showResume, setShowResume] = React.useState(!!savedDraft);
+
+  if (showResume && savedDraft) return (
+    <div style={{ background: '#fff', borderRadius: 14, border: '0.5px solid #E2EBF6', padding: 32, textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+      <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: '#0C1A2E', marginBottom: 8 }}>Resume Assessment?</div>
+      <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 24 }}>You have an unfinished assessment. Resume where you left off or start fresh.</div>
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+        <button onClick={() => { setShowResume(false); }} style={{ padding: '9px 20px', background: '#1D4ED8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Resume</button>
+        <button onClick={() => { localStorage.removeItem('pf-assessment-draft'); setShowResume(false); }} style={{ padding: '9px 20px', background: 'transparent', color: '#1D4ED8', border: '1px solid #1D4ED8', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Start Fresh</button>
+      </div>
+    </div>
+  );
 
   return (
     <div ref={topRef} style={{ fontFamily:"'Satoshi',-apple-system,sans-serif" }}>

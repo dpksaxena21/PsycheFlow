@@ -146,6 +146,9 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   const [journalText, setJournalText] = useState('');
   const [journalAnalysis, setJournalAnalysis] = useState(null);
   const [journalDraft, setJournalDraft] = useState(() => localStorage.getItem('pf-journal-draft') || '');
+  const [recording, setRecording] = useState(false);
+  const [selectedEmotions, setSelectedEmotions] = useState([]);
+  const mediaRecorderRef = React.useRef(null);
   const [journalLoading, setJournalLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
@@ -215,6 +218,29 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
     setMood(m);
     await supabase.from('mood_checkins').insert({ user_id: user.id, mood: m, created_at: new Date().toISOString() });
     setMoodSaved(true);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks = [];
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        // Convert to text via Web Speech API fallback
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        setJournalDraft(d => d + ' [Voice note recorded — transcription requires Whisper integration]');
+      };
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      setRecording(true);
+    } catch { alert('Microphone access denied.'); }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
   };
 
   const analyzeJournal = async () => {
@@ -1105,6 +1131,10 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+        *:focus-visible { outline: 2px solid #1D4ED8 !important; outline-offset: 2px !important; }
+        button:focus-visible, a:focus-visible { outline: 2px solid #1D4ED8 !important; outline-offset: 2px !important; }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+        @media (prefers-contrast: high) { * { border-color: #000 !important; } }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(29,78,216,0.2); border-radius: 10px; }

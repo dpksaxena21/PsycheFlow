@@ -128,6 +128,7 @@ export default function App() {
   const [showCrisis, setShowCrisis]           = useState(false);
   const [superAdminUser, setSuperAdminUser]   = useState(() => { try { return JSON.parse(localStorage.getItem('psycheflow_superadmin')||'null'); } catch { return null; } });
   const [showSuperAdminAuth, setShowSuperAdminAuth] = useState(false);
+  const [showPricing, setShowPricing] = useState(() => window.location.pathname === '/pricing');
 
 
   // checkOnboarding now handled by Zustand store
@@ -265,6 +266,7 @@ export default function App() {
     return <SuperAdminAuth onLogin={(u) => { setSuperAdminUser(u); localStorage.setItem('psycheflow_superadmin', JSON.stringify(u)); setShowSuperAdminAuth(false); }} />;
   }
 
+  if (showPricing) return <Pricing onBack={() => setShowPricing(false)} onGetStarted={() => { setShowPricing(false); setShowLanding(false); }}/>
   if (hospitalUser) return <HospitalPortal user={hospitalUser} onLogout={() => { setHospitalUser(null); localStorage.removeItem('psycheflow_hospital_user'); setShowHospitalLanding(false); setShowLanding(true); }} />;
   if (showHospitalAuth) return <HospitalAuth onBack={() => { setShowHospitalAuth(false); setShowHospitalLanding(true); }} onLogin={(u) => { setHospitalUser(u); setShowHospitalAuth(false); localStorage.setItem('psycheflow_hospital_user', JSON.stringify(u)); }} />;
   if (showHospitalLanding) return <HospitalLanding onBack={() => setShowHospitalLanding(false)} onContact={() => setShowHospitalLanding(false)} onGetStarted={() => { setShowHospitalLanding(false); setShowHospitalAuth(true); }} />;
@@ -273,7 +275,7 @@ export default function App() {
   if (legalPage === 'privacy') return <Privacy onBack={() => setLegalPage(null)} />;
   if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
   if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
-  if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} /> : <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} />;
+  if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} /> : <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} onPricing={() => setShowPricing(true)}/>;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false && !isPsychologist) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;

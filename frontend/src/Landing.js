@@ -82,7 +82,7 @@ const useIsMobile = () => {
   return mobile;
 };
 
-export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospitalLanding }) {
+export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospitalLanding, onPricing }) {
   const [scrolled, setScrolled] = useState(false);
   const isMobile = useIsMobile();
   const px = isMobile ? '20px' : '48px';
