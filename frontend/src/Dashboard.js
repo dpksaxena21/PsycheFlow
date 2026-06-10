@@ -404,7 +404,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
               )}
               {moodSaved && (
                 <div style={{ background: t.bg2, borderRadius: 12, padding: '12px 16px', marginBottom: 20, border: `0.5px solid ${t.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>✅</span>
+                  <div style={{ width:24, height:24, borderRadius:'50%', background:t.success, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Mood logged — feeling {mood} today</div>
                     <div style={{ fontSize: 11, color: t.text3 }}>Your psychologist can see this</div>
