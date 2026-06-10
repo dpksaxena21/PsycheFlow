@@ -725,10 +725,10 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                     <div style={{ fontSize: 11, fontWeight: 700, color: t.text3, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>Weekly AI Insights</div>
                     <div style={{ display: 'grid', gap: 10 }}>
                       {[
-                        sessions.length > 1 && (sessions[0].phq_score < sessions[sessions.length - 1].phq_score ? '📉 Your depression score has improved by ' + (sessions[sessions.length - 1].phq_score - sessions[0].phq_score) + ' points since you started.' : '📈 Your PHQ-9 trend shows room for improvement. Consider discussing with your therapist.'),
-                        journals.length > 0 && `📓 You've written ${journals.length} journal ${journals.length === 1 ? 'entry' : 'entries'}. Journaling is associated with reduced anxiety and better emotional processing.`,
-                        sessions.length > 0 && `🧠 Your latest assessment was ${Math.floor((Date.now() - new Date(sessions[0].created_at)) / (24 * 60 * 60 * 1000))} days ago. Regular check-ins help track your mental health progress.`,
-                        '💡 AI analysis suggests: consistent sleep, regular exercise, and social connection are the strongest protective factors for mental health.',
+                        sessions.length > 1 && (sessions[0].phq_score < sessions[sessions.length - 1].phq_score ? '↓ Your depression score has improved by ' + (sessions[sessions.length - 1].phq_score - sessions[0].phq_score) + ' points since you started.' : '↑ Your PHQ-9 trend shows room for improvement. Consider discussing with your therapist.'),
+                        journals.length > 0 && `✦ You've written ${journals.length} journal ${journals.length === 1 ? 'entry' : 'entries'}. Journaling is associated with reduced anxiety and better emotional processing.`,
+                        sessions.length > 0 && `◎ Your latest assessment was ${Math.floor((Date.now() - new Date(sessions[0].created_at)) / (24 * 60 * 60 * 1000))} days ago. Regular check-ins help track your mental health progress.`,
+                        '→ AI analysis suggests: consistent sleep, regular exercise, and social connection are the strongest protective factors for mental health.',
                       ].filter(Boolean).map((insight, i) => (
                         <div key={i} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: t.text, lineHeight: 1.6 }}>
                           {insight}
