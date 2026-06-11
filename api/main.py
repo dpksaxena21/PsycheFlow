@@ -165,6 +165,14 @@ def root():
         "environment": _os.getenv("ENVIRONMENT", "production"),
     }
 
+@app.on_event("startup")
+async def startup_event():
+    import asyncio
+    async def _bg():
+        await asyncio.sleep(1)
+        print("PsycheFlow API ready")
+    asyncio.create_task(_bg())
+
 @app.get("/health")
 def health():
     return {"status": "ok", "timestamp": __import__("datetime").datetime.utcnow().isoformat()}
