@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from './supabase';
 import axios from 'axios';
 import { calcWellnessScore, calcRiskLevel, severity, ScoreChange, SparkLine, WellnessRing, AchievementBadge, ClinicalScoreCards } from './DashboardWidgets';
+import MedicationAdherence from './MedicationAdherence';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
 import QuickCreate from './QuickCreate';
@@ -244,11 +245,12 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
   };
 
   const analyzeJournal = async () => {
+    setJournalText(journalDraft);
     if (journalText.trim().length < 20) return;
     setJournalLoading(true);
     try {
       const res = await axios.post(API + '/analyze-journal', { text: journalText });
-      setJournalAnalysis(res.data);
+      setJournalAnalysis(analysis);
       await supabase.from('journal_entries').insert({ user_id: user.id, text: journalText, analysis: res.data });
       setJournalText('');
       fetchAll();
@@ -1071,6 +1073,13 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           )}
 
           {/* ── SHARE CODE ───────────────────────────── */}
+          {tab === 'medications' && (
+            <div>
+              <Breadcrumbs items={[{ label: 'Dashboard', onClick: () => setTab('overview') }, { label: 'Medications' }]} t={t}/>
+              <MedicationAdherence user={user} prescriptions={[]} t={t} isMobile={isMobile}/>
+            </div>
+          )}
+
           {tab === 'share' && (
             <div>
               <h2 style={{ margin: '0 0 20px', color: t.text, fontSize: 20, fontWeight: 700 }}>Share Code</h2>

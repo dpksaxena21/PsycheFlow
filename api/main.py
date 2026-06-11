@@ -1199,3 +1199,147 @@ async def send_sms(request: Request, data: SMSInput):
         return {"success": result.get("type") == "success", "message": result.get("message", ""), "raw": result}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+# ── NLP Journal Intelligence Endpoints ───────────────────
+
+class JournalNLPInput(BaseModel):
+    text: str
+    user_id: str
+    journal_id: str = ""
+    save_to_db: bool = False
+
+class PopulationNLPInput(BaseModel):
+    hospital_id: str
+    texts: list
+
+@app.post("/journal-nlp")
+@limiter.limit("30/minute")
+def journal_nlp_full(request: Request, data: JournalNLPInput):
+    """Full NLP analysis — themes, emotions, cognitive distortions, risk, sentiment"""
+    if len(data.text.strip()) < 20:
+        return {"error": "Please write at least a few sentences."}
+    from journal_analysis import analyze_journal
+    result = analyze_journal(data.text)
+    return {"analysis": result, "user_id": data.user_id, "journal_id": data.journal_id}
+
+@app.post("/journal-population-analytics")
+@limiter.limit("5/minute")
+def journal_population(request: Request, data: PopulationNLPInput):
+    """Aggregate journal themes for hospital population analytics"""
+    from journal_analysis import extract_population_themes
+    result = extract_population_themes(data.texts)
+    return {"hospital_id": data.hospital_id, "analytics": result}
+
+# ── Medication Adherence Endpoints ───────────────────────
+
+class MedLogInput(BaseModel):
+    user_id: str
+    medication_name: str
+    dose: str
+    scheduled_time: str
+    status: str  # taken/skipped/snoozed
+    skip_reason: str = ""
+    side_effects: list = []
+    taken_at: str = ""
+
+class AdherenceQueryInput(BaseModel):
+    user_id: str
+    days: int = 30
+
+@app.post("/medication/log")
+@limiter.limit("60/minute")
+async def log_medication(request: Request, data: MedLogInput):
+    """Log a medication dose event"""
+    import httpx, os
+    from datetime import datetime
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+    record = {
+        "user_id": data.user_id,
+        "medication_name": data.medication_name,
+        "dose": data.dose,
+        "scheduled_time": data.scheduled_time,
+        "status": data.status,
+        "skip_reason": data.skip_reason,
+        "side_effects": data.side_effects,
+        "taken_at": data.taken_at or datetime.utcnow().isoformat(),
+    }
+    async with httpx.AsyncClient() as client:
+        res = await client.post(
+            f"{SUPABASE_URL}/rest/v1/medication_logs",
+            headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"},
+            json=record
+        )
+    return {"success": res.status_code in [200, 201], "status": data.status}
+
+@app.post("/medication/adherence")
+@limiter.limit("30/minute")
+async def get_adherence(request: Request, data: AdherenceQueryInput):
+    """Calculate adherence stats for a patient"""
+    import httpx, os
+    from datetime import datetime, timedelta
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+    since = (datetime.utcnow() - timedelta(days=data.days)).isoformat()
+    async with httpx.AsyncClient() as client:
+        res = await client.get(
+            f"{SUPABASE_URL}/rest/v1/medication_logs?user_id=eq.{data.user_id}&taken_at=gte.{since}&select=*",
+            headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+        )
+    logs = res.json() if res.status_code == 200 else []
+
+    total = len(logs)
+    taken = len([l for l in logs if l['status'] == 'taken'])
+    skipped = len([l for l in logs if l['status'] == 'skipped'])
+    snoozed = len([l for l in logs if l['status'] == 'snoozed'])
+    adherence_pct = round(taken / max(total, 1) * 100, 1)
+
+    # Calculate streak
+    streak = 0
+    if logs:
+        sorted_logs = sorted(logs, key=lambda x: x.get('taken_at',''), reverse=True)
+        for log in sorted_logs:
+            if log['status'] == 'taken':
+                streak += 1
+            else:
+                break
+
+    # Side effects
+    all_side_effects = []
+    for l in logs:
+        all_side_effects.extend(l.get('side_effects', []))
+    side_effect_counts = {}
+    for se in all_side_effects:
+        side_effect_counts[se] = side_effect_counts.get(se, 0) + 1
+
+    # Skip reasons
+    skip_reasons = {}
+    for l in logs:
+        if l.get('skip_reason'):
+            skip_reasons[l['skip_reason']] = skip_reasons.get(l['skip_reason'], 0) + 1
+
+    # Risk: adherence dropping
+    recent_7 = [l for l in logs if l['status']=='taken'][-7:]
+    older_7 = [l for l in logs if l['status']=='taken'][:-7]
+    adherence_trend = 'stable'
+    if len(recent_7) < len(older_7) * 0.7:
+        adherence_trend = 'dropping'
+    elif len(recent_7) > len(older_7) * 1.1:
+        adherence_trend = 'improving'
+
+    return {
+        "user_id": data.user_id,
+        "period_days": data.days,
+        "total_doses": total,
+        "taken": taken,
+        "skipped": skipped,
+        "snoozed": snoozed,
+        "adherence_percentage": adherence_pct,
+        "current_streak": streak,
+        "adherence_trend": adherence_trend,
+        "side_effects": side_effect_counts,
+        "skip_reasons": skip_reasons,
+        "risk_flag": adherence_trend == 'dropping' or adherence_pct < 70,
+        "logs": logs[-30:]
+    }

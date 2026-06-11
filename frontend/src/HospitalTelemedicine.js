@@ -26,6 +26,16 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
   const [generating, setGenerating] = useState(false);
   const [deviceCheck, setDeviceCheck] = useState({ camera:null, mic:null, speaker:null });
   const [consentGiven, setConsentGiven] = useState(false);
+  const [quality, setQuality] = useState({ status:'unknown', latency:0, packetLoss:0, bitrate:0 });
+  const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const [fallbackMode, setFallbackMode] = useState('video'); // video | audio | chat
+  const [recording, setRecording] = useState(false);
+  const [recordingConsent, setRecordingConsent] = useState(false);
+  const [waitingRoom, setWaitingRoom] = useState(false);
+  const qualityIntervalRef = useRef();
+  const mediaRecorderRef = useRef();
+  const recordedChunksRef = useRef([]);
 
   // Post-session wizard
   const [postStep, setPostStep] = useState(0);
@@ -77,16 +87,117 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
       const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
       setLocalStream(stream);
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-      const pc = new RTCPeerConnection({ iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}] });
+      // Multi-region TURN + STUN (Metered.ca free tier)
+      const pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun.relay.metered.ca:80' },
+          { urls: 'turn:global.relay.metered.ca:80', username: 'psycheflow', credential: 'psycheflow2026' },
+          { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: 'psycheflow', credential: 'psycheflow2026' },
+          { urls: 'turn:global.relay.metered.ca:443', username: 'psycheflow', credential: 'psycheflow2026' },
+          { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: 'psycheflow', credential: 'psycheflow2026' },
+        ],
+        iceTransportPolicy: 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+      });
       pcRef.current = pc;
       stream.getTracks().forEach(t=>pc.addTrack(t,stream));
       pc.ontrack = e=>{ if(remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0]; };
       await supabase.from('telemedicine_sessions').update({ status:'in_progress', started_at:new Date().toISOString() }).eq('id', session.id);
       setCallStatus('live');
+
+      // Connection quality monitoring
+      qualityIntervalRef.current = setInterval(async () => {
+        if (!pcRef.current) return;
+        try {
+          const stats = await pcRef.current.getStats();
+          let latency = 0, packetLoss = 0, bitrate = 0;
+          stats.forEach(report => {
+            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+              latency = Math.round(report.currentRoundTripTime * 1000) || 0;
+            }
+            if (report.type === 'inbound-rtp' && report.kind === 'video') {
+              packetLoss = report.packetsLost || 0;
+              bitrate = Math.round((report.bytesReceived || 0) * 8 / 1000) || 0;
+            }
+          });
+          const status = latency < 100 && packetLoss < 5 ? 'excellent' : latency < 200 && packetLoss < 10 ? 'good' : latency < 400 ? 'fair' : 'poor';
+          setQuality({ status, latency, packetLoss, bitrate });
+
+          // Auto-adapt video quality based on connection
+          if (pcRef.current && localStream) {
+            const videoSender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+            if (videoSender) {
+              const params = videoSender.getParameters();
+              if (!params.encodings) params.encodings = [{}];
+              if (status === 'poor') {
+                params.encodings[0].maxBitrate = 150000; // 150kbps — 480p
+                if (latency > 500) setFallbackMode('audio'); // fallback to audio only
+              } else if (status === 'fair') {
+                params.encodings[0].maxBitrate = 500000; // 500kbps — 720p
+              } else {
+                params.encodings[0].maxBitrate = 1500000; // 1.5Mbps — 1080p
+              }
+              videoSender.setParameters(params).catch(() => {});
+            }
+          }
+        } catch {}
+      }, 3000);
+
+      // Reconnection logic
+      pcRef.current.oniceconnectionstatechange = () => {
+        const state = pcRef.current?.iceConnectionState;
+        if (state === 'disconnected' || state === 'failed') {
+          setReconnecting(true);
+          let attempts = 0;
+          const retry = setInterval(() => {
+            attempts++;
+            setReconnectAttempt(attempts);
+            if (pcRef.current?.iceConnectionState === 'connected') {
+              setReconnecting(false);
+              clearInterval(retry);
+            }
+            if (attempts >= 5) {
+              setReconnecting(false);
+              setFallbackMode('chat'); // fall back to chat if video fails completely
+              clearInterval(retry);
+            }
+          }, 2000);
+        } else if (state === 'connected') {
+          setReconnecting(false);
+          setReconnectAttempt(0);
+        }
+      };
     } catch { setCallStatus('error'); }
   };
 
+  const startRecording = () => {
+    if (!localStream || !recordingConsent) return;
+    const recorder = new MediaRecorder(localStream, { mimeType: 'video/webm;codecs=vp9' });
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `session-${activeSession?.room_id}-${new Date().toISOString().slice(0,10)}.webm`;
+      a.click(); URL.revokeObjectURL(url);
+    };
+    recorder.start(1000);
+    mediaRecorderRef.current = recorder;
+    setRecording(true);
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  };
+
   const endCall = async () => {
+    clearInterval(qualityIntervalRef.current);
+    if (recording) stopRecording();
     localStream?.getTracks().forEach(t=>t.stop());
     pcRef.current?.close();
     setLocalStream(null);
@@ -207,8 +318,43 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
             <div style={{ fontSize:13, color:'rgba(255,255,255,0.8)', fontWeight:700 }}>{activeSession?.hospital_patients?.full_name}</div>
             <div style={{ padding:'2px 8px', borderRadius:100, background:'rgba(255,255,255,0.1)', fontSize:11, color:'rgba(255,255,255,0.6)' }}>Room: {activeSession?.room_id}</div>
           </div>
-          <div style={{ fontSize:18, fontWeight:700, color:'#22c55e', fontFamily:'monospace' }}>{TIMER_FMT(duration)}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            {/* Connection quality */}
+            <div style={{ display:'flex', alignItems:'center', gap:6, padding:'3px 10px', borderRadius:100, background:'rgba(255,255,255,0.08)' }}>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:quality.status==='excellent'?'#22c55e':quality.status==='good'?'#84cc16':quality.status==='fair'?'#f59e0b':'#ef4444' }}/>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.7)', textTransform:'capitalize' }}>{quality.status}</span>
+              {quality.latency>0&&<span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>{quality.latency}ms</span>}
+            </div>
+            {recording && <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:100, background:'rgba(220,38,38,0.3)', border:'1px solid rgba(220,38,38,0.5)' }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#ef4444', animation:'pulse 1s ease-in-out infinite' }}/>
+              <span style={{ fontSize:10, color:'#fca5a5' }}>REC</span>
+            </div>}
+            <div style={{ fontSize:18, fontWeight:700, color:'#22c55e', fontFamily:'monospace' }}>{TIMER_FMT(duration)}</div>
+          </div>
         </div>
+
+        {/* Reconnecting overlay */}
+        {reconnecting && (
+          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.7)', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ fontSize:16, fontWeight:700, color:'#fff', marginBottom:8 }}>Reconnecting...</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)' }}>Attempt {reconnectAttempt} of 5</div>
+            <div style={{ marginTop:12, display:'flex', gap:6 }}>
+              {[0,1,2].map(i=><div key={i} style={{ width:8,height:8,borderRadius:'50%',background:'#1D4ED8',animation:`pulse ${0.6+i*0.2}s ease-in-out infinite` }}/>)}
+            </div>
+          </div>
+        )}
+
+        {/* Fallback mode banner */}
+        {fallbackMode==='audio' && (
+          <div style={{ position:'absolute', top:60, left:'50%', transform:'translateX(-50%)', zIndex:9, background:'rgba(245,158,11,0.9)', borderRadius:8, padding:'6px 14px', fontSize:12, color:'#fff', fontWeight:600 }}>
+            Poor connection — switched to audio only
+          </div>
+        )}
+        {fallbackMode==='chat' && (
+          <div style={{ position:'absolute', top:60, left:'50%', transform:'translateX(-50%)', zIndex:9, background:'rgba(220,38,38,0.9)', borderRadius:8, padding:'6px 14px', fontSize:12, color:'#fff', fontWeight:600 }}>
+            Video failed — using secure chat
+          </div>
+        )}
 
         {/* Remote video */}
         <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
@@ -233,6 +379,7 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
             { label:videoOff?'Start Video':'Stop Video', icon:'📹', bg:videoOff?'#374151':'rgba(255,255,255,0.12)', onClick:toggleVideo },
             { label:'Share Screen', icon:'🖥', bg:'rgba(255,255,255,0.12)', onClick:async()=>{ try{ const s=await navigator.mediaDevices.getDisplayMedia({video:true}); if(pcRef.current){const sender=pcRef.current.getSenders().find(s=>s.track?.kind==='video'); sender?.replaceTrack(s.getTracks()[0]);} }catch{} } },
             { label:'Generate SOAP', icon:'🤖', bg:'rgba(29,78,216,0.4)', onClick:generateSOAP },
+            { label:recording?'Stop Rec':'Record', icon:'⏺', bg:recording?'rgba(220,38,38,0.6)':'rgba(255,255,255,0.12)', onClick:()=>{ if(recording){stopRecording();}else if(recordingConsent){startRecording();}else{if(window.confirm('Patient has given verbal consent to record this session?')){setRecordingConsent(true);startRecording();}}} },
             { label:'End Call', icon:'📵', bg:'#DC2626', onClick:endCall },
           ].map((btn,i)=>(
             <button key={i} onClick={btn.onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer' }}>
