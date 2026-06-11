@@ -56,33 +56,33 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
           <div style={{ width:30, height:30, borderRadius:7, background:'linear-gradient(135deg,#1D4ED8,#0891B2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white" opacity="0.9"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
           </div>
-          <span style={{ fontSize:15, fontWeight:700, color:navScrolled?S.navy:'#fff' }}><span style={{ color:navScrolled?S.blue:'#93C5FD' }}>Psyche</span>Flow <span style={{ fontWeight:400, opacity:0.6 }}>for Hospitals</span></span>
+          <span style={{ fontSize:15, fontWeight:700, color:S.navy }}><span style={{ color:navScrolled?S.blue:'#93C5FD' }}>Psyche</span>Flow <span style={{ fontWeight:400, opacity:0.6 }}>for Hospitals</span></span>
         </button>
         {!isMobile && (
           <div style={{ display:'flex', gap:4, flex:1 }}>
             {[['Product Tour','tour'],['Workflow','workflow'],['NABH','nabh'],['Security','security'],['ROI','roi']].map(([label, id]) => (
-              <button key={label} onClick={() => scrollTo(id)} style={{ padding:'6px 12px', background:'none', border:'none', fontSize:13, color:navScrolled?S.muted:'rgba(255,255,255,0.7)', cursor:'pointer', borderRadius:7 }}
+              <button key={label} onClick={() => scrollTo(id)} style={{ padding:'6px 12px', background:'none', border:'none', fontSize:13, color:S.muted, cursor:'pointer', borderRadius:7 }}
                 onMouseEnter={e => e.currentTarget.style.color=navScrolled?S.navy:'#fff'}
                 onMouseLeave={e => e.currentTarget.style.color=navScrolled?S.muted:'rgba(255,255,255,0.7)'}>{label}</button>
             ))}
           </div>
         )}
         <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
-          <button onClick={onBack} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${navScrolled?S.border:'rgba(255,255,255,0.3)'}`, color:navScrolled?S.muted:'rgba(255,255,255,0.9)', borderRadius:8, fontSize:13, cursor:'pointer' }}>← Back</button>
-          <button onClick={onGetStarted} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${navScrolled?S.border:'rgba(255,255,255,0.3)'}`, color:navScrolled?S.muted:'rgba(255,255,255,0.85)', borderRadius:8, fontSize:13, cursor:'pointer', fontWeight:500 }}>Hospital Login</button>
+          <button onClick={onBack} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${S.border}`, color:S.muted, borderRadius:8, fontSize:13, cursor:'pointer' }}>← Back</button>
+          <button onClick={onGetStarted} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${S.border}`, color:navScrolled?S.muted:'rgba(255,255,255,0.85)', borderRadius:8, fontSize:13, cursor:'pointer', fontWeight:500 }}>Hospital Login</button>
           <button onClick={() => scrollTo('demo')} style={{ padding:'8px 18px', background:S.blue, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>Book Demo</button>
         </div>
       </nav>
 
       {/* HERO */}
-      <div style={{ background:`linear-gradient(135deg, ${S.navy} 0%, #1a3a6b 100%)`, minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 60px' }}>
+      <div style={{ background:'#F8FAFF', minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 60px' }}>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:60, alignItems:'center' }}>
           <div>
-            <h1 style={{ fontSize:isMobile?32:50, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
+            <h1 style={{ fontSize:isMobile?32:50, fontWeight:700, color:'#0C1A2E', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
               Reduce Intake Time<br/>
-              <span style={{ color:'#6EE7B7' }}>by 40%.</span>
+              <span style={{ color:'#059669' }}>by 40%.</span>
             </h1>
-            <p style={{ fontSize:17, color:'rgba(255,255,255,0.65)', lineHeight:1.7, marginBottom:32, maxWidth:460 }}>
+            <p style={{ fontSize:17, color:'#3B5998', lineHeight:1.7, marginBottom:32, maxWidth:460 }}>
               Automate mental health assessments, clinical documentation, crisis monitoring, and NABH reporting. One platform for your entire psychiatry department.
             </p>
             <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:40 }}>
@@ -92,18 +92,18 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:16 }}>
               {[['40%','Reduction in intake time'],['60%','Less documentation effort'],['14','Clinical assessments'],['100%','Audit trail coverage']].map(([val, label]) => (
                 <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:10, padding:'14px 16px', border:'1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ fontSize:24, fontWeight:700, color:'#6EE7B7' }}>{val}</div>
-                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', marginTop:3 }}>{label}</div>
+                  <div style={{ fontSize:24, fontWeight:700, color:'#059669' }}>{val}</div>
+                  <div style={{ fontSize:11, color:'#94a3b8', marginTop:3 }}>{label}</div>
                 </div>
               ))}
             </div>
           </div>
           {!isMobile && (
-            <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:20, border:'1px solid rgba(255,255,255,0.08)', padding:20 }}>
+            <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2EBF6', padding:20, boxShadow:'0 20px 60px rgba(12,26,46,0.12)' }}>
               <div style={{ display:'flex', gap:6, marginBottom:14 }}>
                 {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{ width:9,height:9,borderRadius:'50%',background:c }}/>)}
               </div>
-              <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Hospital Command Center — Apollo Hospital, Ghaziabad</div>
+              <div style={{ fontSize:9, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>Hospital Command Center — Apollo Hospital, Ghaziabad</div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:14 }}>
                 {[['24','OPD','#93C5FD'],['8','IPD','#A5B4FC'],['₹1.2L','Revenue','#6EE7B7'],['2','Alerts','#FCA5A5']].map(([val,label,color])=>(
                   <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:8, padding:'10px 8px', textAlign:'center' }}>
@@ -113,12 +113,12 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
                 ))}
               </div>
               <div style={{ background:'rgba(220,38,38,0.15)', borderRadius:10, padding:'10px 12px', border:'1px solid rgba(220,38,38,0.3)', marginBottom:10 }}>
-                <div style={{ fontSize:10, color:'#FCA5A5', fontWeight:700, marginBottom:4 }}>CRISIS ALERT</div>
-                <div style={{ fontSize:12, color:'rgba(255,255,255,0.7)' }}>Patient BED-04 · PHQ-9 crossed 20 · Psychologist notified</div>
+                <div style={{ fontSize:10, color:'#DC2626', fontWeight:700, marginBottom:4 }}>CRISIS ALERT</div>
+                <div style={{ fontSize:12, color:'#374151' }}>Patient BED-04 · PHQ-9 crossed 20 · Psychologist notified</div>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                 {['OPD Queue','Lab Kanban','Pharmacy','Billing RCM'].map(m=>(
-                  <div key={m} style={{ background:'rgba(255,255,255,0.04)', borderRadius:8, padding:'8px 10px', fontSize:11, color:'rgba(255,255,255,0.5)', border:'1px solid rgba(255,255,255,0.06)' }}>{m}</div>
+                  <div key={m} style={{ background:'#F8FAFF', borderRadius:8, padding:'8px 10px', fontSize:11, color:'#3B5998', border:'1px solid #E2EBF6' }}>{m}</div>
                 ))}
               </div>
             </div>
@@ -199,12 +199,12 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
             </div>
             <div style={{ display:'grid', gap:0 }}>
               {[
-                { n:'01', title:'Patient Enters Hospital', desc:'Receptionist registers patient. Assessment link sent via SMS automatically.', color:'#93C5FD' },
-                { n:'02', title:'Digital Assessment Completed', desc:'Patient completes PHQ-9, GAD-7 on mobile. Takes 12 minutes. No paper.', color:'#6EE7B7' },
+                { n:'01', title:'Patient Enters Hospital', desc:'Receptionist registers patient. Assessment link sent via SMS automatically.', color:'#1D4ED8' },
+                { n:'02', title:'Digital Assessment Completed', desc:'Patient completes PHQ-9, GAD-7 on mobile. Takes 12 minutes. No paper.', color:'#059669' },
                 { n:'03', title:'Risk Scored Automatically', desc:'AI assigns risk level (Low/Moderate/High/Critical). PHQ spike triggers immediate alert.', color:'#FCD34D' },
-                { n:'04', title:'Psychiatrist Receives Summary', desc:'Pre-session brief ready: latest scores, mood trends, risk flags, journal themes.', color:'#A5B4FC' },
+                { n:'04', title:'Psychiatrist Receives Summary', desc:'Pre-session brief ready: latest scores, mood trends, risk flags, journal themes.', color:'#7C3AED' },
                 { n:'05', title:'Consultation + SOAP Generated', desc:'Doctor conducts session. AI generates SOAP notes. Prescription recorded digitally.', color:'#F9A8D4' },
-                { n:'06', title:'Progress Tracked Automatically', desc:'PHQ-9 trajectory updated. Outcome analytics refreshed. NABH indicators recorded.', color:'#6EE7B7' },
+                { n:'06', title:'Progress Tracked Automatically', desc:'PHQ-9 trajectory updated. Outcome analytics refreshed. NABH indicators recorded.', color:'#059669' },
               ].map((step, i) => (
                 <div key={i} style={{ display:'flex', gap:20, paddingBottom:24, position:'relative' }}>
                   {i < 5 && <div style={{ position:'absolute', left:19, top:40, bottom:0, width:2, background:'rgba(255,255,255,0.08)' }}/>}
@@ -254,7 +254,7 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
             </div>
             <div style={{ background:`linear-gradient(135deg,${S.navy},#1a3a6b)`, borderRadius:16, padding:28, textAlign:'center' }}>
               <div style={{ fontSize:14, color:'rgba(255,255,255,0.5)', marginBottom:8 }}>For a hospital with 100 psychiatry patients/day</div>
-              <div style={{ fontSize:32, fontWeight:700, color:'#6EE7B7', marginBottom:4 }}>800 minutes saved daily</div>
+              <div style={{ fontSize:32, fontWeight:700, color:'#059669', marginBottom:4 }}>800 minutes saved daily</div>
               <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)' }}>= 13.3 staff hours = ₹8,000+ value per day</div>
             </div>
           </div>

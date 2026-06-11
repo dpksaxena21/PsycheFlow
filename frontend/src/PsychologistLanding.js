@@ -66,13 +66,13 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
       </nav>
 
       {/* HERO */}
-      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 60px', background:`linear-gradient(135deg, #0C1A2E 0%, #1a3a6b 50%, #0d2847 100%)`, position:'relative' }}>
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 60px', background:'#0C1A2E', position:'relative' }}>
         <div style={{ position:'absolute', top:'15%', right:'8%', width:300, height:300, borderRadius:'50%', background:'rgba(124,58,237,0.08)', filter:'blur(50px)', pointerEvents:'none' }}/>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:60, alignItems:'center' }}>
           <div>
             <h1 style={{ fontSize:isMobile?34:52, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
               Less paperwork.<br/>
-              <span style={{ color:'#A5B4FC' }}>More time with patients.</span>
+              <span style={{ color:'#93c5fd' }}>More time with patients.</span>
             </h1>
             <p style={{ fontSize:17, color:'rgba(255,255,255,0.6)', lineHeight:1.7, marginBottom:32, maxWidth:460 }}>
               AI-powered clinical tools that handle documentation, risk monitoring, and session preparation — so you focus on what matters: helping patients.
@@ -83,8 +83,8 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
               {[['7.5 hrs','Saved per week'],['14','Assessments'],['14-day','Free trial']].map(([val,label]) => (
-                <div key={label} style={{ textAlign:'center', background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'12px', border:'1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize:20, fontWeight:700, color:'#A5B4FC', marginBottom:2 }}>{val}</div>
+                <div key={label} style={{ textAlign:'center', background:'rgba(255,255,255,0.03)', borderRadius:8, padding:'12px', border:'1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize:20, fontWeight:700, color:'#93c5fd', marginBottom:2 }}>{val}</div>
                   <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{label}</div>
                 </div>
               ))}
@@ -166,12 +166,12 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
         <div id="features" style={{ padding:'80px 40px', background:'#0C1A2E' }}>
           <div style={{ maxWidth:1100, margin:'0 auto' }}>
             <div style={{ textAlign:'center', marginBottom:48 }}>
-              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:'rgba(124,58,237,0.15)', color:'#A5B4FC', fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:14 }}>Features</div>
+              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:100, background:'rgba(124,58,237,0.15)', color:'#93c5fd', fontSize:12, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:14 }}>Features</div>
               <h2 style={{ fontSize:isMobile?26:36, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', margin:0 }}>Everything a modern psychologist needs</h2>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:16 }}>
               {[
-                { title:'Walk Into Every Session Prepared', desc:'AI generates a pre-session brief: latest scores, mood trends, risk flags, and journal themes — before you even open the door.', color:'#A5B4FC', items:['Latest PHQ-9 & GAD-7 scores','Mood trend over 2 weeks','Key journal themes','Risk level & change since last session'] },
+                { title:'Walk Into Every Session Prepared', desc:'AI generates a pre-session brief: latest scores, mood trends, risk flags, and journal themes — before you even open the door.', color:'#93c5fd', items:['Latest PHQ-9 & GAD-7 scores','Mood trend over 2 weeks','Key journal themes','Risk level & change since last session'] },
                 { title:'Finish Documentation in Seconds', desc:'AI generates SOAP, DAP, or BIRP notes during your session. Edit and save — no more 2-hour evenings on paperwork.', color:'#6EE7B7', items:['SOAP / DAP / BIRP templates','AI-generated drafts','Auto-save every 2 seconds','One-click finalize'] },
                 { title:'Know Which Patients Need You Most', desc:'AI priority queue flags patients with rising PHQ-9, missed sessions, and declining journal sentiment — before they reach crisis.', color:'#FCD34D', items:['Risk level tracking','PHQ trajectory alerts','Session attendance tracking','Journal sentiment analysis'] },
                 { title:'Full Patient Timeline', desc:'See every assessment, journal entry, mood log, and session note in chronological order — a complete picture of every patient.', color:'#F9A8D4', items:['All assessments in one view','Journal entries with AI analysis','Mood & sleep trends','Session history'] },
@@ -207,7 +207,7 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
             <div style={{ display:'grid', gap:0 }}>
               {[
                 { n:'01', title:'Patient Completes Assessment', desc:'Send a link. Patient completes PHQ-9, GAD-7, mood check-in, and journal entry from their phone.', color:'#93C5FD' },
-                { n:'02', title:'Review AI Pre-Session Brief', desc:'Before the session: AI brief shows latest scores, risk flags, journal themes, and suggested focus areas.', color:'#A5B4FC' },
+                { n:'02', title:'Review AI Pre-Session Brief', desc:'Before the session: AI brief shows latest scores, risk flags, journal themes, and suggested focus areas.', color:'#93c5fd' },
                 { n:'03', title:'Conduct Session in Workspace', desc:'Split-screen workspace: patient summary left, your notes center, AI copilot right. Everything visible.', color:'#6EE7B7' },
                 { n:'04', title:'AI Generates SOAP Note', desc:'Session ends. SOAP note is auto-drafted. Edit in 2 minutes. Saved automatically.', color:'#FCD34D' },
                 { n:'05', title:'Assign Homework & Follow-up', desc:'Assign ACT exercises, journaling prompts, or custom tasks. Track completion before next session.', color:'#F9A8D4' },
@@ -241,7 +241,7 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
                   <tr style={{ background:'rgba(29,78,216,0.15)' }}>
                     <th style={{ padding:'14px 20px', fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.5)', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>Feature</th>
                     <th style={{ padding:'14px 16px', fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.5)', textAlign:'center', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>Traditional</th>
-                    <th style={{ padding:'14px 16px', fontSize:12, fontWeight:700, color:'#A5B4FC', textAlign:'center', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>PsycheFlow</th>
+                    <th style={{ padding:'14px 16px', fontSize:12, fontWeight:700, color:'#93c5fd', textAlign:'center', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>PsycheFlow</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,7 +288,7 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
             <h2 style={{ fontSize:isMobile?26:34, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', margin:'0 0 12px' }}>Simple pricing for psychologists</h2>
             <p style={{ fontSize:15, color:'rgba(255,255,255,0.4)', marginBottom:40 }}>Start free for 14 days. No credit card required.</p>
             <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:20, padding:32, border:'1px solid rgba(255,255,255,0.08)', marginBottom:20 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:'#A5B4FC', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Psychologist Plan</div>
+              <div style={{ fontSize:13, fontWeight:700, color:'#93c5fd', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Psychologist Plan</div>
               <div style={{ fontSize:40, fontWeight:700, color:'#fff', marginBottom:4 }}>₹999<span style={{ fontSize:16, fontWeight:400, color:'rgba(255,255,255,0.4)' }}>/month</span></div>
               <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', marginBottom:24 }}>₹9,999/year (save 17%)</div>
               {['Everything in Free plan','Up to 30 patients','AI Clinical Copilot','Session Workspace (SOAP/DAP/BIRP)','Treatment planning','Crisis alerts & timeline','Journal intelligence','Practice analytics','14-day free trial'].map(feature => (
