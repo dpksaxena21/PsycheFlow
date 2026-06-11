@@ -151,7 +151,7 @@ export default function HospitalPortal({ user, onLogout }) {
       supabase.from('opd_queue').select('*').eq('hospital_id', hosp.id).gte('created_at', today).order('created_at', { ascending:true }),
       supabase.from('bed_tracking').select('*').eq('hospital_id', hosp.id).eq('status','pending').order('flagged_at', { ascending:false }),
       supabase.from('referrals').select('*').eq('hospital_id', hosp.id).order('created_at', { ascending:false }),
-      supabase.from('hospital_staff').select('*, profiles(display_name, email)').eq('hospital_id', hosp.id),
+      supabase.from('hospital_staff').select('*').eq('hospital_id', hosp.id),
     ]);
     setQueue(q||[]);
     setBeds(b||[]);
