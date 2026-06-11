@@ -420,7 +420,12 @@ export default function AssessmentResults({ results, fullReport, reportLoading, 
               { label:'Journal Prompt', value: results.phq>=10 ? '"What\'s one small thing that brought me joy today?"' : '"What am I afraid will happen, and how likely is it?"', icon:'📝', color:S.warning },
             ].map(rec => (
               <div key={rec.label} style={{ display:'flex', gap:12, padding:'14px', background:S.bg, borderRadius:10 }}>
-                <div style={{ fontSize:20, flexShrink:0 }}>{rec.icon}</div>
+                <div style={{ width:32, height:32, borderRadius:8, background:rec.color+'15', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  {rec.icon==='target' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={rec.color} strokeWidth="1.5"/><circle cx="12" cy="12" r="6" stroke={rec.color} strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill={rec.color}/></svg>}
+                  {rec.icon==='brain' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke={rec.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  {rec.icon==='calendar' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke={rec.color} strokeWidth="1.5"/><path d="M3 10h18M8 2v4M16 2v4" stroke={rec.color} strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                  {rec.icon==='journal' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke={rec.color} strokeWidth="1.5" strokeLinecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke={rec.color} strokeWidth="1.5"/><path d="M8 7h8M8 11h5" stroke={rec.color} strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                </div>
                 <div>
                   <div style={{ fontSize:11, fontWeight:700, color:rec.color, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:3 }}>{rec.label}</div>
                   <div style={{ fontSize:13, color:S.navy }}>{rec.value}</div>
