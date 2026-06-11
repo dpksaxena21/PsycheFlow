@@ -28,6 +28,7 @@ import DPDP from './DPDP';
 import Pricing from './Pricing';
 
 import { IconJournal, IconAnalyze, IconAlert, IconCheck, IconWarning } from './icons';
+import AssessmentResults from './AssessmentResults';
 import LoadingScreen from './LoadingScreen';
 import { API_URL as API } from './config';
 
@@ -392,72 +393,15 @@ export default function App() {
   );
 
   if (screen === 'results' && results) {
-    const phq = phqLevel(results.phq);
-    const gad = gadLevel(results.gad);
-    return (
-      <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:'#f1f5f9', minHeight:'100vh', padding:32 }}>
-        <div style={{ maxWidth:680, margin:'0 auto' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-            <h2 style={{ color:'#1D4ED8', margin:0 }}>Your Psychological Report</h2>
-            <div>
-              <button onClick={() => setScreen('home')} style={{ padding:'8px 16px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:13, marginRight:8 }}>Dashboard</button>
-              <button onClick={() => { setScreen('questionnaire'); setResults(null); setFullReport(null); setAssessMode(null); }} style={{ padding:'8px 16px', background:'#fff', color:'#1D4ED8', border:'1px solid #1D4ED8', borderRadius:8, cursor:'pointer', fontSize:13 }}>Retake</button>
-            </div>
-          </div>
-          <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Mental Health Screening</h3>
-            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:12 }}>
-              {[{label:'Depression (PHQ-9)',score:results.phq,level:phq},{label:'Anxiety (GAD-7)',score:results.gad,level:gad}].map((item,i)=>(
-                <div key={i} style={{ background:'#f8fafc', borderRadius:12, padding:16, textAlign:'center' }}>
-                  <div style={{ fontSize:12, color:'#64748b', marginBottom:4 }}>{item.label}</div>
-                  <div style={{ fontSize:28, fontWeight:'bold', color:item.level.color }}>{item.score}</div>
-                  <div style={{ fontSize:12, color:item.level.color, fontWeight:'bold' }}>{item.level.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {(results.bipolar>0||results.ptsd>0||results.ocd>0||results.adhd>0||results.burnout>0) && (
-            <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-              <h3 style={{ margin:'0 0 16px', color:'#1e293b' }}>Additional Screening Results</h3>
-              <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap:10 }}>
-                {[{label:'Bipolar (MDQ)',score:results.bipolar,max:20},{label:'PTSD (PCL-5)',score:results.ptsd,max:20},{label:'OCD (OCI-R)',score:results.ocd,max:20},{label:'ADHD (ASRS)',score:results.adhd,max:20},{label:'Burnout (MBI)',score:results.burnout,max:20},{label:'Self-Esteem',score:results.selfEsteem,max:12}].filter(item=>item.score>0).map((item,i)=>{
-                  const lv=scoreLevel(item.score,item.max);
-                  return (<div key={i} style={{ background:'#f8fafc', borderRadius:10, padding:12, textAlign:'center' }}><div style={{ fontSize:11, color:'#64748b', marginBottom:4 }}>{item.label}</div><div style={{ fontSize:22, fontWeight:'bold', color:lv.color }}>{item.score}</div><div style={{ fontSize:11, color:lv.color, fontWeight:'bold' }}>{lv.label}</div></div>);
-                })}
-              </div>
-            </div>
-          )}
-          <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#1D4ED8' }}>Personality — Big Five (OCEAN)</h3>
-            {bigFive.map(t=>(<TraitBar key={t} name={t} data={results.predictions[t]} colorFn={(l)=>colorMap[l]} />))}
-          </div>
-          <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 16px', color:'#dc2626' }}>Dark Triad Assessment</h3>
-            <p style={{ fontSize:12, color:'#94a3b8', marginTop:0, marginBottom:16 }}>For self-awareness only. High scores indicate tendencies, not disorders.</p>
-            {darkTriad.map(t=>(<TraitBar key={t} name={t} data={results.predictions[t]} colorFn={(l)=>dtColor[l]} />))}
-          </div>
-          <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #e2e8f0', marginBottom:20 }}>
-            <h3 style={{ margin:'0 0 8px', color:'#1D4ED8' }}>Full Psychological Report</h3>
-            <p style={{ fontSize:13, color:'#94a3b8', marginTop:0, marginBottom:16 }}>A comprehensive 2000+ word psychological profile written by our AI psychologist.</p>
-            {!fullReport ? (
-              <button onClick={handleGenerateReport} disabled={reportLoading} style={{ padding:'12px 32px', background:'#1D4ED8', color:'#fff', border:'none', borderRadius:10, cursor:'pointer', fontSize:15, fontWeight:'bold', boxShadow:'0 4px 20px rgba(29,78,216,0.15)' }}>
-                {reportLoading ? 'Generating your report (~1 min)...' : 'Generate My Full Report'}
-              </button>
-            ) : (
-              <div>
-                {Object.entries(fullReport.sections).map(([title,content])=>(content&&(
-                  <div key={title} style={{ marginBottom:24 }}>
-                    <h4 style={{ color:'#1D4ED8', fontSize:13, fontWeight:'bold', textTransform:'uppercase', letterSpacing:'0.5px', borderBottom:'2px solid #EFF6FF', paddingBottom:8, marginBottom:12 }}>{title}</h4>
-                    <p style={{ fontSize:14, color:'#374151', lineHeight:1.8, margin:0, whiteSpace:'pre-wrap' }}>{content}</p>
-                  </div>
-                )))}
-                <div style={{ background:'#f8fafc', borderRadius:8, padding:12, fontSize:12, color:'#94a3b8', marginTop:16 }}>{fullReport.word_count} words · Generated by PsycheFlow AI</div>
-              </div>
-            )}
-          </div>
-          <JournalSection userId={user.id} />
-        </div>
-      </div>
-    );
+    return <AssessmentResults
+      results={results}
+      fullReport={fullReport}
+      reportLoading={reportLoading}
+      onDashboard={() => setScreen('home')}
+      onRetake={() => { setScreen('questionnaire'); setResults(null); setFullReport(null); setAssessMode(null); }}
+      onGenerateReport={handleGenerateReport}
+      user={user}
+      isMobile={isMobile}
+    />;
   }
 }
