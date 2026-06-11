@@ -141,8 +141,9 @@ export default function HospitalPortal({ user, onLogout }) {
         } catch(e) { console.log('Session restore failed', e); }
       }
     }
-    const { data: hosp } = await supabase.from('hospitals').select('*').eq('admin_id', user.id).single();
-    if (!hosp) { setLoading(false); return; }
+    const { data: hosp, error: hospErr } = await supabase.from('hospitals').select('*').eq('admin_id', user.id).single();
+    console.log('Hospital query result:', hosp, 'Error:', hospErr, 'user.id:', user.id);
+    if (!hosp) { console.log('No hospital found for user:', user.id, hospErr); setLoading(false); return; }
     setHospital(hosp);
 
     const today = new Date().toISOString().split('T')[0];
