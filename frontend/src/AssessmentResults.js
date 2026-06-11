@@ -414,10 +414,10 @@ export default function AssessmentResults({ results, fullReport, reportLoading, 
           <div style={{ fontSize:16, fontWeight:700, color:S.navy, marginBottom:20 }}>Your next steps</div>
           <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(2,1fr)', gap:12 }}>
             {[
-              { label:'Focus Area', value: results.phq>=results.gad ? 'Depression & Mood' : 'Anxiety Management', icon:'🎯', color:S.blue },
-              { label:'Recommended Therapy', value: results.phq>=15||results.gad>=15 ? 'CBT + Professional Consultation' : results.burnout>=12 ? 'Mindfulness-Based Stress Reduction' : 'ACT (Acceptance & Commitment)', icon:'🧠', color:S.purple },
-              { label:'Daily Practice', value: results.gad>=10 ? 'Box breathing 4-4-4-4 twice daily' : 'Mindful journaling + mood logging', icon:'📅', color:S.success },
-              { label:'Journal Prompt', value: results.phq>=10 ? '"What\'s one small thing that brought me joy today?"' : '"What am I afraid will happen, and how likely is it?"', icon:'📝', color:S.warning },
+              { label:'Focus Area', value: results.phq>=results.gad ? 'Depression & Mood' : 'Anxiety Management', icon:'target', color:S.blue },
+              { label:'Recommended Therapy', value: results.phq>=15||results.gad>=15 ? 'CBT + Professional Consultation' : results.burnout>=12 ? 'Mindfulness-Based Stress Reduction' : 'ACT (Acceptance & Commitment)', icon:'brain', color:S.purple },
+              { label:'Daily Practice', value: results.gad>=10 ? 'Box breathing 4-4-4-4 twice daily' : 'Mindful journaling + mood logging', icon:'calendar', color:S.success },
+              { label:'Journal Prompt', value: results.phq>=10 ? '"What\'s one small thing that brought me joy today?"' : '"What am I afraid will happen, and how likely is it?"', icon:'journal', color:S.warning },
             ].map(rec => (
               <div key={rec.label} style={{ display:'flex', gap:12, padding:'14px', background:S.bg, borderRadius:10 }}>
                 <div style={{ width:32, height:32, borderRadius:8, background:rec.color+'15', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>

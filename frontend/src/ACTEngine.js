@@ -7,11 +7,11 @@ import { API_URL as API } from './config';
 
 const processInfo = {
   defusion:         { icon:'brain', label:'Cognitive Defusion',    color:'#6366f1', desc:'See thoughts as thoughts, not facts' },
-  acceptance:       { icon:'🌊', label:'Acceptance',             color:'#0ea5e9', desc:'Make room for difficult feelings' },
+  acceptance:       { icon:'wave', label:'Acceptance',             color:'#0ea5e9', desc:'Make room for difficult feelings' },
   present_moment:   { icon:'target', label:'Present Moment',         color:'#10b981', desc:'Anchor yourself in the now' },
   values:           { icon:'star', label:'Values',                  color:'#f59e0b', desc:'Clarify what truly matters' },
-  committed_action: { icon:'🚀', label:'Committed Action',       color:'#ef4444', desc:'Act on what matters despite obstacles' },
-  self_as_context:  { icon:'👁️', label:'Self as Context',        color:'#8b5cf6', desc:'Connect with your observer self' },
+  committed_action: { icon:'rocket', label:'Committed Action',       color:'#ef4444', desc:'Act on what matters despite obstacles' },
+  self_as_context:  { icon:'eye', label:'Self as Context',        color:'#8b5cf6', desc:'Connect with your observer self' },
 };
 
 const AAQ_QUESTIONS = [

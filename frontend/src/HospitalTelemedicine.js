@@ -617,16 +617,26 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
         <div style={{ padding:'14px 20px', background:'rgba(0,0,0,0.5)', display:'flex', justifyContent:'center', gap:14, flexShrink:0 }}>
           {[
             { label:muted?'Unmute':'Mute', icon:muted?'🎤':'🎤', bg:muted?'#374151':'rgba(255,255,255,0.12)', onClick:toggleMute },
-            { label:videoOff?'Start Video':'Stop Video', icon:'📹', bg:videoOff?'#374151':'rgba(255,255,255,0.12)', onClick:toggleVideo },
-            { label:'Share Screen', icon:'🖥', bg:'rgba(255,255,255,0.12)', onClick:async()=>{ try{ const s=await navigator.mediaDevices.getDisplayMedia({video:true}); if(pcRef.current){const sender=pcRef.current.getSenders().find(s=>s.track?.kind==='video'); sender?.replaceTrack(s.getTracks()[0]);} }catch{} } },
-            { label:'Generate SOAP', icon:null, label2:'AI SOAP', bg:'rgba(29,78,216,0.4)', onClick:generateSOAP },
-            { label:recording?'Stop Rec':'Record', icon:null, label2:recording?'Stop':'Record', bg:recording?'rgba(220,38,38,0.6)':'rgba(255,255,255,0.12)', onClick:()=>{ if(recording){stopRecording();}else if(recordingConsent){startRecording();}else{if(window.confirm('Patient has given verbal consent to record this session?')){setRecordingConsent(true);startRecording();}}} },
-            { label:'Background', icon:null, label2:'BG', bg:virtualBg!=='none'?'rgba(124,58,237,0.4)':'rgba(255,255,255,0.12)', onClick:()=>setShowBgSettings(b=>!b) },
-            { label:'Audio', icon:null, label2:'Audio', bg:noiseSuppressionEnabled?'rgba(5,150,105,0.4)':'rgba(255,255,255,0.12)', onClick:()=>setShowAudioSettings(a=>!a) },
-            { label:'End Call', icon:'📵', bg:'#DC2626', onClick:endCall },
+            { label:videoOff?'Start Video':'Stop Video', icon:'video', bg:videoOff?'#374151':'rgba(255,255,255,0.12)', onClick:toggleVideo },
+            { label:'Share Screen', icon:'screen', bg:'rgba(255,255,255,0.12)', onClick:async()=>{ try{ const s=await navigator.mediaDevices.getDisplayMedia({video:true}); if(pcRef.current){const sender=pcRef.current.getSenders().find(s=>s.track?.kind==='video'); sender?.replaceTrack(s.getTracks()[0]);} }catch{} } },
+            { label:'Generate SOAP', icon:null, label2:'AI SOAP', bg:'rgba(29,78,216,0.4)', icon:'generate', onClick:generateSOAP },
+            { label:recording?'Stop Rec':'Record', icon:null, label2:recording?'Stop':'Record', bg:recording?'rgba(220,38,38,0.6)':'rgba(255,255,255,0.12)', icon:'record', onClick:()=>{ if(recording){stopRecording();}else if(recordingConsent){startRecording();}else{if(window.confirm('Patient has given verbal consent to record this session?')){setRecordingConsent(true);startRecording();}}} },
+            { label:'Background', icon:null, label2:'BG', bg:virtualBg!=='none'?'rgba(124,58,237,0.4)':'rgba(255,255,255,0.12)', icon:'bg', onClick:()=>setShowBgSettings(b=>!b) },
+            { label:'Audio', icon:null, label2:'Audio', bg:noiseSuppressionEnabled?'rgba(5,150,105,0.4)':'rgba(255,255,255,0.12)', icon:'audio', onClick:()=>setShowAudioSettings(a=>!a) },
+            { label:'End Call', icon:'endcall', bg:'#DC2626', onClick:endCall },
           ].map((btn,i)=>(
             <button key={i} onClick={btn.onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer' }}>
-              <div style={{ width:46, height:46, borderRadius:'50%', background:btn.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{btn.icon}</div>
+              <div style={{ width:46, height:46, borderRadius:'50%', background:btn.bg, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                {btn.icon==='mic'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" stroke="#fff" strokeWidth="1.5"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {btn.icon==='video'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M23 7l-7 5 7 5V7z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="1" y="5" width="15" height="14" rx="2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                {btn.icon==='screen'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="#fff" strokeWidth="1.5"/><path d="M8 21h8M12 17v4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {btn.icon==='endcall'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 12a19.79 19.79 0 01-3.07-8.67 2 2 0 012-2.18h3A2 2 0 017.09 3a12.36 12.36 0 00.57 2.57 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.36 12.36 0 002.57.57A2 2 0 0122 16.92z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {btn.icon==='generate'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="#fff" strokeWidth="1.5"/><path d="M9 11V7a3 3 0 016 0v4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {btn.icon==='record'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#fff" strokeWidth="1.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>}
+                {btn.icon==='bg'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#fff" strokeWidth="1.5"/><circle cx="12" cy="10" r="3" stroke="#fff" strokeWidth="1.5"/><path d="M2 20c2-4 4-6 10-6s8 2 10 6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {btn.icon==='audio'&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H2v6h4l5 4V5z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {!['mic','video','screen','endcall','generate','record','bg','audio'].includes(btn.icon) && <span style={{ fontSize:11, color:'#fff', fontWeight:600 }}>{btn.label?.slice(0,4)}</span>}
+              </div>
               <span style={{ fontSize:9, color:'rgba(255,255,255,0.5)' }}>{btn.label}</span>
             </button>
           ))}

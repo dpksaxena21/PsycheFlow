@@ -1930,7 +1930,7 @@ export default function HospitalPortal({ user, onLogout }) {
               {[
                 { label:'OPD Waiting', value:waiting, sub:`${queue.filter(q=>q.status==='in_consultation').length} in consultation`, color:S.blue, action:'queue', icon:'hospital' },
                 { label:'Registered Patients', value:patients.length, sub:'Total in registry', color:S.cyan, action:'patients', icon:'patients' },
-                { label:'IPD Admitted', value:ipdList.filter(i=>i.status==='admitted').length, sub:`${ipdList.filter(i=>i.status==='discharged').length} discharged today`, color:'#7C3AED', action:'ipd', icon:'🛏' },
+                { label:'IPD Admitted', value:ipdList.filter(i=>i.status==='admitted').length, sub:`${ipdList.filter(i=>i.status==='discharged').length} discharged today`, color:'#7C3AED', action:'ipd', icon:'bed' },
                 { label:'Crisis Flags', value:crisis + beds.filter(b=>b.urgency==='crisis').length, sub:'Needs immediate review', color:crisis>0?S.danger:S.success, action:'beds', icon:'crisis' },
               ].map((s,i)=>(
                 <div key={i} onClick={()=>setTab(s.action)} style={{ ...card, cursor:'pointer', borderLeft:`3px solid ${s.color}`, padding:'16px 20px' }}
