@@ -69,6 +69,7 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
         )}
         <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
           <button onClick={onBack} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${navScrolled?S.border:'rgba(255,255,255,0.3)'}`, color:navScrolled?S.muted:'rgba(255,255,255,0.9)', borderRadius:8, fontSize:13, cursor:'pointer' }}>← Back</button>
+          <button onClick={onGetStarted} style={{ padding:'7px 14px', background:'transparent', border:`1px solid ${navScrolled?S.border:'rgba(255,255,255,0.3)'}`, color:navScrolled?S.muted:'rgba(255,255,255,0.85)', borderRadius:8, fontSize:13, cursor:'pointer', fontWeight:500 }}>Hospital Login</button>
           <button onClick={() => scrollTo('demo')} style={{ padding:'8px 18px', background:S.blue, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>Book Demo</button>
         </div>
       </nav>
