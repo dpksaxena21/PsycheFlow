@@ -72,7 +72,7 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
     const h = hosp_override || hospital;
     if (!h) return;
     const { data } = await supabase.from('telemedicine_sessions')
-      .select('*, hospital_patients(full_name, patient_uid, date_of_birth), hospital_staff(name, designation)')
+      .select('*, hospital_patients(full_name, patient_uid, date_of_birth)')
       .eq('hospital_id', h.id).order('scheduled_at', { ascending:false });
     setSessions(data||[]);
   };

@@ -16,7 +16,7 @@ export default function HospitalAppointments({ hospital, patients, staff, S, car
   const loadAppointments = async () => {
     if (!hospital) return;
     const { data } = await supabase.from('hospital_appointments')
-      .select('*, hospital_patients(full_name, patient_uid), hospital_staff(name, designation)')
+      .select('*, hospital_patients(full_name, patient_uid)')
       .eq('hospital_id', hospital.id)
       .order('scheduled_date', { ascending: true });
     setAppointments(data || []);
