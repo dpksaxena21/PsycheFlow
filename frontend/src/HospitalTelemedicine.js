@@ -648,9 +648,15 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
           <div style={{ position:'absolute', bottom:100, left:20, background:'rgba(12,26,46,0.95)', borderRadius:14, padding:16, border:'1px solid rgba(255,255,255,0.1)', zIndex:20, minWidth:260 }}>
             <div style={{ fontSize:12, fontWeight:700, color:'#fff', marginBottom:12 }}>Virtual Background</div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
-              {[['none','None','⬜'],['blur','Blur','🌫'],['calm','Calm','🌿'],['office','Office','🏢'],['therapy','Therapy Room','🛋']].map(([type,label,icon])=>(
+              {[['none','None','off'],['blur','Blur','blur'],['calm','Calm','calm'],['office','Office','office'],['therapy','Therapy Room','therapy']].map(([type,label,icon])=>(
                 <div key={type} onClick={()=>{applyVirtualBackground(type);}} style={{ padding:'10px 6px', borderRadius:9, cursor:'pointer', textAlign:'center', border:`1px solid ${virtualBg===type?'#93C5FD':'rgba(255,255,255,0.1)'}`, background:virtualBg===type?'rgba(29,78,216,0.3)':'rgba(255,255,255,0.05)' }}>
-                  <div style={{ fontSize:18, marginBottom:3 }}>{icon}</div>
+                  <div style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 3px' }}>
+                    {icon==='off'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/><path d="M6 18L18 6M6 6l12 12" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                    {icon==='blur'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="rgba(255,255,255,0.6)"/><circle cx="12" cy="12" r="7" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/><circle cx="12" cy="12" r="11" stroke="rgba(255,255,255,0.15)" strokeWidth="3"/></svg>}
+                    {icon==='calm'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 9h.01M15 9h.01" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round"/></svg>}
+                    {icon==='office'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/><path d="M12 12v4M10 14h4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                    {icon==='therapy'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/><path d="M9 22V12h6v10" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                  </div>
                   <div style={{ fontSize:10, color:virtualBg===type?'#93C5FD':'rgba(255,255,255,0.5)' }}>{label}</div>
                 </div>
               ))}

@@ -140,13 +140,13 @@ function ExercisePlayer({ exercise, onComplete, onBack }) {
                       style={{ flex:1, padding:'12px', background:'#22c55e',
                         color:'#fff', border:'none', borderRadius:10,
                         cursor:'pointer', fontSize:14 }}>
-                      👍 Yes, helpful
+                      Yes, helpful
                     </button>
                     <button onClick={() => submitFeedback(false)}
                       style={{ flex:1, padding:'12px', background:'#f1f5f9',
                         color:'#64748b', border:'none', borderRadius:10,
                         cursor:'pointer', fontSize:14 }}>
-                      👎 Not really
+                      Not really
                     </button>
                   </div>
                 </div>
