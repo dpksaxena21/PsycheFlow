@@ -2563,7 +2563,7 @@ export default function HospitalPortal({ user, onLogout }) {
                     { indicator:'Assessment Completion Rate', value:patients.length>0?'100%':'—', target:'> 90%', met:true },
                     { indicator:'Crisis Response Time', value:'< 5 min', target:'< 15 min', met:true },
                     { indicator:'Documentation Rate', value:ehrList.length>0?Math.round(ehrList.length/Math.max(1,patients.length)*100)+'%':'—', target:'> 95%', met:true },
-                    { indicator:'Bed Occupancy Rate', value:ipdList.length>0?Math.round(ipdList.filter(i=>i.status==='admitted').length/Math.max(1,beds.length)*100)+'%':'—', target:'< 85%', met:true },
+                    { indicator:'Bed Occupancy Rate', value:ipdList.length>0?Math.round(ipdList.filter(i=>i.status==='admitted').length/Math.max(1,(beds||[]).length)*100)+'%':'—', target:'< 85%', met:true },
                   ].map(qi => (
                     <div key={qi.indicator} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:`0.5px solid ${S.border}` }}>
                       <div>
@@ -2584,10 +2584,10 @@ export default function HospitalPortal({ user, onLogout }) {
                   <div style={{ fontSize:12, color:S.muted, marginBottom:10 }}>All clinical actions are logged for NABH audit readiness.</div>
                   {[
                     ['Patient registrations', patients.length, S.blue],
-                    ['EHR records created', ehrList.length, S.success],
-                    ['Lab orders', labOrders.length, S.warning],
-                    ['Billing invoices', invoices.length, S.cyan],
-                    ['OPD tokens issued', queue.length, S.purple],
+                    ['EHR records created', (ehrList||[]).length, S.success],
+                    ['Lab orders', (labOrders||[]).length, S.warning],
+                    ['Billing invoices', (invoices||[]).length, S.cyan],
+                    ['OPD tokens issued', (queue||[]).length, S.purple],
                   ].map(([label, val, color]) => (
                     <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:`0.5px solid ${S.border}` }}>
                       <span style={{ fontSize:12, color:S.muted }}>{label}</span>
@@ -2598,10 +2598,10 @@ export default function HospitalPortal({ user, onLogout }) {
                     const data = `NABH Audit Report — ${new Date().toLocaleDateString('en-IN')}
 
 Patients: ${patients.length}
-EHR Records: ${ehrList.length}
-Lab Orders: ${labOrders.length}
-Invoices: ${invoices.length}
-OPD Tokens: ${queue.length}
+EHR Records: ${(ehrList||[]).length}
+Lab Orders: ${(labOrders||[]).length}
+Invoices: ${(invoices||[]).length}
+OPD Tokens: ${(queue||[]).length}
 
 Compliance: 8/14 checklist items complete
 Critical Items: All 9 complete`;
