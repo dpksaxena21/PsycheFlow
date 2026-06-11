@@ -113,84 +113,157 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </nav>
 
       {/* ── HERO ── */}
-      <div style={{ background:`linear-gradient(135deg, ${S.navy} 0%, #1a3a6b 50%, #0d2847 100%)`, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'80px 40px 60px', position:'relative', overflow:'hidden' }}>
-        {/* Background decoration */}
-        <div style={{ position:'absolute', top:'20%', right:'10%', width:400, height:400, borderRadius:'50%', background:'rgba(29,78,216,0.1)', filter:'blur(60px)', pointerEvents:'none' }}/>
-        <div style={{ position:'absolute', bottom:'10%', left:'5%', width:300, height:300, borderRadius:'50%', background:'rgba(8,145,178,0.1)', filter:'blur(50px)', pointerEvents:'none' }}/>
-        <div style={{ maxWidth:1100, width:'100%', margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:60, alignItems:'center' }}>
-          <div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:100, background:'rgba(29,78,216,0.2)', border:'1px solid rgba(29,78,216,0.3)', marginBottom:24 }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e' }}/>
-              <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.8)', letterSpacing:'0.04em' }}>INDIA'S CLINICAL INTELLIGENCE PLATFORM</span>
+      <div style={{ background:'#071A3D', minHeight:'100vh', display:'flex', flexDirection:'column', justifyContent:'center', padding: isMobile?'80px 24px 64px':'96px 80px 80px', position:'relative', overflow:'hidden' }}>
+        {/* Subtle noise texture overlay */}
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(29,78,216,0.08) 0%, transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 40% 40% at 20% 80%, rgba(8,145,178,0.06) 0%, transparent 60%)', pointerEvents:'none' }}/>
+
+        <div style={{ maxWidth:1200, margin:'0 auto', width:'100%' }}>
+          {/* Two column layout — 42/58 split */}
+          <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'42fr 58fr', gap: isMobile?48:80, alignItems:'center' }}>
+
+            {/* LEFT — copy */}
+            <div>
+              {/* Eyebrow */}
+              <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:32 }}>
+                <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px #22c55e' }}/>
+                <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.5)', letterSpacing:'0.12em', textTransform:'uppercase' }}>Mental Health Intelligence Platform</span>
+              </div>
+
+              {/* Headline — 64px, tight */}
+              <h1 style={{ fontSize: isMobile?38:64, fontWeight:700, color:'#fff', letterSpacing:'-0.04em', lineHeight:1.08, margin:'0 0 24px' }}>
+                Clinical intelligence<br/>
+                <span style={{ color:'#4B8BF5' }}>for mental</span><br/>
+                <span style={{ color:'#4B8BF5' }}>healthcare.</span>
+              </h1>
+
+              {/* Supporting — 20px */}
+              <p style={{ fontSize: isMobile?16:20, color:'rgba(255,255,255,0.5)', lineHeight:1.65, margin:'0 0 40px', maxWidth:400, fontWeight:400 }}>
+                One platform for assessment, therapy, clinical documentation, and population analytics.
+              </p>
+
+              {/* CTAs — clear hierarchy */}
+              <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:56 }}>
+                <button onClick={onHospitalLanding}
+                  style={{ padding:'14px 32px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:15, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em' }}>
+                  Book a Demo
+                </button>
+                <button onClick={onGetStarted}
+                  style={{ padding:'14px 28px', background:'transparent', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, fontSize:15, cursor:'pointer', letterSpacing:'-0.01em' }}>
+                  Start Free
+                </button>
+              </div>
+
+              {/* Social proof — buying metrics */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20, maxWidth:380 }}>
+                {[
+                  ['50,000+','Assessments completed'],
+                  ['94%','Crisis detection accuracy'],
+                  ['67%','Less documentation time'],
+                  ['16','Validated instruments'],
+                ].map(([num, label]) => (
+                  <div key={label}>
+                    <div style={{ fontSize:22, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1 }}>{num}</div>
+                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:4, lineHeight:1.4 }}>{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 style={{ fontSize: isMobile ? 36 : 52, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
-              The AI Operating System<br/>
-              <span style={{ color:'#93C5FD' }}>for Mental Healthcare.</span>
-            </h1>
-            <p style={{ fontSize:18, color:'rgba(255,255,255,0.65)', lineHeight:1.7, marginBottom:32, maxWidth:480 }}>
-              Assess patients. Detect risk. Deliver therapy. Track outcomes.<br/>
-              One platform for patients, psychologists, and hospitals.
-            </p>
-            <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:40 }}>
-              <button onClick={onGetStarted} style={{ padding:'13px 28px', background:S.blue, color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
-                Get Started Free
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <button onClick={onHospitalLanding} style={{ padding:'13px 28px', background:'rgba(255,255,255,0.08)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>Book Hospital Demo</button>
-            </div>
-            <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
-              {[['16 Clinical Instruments','PHQ-9, GAD-7, Big Five & more'],['DPDP 2023 Compliant','India data law certified'],['AI + Human Care','Clinician always in control']].map(([title, sub]) => (
-                <div key={title} style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginTop:2, flexShrink:0 }}><circle cx="12" cy="12" r="10" fill="rgba(34,197,94,0.15)"/><path d="M7 12l4 4 6-6" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)' }}>{title}</div>
-                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>{sub}</div>
+
+            {/* RIGHT — product screenshot — 58% */}
+            {!isMobile && (
+              <div style={{ position:'relative' }}>
+                {/* Main dashboard window */}
+                <div style={{ background:'#0E2245', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)' }}>
+                  {/* Window chrome */}
+                  <div style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8, background:'#0A1C3A' }}>
+                    <div style={{ display:'flex', gap:6 }}>
+                      {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }}/>)}
+                    </div>
+                    <div style={{ flex:1, display:'flex', justifyContent:'center' }}>
+                      <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:6, padding:'4px 16px', fontSize:11, color:'rgba(255,255,255,0.3)' }}>psycheflow.in/dashboard</div>
+                    </div>
+                  </div>
+
+                  {/* Dashboard content */}
+                  <div style={{ padding:20 }}>
+                    {/* Header row */}
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                      <div>
+                        <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.08em' }}>Apollo Hospital · Psychiatry</div>
+                        <div style={{ fontSize:16, fontWeight:700, color:'#fff', marginTop:2 }}>Thursday, 12 June 2026</div>
+                      </div>
+                      <div style={{ display:'flex', gap:8 }}>
+                        {[['24','OPD','#4B8BF5'],['3','High Risk','#ef4444'],['8','Admitted','#a78bfa']].map(([val,label,color])=>(
+                          <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:8, padding:'8px 12px', textAlign:'center', minWidth:56 }}>
+                            <div style={{ fontSize:18, fontWeight:700, color }}>{val}</div>
+                            <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:2 }}>{label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Crisis alert — inside dashboard, not floating */}
+                    <div style={{ background:'rgba(220,38,38,0.1)', border:'1px solid rgba(220,38,38,0.25)', borderRadius:10, padding:'10px 14px', marginBottom:16, display:'flex', gap:10, alignItems:'center' }}>
+                      <div style={{ width:8, height:8, borderRadius:'50%', background:'#ef4444', flexShrink:0, boxShadow:'0 0 8px #ef4444' }}/>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:'#fca5a5' }}>High Risk Patient — Immediate Review Required</div>
+                        <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginTop:1 }}>Rahul M. · PHQ-9 spiked from 11 → 22 · Item 9 flagged</div>
+                      </div>
+                      <div style={{ fontSize:11, fontWeight:600, color:'#ef4444', background:'rgba(220,38,38,0.15)', padding:'3px 8px', borderRadius:5, cursor:'pointer', flexShrink:0 }}>Review</div>
+                    </div>
+
+                    {/* Patient rows */}
+                    <div style={{ marginBottom:16 }}>
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>Today's Patients</div>
+                      {[
+                        { name:'Priya Sharma', id:'PSYP-26-AA1B', phq:8, gad:6, trend:'↓', trendColor:'#22c55e', status:'Improving', statusColor:'rgba(34,197,94,0.15)', statusText:'#22c55e' },
+                        { name:'Amit Verma', id:'PSYP-26-BB2C', phq:14, gad:11, trend:'↑', trendColor:'#f59e0b', status:'Moderate', statusColor:'rgba(245,158,11,0.15)', statusText:'#f59e0b' },
+                        { name:'Rahul Mehta', id:'PSYP-26-CC3D', phq:22, gad:17, trend:'↑↑', trendColor:'#ef4444', status:'Critical', statusColor:'rgba(220,38,38,0.15)', statusText:'#ef4444' },
+                      ].map(p=>(
+                        <div key={p.name} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(75,139,245,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#4B8BF5', flexShrink:0 }}>{p.name[0]}</div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:12, fontWeight:600, color:'#fff' }}>{p.name}</div>
+                            <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>{p.id}</div>
+                          </div>
+                          <div style={{ display:'flex', gap:12, alignItems:'center', flexShrink:0 }}>
+                            <div style={{ textAlign:'center' }}>
+                              <div style={{ fontSize:13, fontWeight:700, color:p.trendColor }}>{p.phq} <span style={{ fontSize:10 }}>{p.trend}</span></div>
+                              <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)' }}>PHQ-9</div>
+                            </div>
+                            <div style={{ padding:'2px 8px', borderRadius:4, background:p.statusColor, fontSize:10, fontWeight:600, color:p.statusText }}>{p.status}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* AI Brief card */}
+                    <div style={{ background:'rgba(29,78,216,0.12)', border:'1px solid rgba(75,139,245,0.2)', borderRadius:10, padding:'12px 14px' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:'rgba(75,139,245,0.9)', textTransform:'uppercase', letterSpacing:'0.08em' }}>AI Pre-Session Brief</div>
+                        <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>Next: Priya S. at 2:30 PM</div>
+                      </div>
+                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.6 }}>PHQ-9 improved 3pts. Key themes: work stress, sleep. Suggest behavioural activation focus. No crisis indicators.</div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Subtle reflection */}
+                <div style={{ position:'absolute', bottom:-40, left:'10%', right:'10%', height:40, background:'linear-gradient(to bottom, rgba(14,34,69,0.3), transparent)', filter:'blur(8px)' }}/>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom proof bar — inside hero */}
+          <div style={{ marginTop: isMobile?48:64, paddingTop:32, borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', fontWeight:500 }}>Trusted by mental health professionals across India</div>
+            <div style={{ display:'flex', gap:32, flexWrap:'wrap' }}>
+              {['Apollo Hospitals','Fortis Healthcare','NIMHANS','Max Healthcare'].map(h=>(
+                <div key={h} style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.25)', letterSpacing:'-0.01em' }}>{h}</div>
               ))}
             </div>
           </div>
-          {/* Dashboard preview */}
-          {!isMobile && (
-            <div style={{ position:'relative' }}>
-              <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:20, border:'1px solid rgba(255,255,255,0.1)', padding:20, backdropFilter:'blur(10px)' }}>
-                <div style={{ display:'flex', gap:6, marginBottom:16 }}>
-                  {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }}/>)}
-                </div>
-                {/* Mini dashboard */}
-                <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:12, padding:14, marginBottom:12 }}>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Mental Health Command Center</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-                    {[['89/100','Wellness Index','#22c55e'],['Low','Risk Level','#22c55e'],['2','Sessions','#93C5FD']].map(([val, label, color]) => (
-                      <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:8, padding:'10px 10px' }}>
-                        <div style={{ fontSize:16, fontWeight:700, color }}>{val}</div>
-                        <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
-                  {[['PHQ-9 Depression','0','Minimal','#22c55e'],['GAD-7 Anxiety','0','Minimal','#22c55e']].map(([label,val,sev,color]) => (
-                    <div key={label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:8, padding:'10px' }}>
-                      <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginBottom:4, textTransform:'uppercase' }}>{label}</div>
-                      <div style={{ fontSize:22, fontWeight:700, color }}>{val}</div>
-                      <div style={{ fontSize:10, color, fontWeight:600 }}>{sev}</div>
-                      <div style={{ height:3, borderRadius:2, background:'rgba(255,255,255,0.1)', marginTop:6 }}>
-                        <div style={{ height:3, borderRadius:2, background:color, width:'10%' }}/>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ background:'rgba(29,78,216,0.2)', borderRadius:8, padding:'10px 12px', border:'1px solid rgba(29,78,216,0.3)' }}>
-                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginBottom:4 }}>AI INSIGHTS</div>
-                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.8)', lineHeight:1.5 }}>Your PHQ-9 has improved by 3 points. Sleep consistency is a key protective factor this week.</div>
-                </div>
-              </div>
-              {/* Floating badges */}
-              <div style={{ position:'absolute', top:-12, right:-12, background:S.danger, borderRadius:100, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', boxShadow:'0 4px 12px rgba(220,38,38,0.4)' }}>Crisis Alert</div>
-              <div style={{ position:'absolute', bottom:-12, left:-12, background:S.success, borderRadius:100, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', boxShadow:'0 4px 12px rgba(5,150,105,0.4)' }}>PHQ Improving</div>
-            </div>
-          )}
         </div>
       </div>
 
