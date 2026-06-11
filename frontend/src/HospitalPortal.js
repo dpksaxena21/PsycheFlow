@@ -129,6 +129,18 @@ export default function HospitalPortal({ user, onLogout }) {
   const loadAll = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    // Session check
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('HospitalPortal session:', session?.user?.email, session?.user?.id);
+    if (!session) {
+      const stored = localStorage.getItem('psycheflow_hospital_session');
+      if (stored) {
+        try {
+          const { access_token, refresh_token } = JSON.parse(stored);
+          await supabase.auth.setSession({ access_token, refresh_token });
+        } catch(e) { console.log('Session restore failed', e); }
+      }
+    }
     const { data: hosp } = await supabase.from('hospitals').select('*').eq('admin_id', user.id).single();
     if (!hosp) { setLoading(false); return; }
     setHospital(hosp);
