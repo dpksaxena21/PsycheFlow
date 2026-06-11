@@ -124,11 +124,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
 
             {/* LEFT — copy */}
             <div>
-              {/* Eyebrow */}
-              <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:32 }}>
-                <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px #22c55e' }}/>
-                <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.5)', letterSpacing:'0.12em', textTransform:'uppercase' }}>Mental Health Intelligence Platform</span>
-              </div>
+
 
               {/* Headline — 64px, tight */}
               <h1 style={{ fontSize: isMobile?38:64, fontWeight:700, color:'#fff', letterSpacing:'-0.04em', lineHeight:1.08, margin:'0 0 24px' }}>
