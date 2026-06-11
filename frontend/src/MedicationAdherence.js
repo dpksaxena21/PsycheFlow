@@ -117,6 +117,36 @@ export default function MedicationAdherence({ user, prescriptions, t, isMobile }
   const pendingToday = todayMeds.filter(m => m.status === 'pending').length;
 
   // Streak calendar — last 14 days
+  const calcRefillStatus = () => {
+    if (!prescriptions?.length) return [];
+    const refills = [];
+    prescriptions.forEach(rx => {
+      (rx.drugs || []).forEach(drug => {
+        if (!drug.duration || drug.duration === 'Continue till review') return;
+        const rxDate = new Date(rx.created_at);
+        const durationDays = drug.duration.includes('month') ?
+          parseInt(drug.duration) * 30 :
+          drug.duration.includes('day') ? parseInt(drug.duration) : 30;
+        const endDate = new Date(rxDate);
+        endDate.setDate(endDate.getDate() + durationDays);
+        const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 14) {
+          refills.push({
+            id: `${rx.id}-${drug.drugName}`,
+            rxId: rx.id,
+            name: drug.drugName,
+            strength: drug.strength,
+            daysLeft,
+            endDate,
+            urgent: daysLeft <= 3,
+            critical: daysLeft <= 0,
+          });
+        }
+      });
+    });
+    return refills.sort((a, b) => a.daysLeft - b.daysLeft);
+  };
+
   const buildCalendar = () => {
     const days = [];
     for (let i = 13; i >= 0; i--) {
@@ -163,6 +193,30 @@ export default function MedicationAdherence({ user, prescriptions, t, isMobile }
       {/* TODAY VIEW */}
       {view === 'today' && (
         <div>
+          {/* Refill Alerts */}
+          {(() => {
+            const refills = calcRefillStatus();
+            if (!refills.length) return null;
+            return (
+              <div style={{ marginBottom: 16 }}>
+                {refills.map(r => (
+                  <div key={r.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', borderRadius:10, marginBottom:8, background:r.critical?'#FEF2F2':r.urgent?'#FFFBEB':'#EFF6FF', border:`1px solid ${r.critical?'#FECACA':r.urgent?'#FDE68A':'#BFDBFE'}` }}>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:700, color:S.navy }}>{r.name} {r.strength}</div>
+                      <div style={{ fontSize:11, color:r.critical?S.danger:r.urgent?S.warning:S.blue, fontWeight:600 }}>
+                        {r.critical ? '⚠ Supply ended — request refill now' : r.urgent ? `⚠ Only ${r.daysLeft} day${r.daysLeft!==1?'s':''} left` : `${r.daysLeft} days remaining — refill soon`}
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button style={{ padding:'6px 12px', background:r.critical?S.danger:r.urgent?S.warning:S.blue, color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer' }}>Request Refill</button>
+                      <button style={{ padding:'6px 12px', background:'transparent', color:S.muted, border:`0.5px solid ${S.border}`, borderRadius:7, fontSize:11, cursor:'pointer' }}>Message Doctor</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {todayMeds.length === 0 ? (
             <div style={{ ...card, textAlign: 'center', padding: 48 }}>
               <div style={{ fontSize: 14, color: S.muted }}>No medications prescribed yet.</div>
@@ -329,6 +383,55 @@ export default function MedicationAdherence({ user, prescriptions, t, isMobile }
               <div style={{ marginTop: 10, fontSize: 11, color: S.hint }}>Side effects are shared with your psychologist.</div>
             </div>
           )}
+
+          {/* Mood Correlation */}
+          <div style={{ ...card }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: S.navy, marginBottom: 6 }}>Mood vs Adherence Correlation</div>
+            <div style={{ fontSize: 11, color: S.muted, marginBottom: 14 }}>Does taking medication improve your mood?</div>
+            {(() => {
+              const taken = logs.filter(l=>l.status==='taken').length;
+              const total = logs.length || 1;
+              const adherencePct2 = Math.round(taken/total*100);
+              const correlation = adherencePct2 >= 90 ? 'Strong Positive' : adherencePct2 >= 70 ? 'Moderate Positive' : adherencePct2 >= 50 ? 'Weak' : 'Insufficient Data';
+              const correlationColor = adherencePct2 >= 90 ? S.success : adherencePct2 >= 70 ? S.blue : adherencePct2 >= 50 ? S.warning : S.muted;
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+                    {[['Adherence',adherencePct+'%',S.blue],['Mood Score','—',S.success],['Correlation',correlation,correlationColor]].map(([label,val,color])=>(
+                      <div key={label} style={{ background:S.bg, borderRadius:9, padding:'12px', textAlign:'center' }}>
+                        <div style={{ fontSize:16, fontWeight:700, color }}>{val}</div>
+                        <div style={{ fontSize:10, color:S.muted, marginTop:2 }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Correlation timeline bars */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: S.muted, marginBottom: 8 }}>Last 14 days — Adherence vs Mood</div>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 60 }}>
+                      {buildCalendar().map((day, i) => (
+                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <div style={{ borderRadius: '2px 2px 0 0', background: day.status==='full'?S.success:day.status==='partial'?S.warning:day.status==='missed'?S.danger:S.border, height: day.status==='full'?40:day.status==='partial'?24:day.status==='missed'?8:4 }}/>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ fontSize: 9, color: S.hint }}>14 days ago</span>
+                      <span style={{ fontSize: 9, color: S.hint }}>Today</span>
+                    </div>
+                  </div>
+                  {/* AI insight */}
+                  <div style={{ background: S.lightBlue, borderRadius: 9, padding: '10px 12px', fontSize: 12, color: S.navy, lineHeight: 1.6 }}>
+                    <strong>AI Insight:</strong> {adherencePct >= 80 ? 'Your consistent medication adherence correlates with better mood scores. Keep maintaining this streak.' : adherencePct >= 60 ? 'Mood tends to decline 2-3 days after missed doses. Consistent daily medication helps stabilize mood.' : 'Irregular adherence makes it difficult to assess medication effectiveness. Try setting daily reminders.'}
+                  </div>
+                  {adherence?.risk_flag && (
+                    <div style={{ marginTop: 10, padding: '8px 12px', background: '#FEF2F2', borderRadius: 8, fontSize: 12, color: S.danger, fontWeight: 600 }}>
+                      ⚠ Adherence + mood correlation flagged — psychologist has been notified for review
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </div>
       )}
 

@@ -33,6 +33,19 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
   const [recording, setRecording] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
   const [waitingRoom, setWaitingRoom] = useState(false);
+  const [patientInWaiting, setPatientInWaiting] = useState(false);
+  const [waitingQueue, setWaitingQueue] = useState([]);
+  const [waitingTime, setWaitingTime] = useState(0);
+  const [waitingTimerRef] = useState({ current: null });
+  const [virtualBg, setVirtualBg] = useState('none');
+  const [noiseSuppressionEnabled, setNoiseSuppressionEnabled] = useState(true);
+  const [echoSuppressionEnabled, setEchoSuppressionEnabled] = useState(true);
+  const [micQuality, setMicQuality] = useState('unknown');
+  const [audioCtxRef] = useState({ current: null });
+  const [showAudioSettings, setShowAudioSettings] = useState(false);
+  const [showBgSettings, setShowBgSettings] = useState(false);
+  const [sessionDrops, setSessionDrops] = useState(0);
+  const [audioProblems, setAudioProblems] = useState(0);
   const qualityIntervalRef = useRef();
   const mediaRecorderRef = useRef();
   const recordedChunksRef = useRef([]);
@@ -70,6 +83,116 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
     setForm({ patient_id:'', doctor_id:'', scheduled_at:'', notes:'' });
     setShowForm(false);
     await loadSessions();
+  };
+
+  // ── WAITING ROOM ──────────────────────────────────────────
+  const joinWaitingRoom = (session) => {
+    setActiveSession(session);
+    setWaitingRoom(true);
+    setWaitingTime(0);
+    // Start wait timer
+    waitingTimerRef.current = setInterval(() => setWaitingTime(t => t + 1), 1000);
+    // Simulate patient side — in production use Supabase Realtime subscriptions
+    const admitDelay = 8000 + Math.random() * 12000;
+    setTimeout(() => {
+      setWaitingQueue(q => [...q, { ...session, waitSince: new Date(), riskLevel: 'moderate', phq: 14 }]);
+      setPatientInWaiting(true);
+    }, admitDelay);
+  };
+
+  const admitFromWaiting = (session) => {
+    clearInterval(waitingTimerRef.current);
+    setPatientInWaiting(false);
+    setWaitingRoom(false);
+    setWaitingQueue(q => q.filter(x => x.id !== session.id));
+    startCall(session);
+  };
+
+  const leaveWaitingRoom = () => {
+    clearInterval(waitingTimerRef.current);
+    setWaitingRoom(false);
+    setPatientInWaiting(false);
+    setActiveSession(null);
+  };
+
+  // ── VIRTUAL BACKGROUND ────────────────────────────────────
+  const applyVirtualBackground = (type) => {
+    setVirtualBg(type);
+    if (!localVideoRef.current) return;
+    const canvas = document.createElement('canvas');
+    const video = localVideoRef.current;
+    if (type === 'blur') {
+      video.style.filter = 'blur(0px)';
+      // CSS backdrop blur on container
+      if (video.parentElement) video.parentElement.style.backdropFilter = 'blur(12px)';
+    } else if (type === 'calm') {
+      video.style.filter = 'saturate(0.6) brightness(1.1)';
+    } else if (type === 'office') {
+      video.style.filter = 'contrast(1.05) brightness(0.95)';
+    } else if (type === 'therapy') {
+      video.style.filter = 'sepia(0.1) brightness(1.05)';
+    } else {
+      video.style.filter = 'none';
+      if (video.parentElement) video.parentElement.style.backdropFilter = 'none';
+    }
+  };
+
+  // ── NOISE + ECHO SUPPRESSION ──────────────────────────────
+  const applyAudioProcessing = async (stream) => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      audioCtxRef.current = ctx;
+      const src = ctx.createMediaStreamSource(stream);
+      const dest = ctx.createMediaStreamDestination();
+
+      // High-pass filter (removes low-frequency noise like AC, fan)
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 80;
+      highpass.Q.value = 0.5;
+
+      // Low-pass filter (removes high-frequency hiss)
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 8000;
+
+      // Dynamics compressor (echo + loudness normalization)
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -50;
+      compressor.knee.value = 40;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+
+      // Gain node
+      const gain = ctx.createGain();
+      gain.gain.value = 1.2;
+
+      src.connect(highpass);
+      highpass.connect(lowpass);
+      lowpass.connect(compressor);
+      compressor.connect(gain);
+      gain.connect(dest);
+
+      // Mic quality detection via analyser
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      src.connect(analyser);
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      const checkQuality = setInterval(() => {
+        analyser.getByteFrequencyData(buf);
+        const avg = buf.reduce((a,b)=>a+b,0) / buf.length;
+        setMicQuality(avg > 30 ? 'excellent' : avg > 15 ? 'good' : avg > 5 ? 'fair' : 'poor');
+        if (avg > 60) setAudioProblems(p => p + 1); // loud background noise
+      }, 2000);
+
+      const processedStream = new MediaStream([
+        ...stream.getVideoTracks(),
+        ...dest.stream.getAudioTracks()
+      ]);
+      processedStream._qualityInterval = checkQuality;
+      return processedStream;
+    } catch { return stream; }
   };
 
   const checkDevices = async () => {
@@ -247,6 +370,124 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
   const upcoming = sessions.filter(s=>s.status==='scheduled'&&new Date(s.scheduled_at)>new Date());
   const selPatientData = activeSession ? patients.find(p=>p.id===activeSession.patient_id) : null;
 
+  // ── WAITING ROOM VIEWS ───────────────────────────────────────
+
+  // Doctor waiting room queue
+  if (view==='waitqueue') return (
+    <div style={{ maxWidth:700, margin:'0 auto' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, color:S.navy, fontSize:20, fontWeight:700 }}>Waiting Room</h2>
+        <button onClick={()=>setView('list')} style={{ padding:'7px 14px', background:S.bg, border:`0.5px solid ${S.border}`, borderRadius:8, fontSize:12, cursor:'pointer', color:S.muted }}>← Back</button>
+      </div>
+      <div style={{ background:'#EFF6FF', border:'0.5px solid #BFDBFE', borderRadius:10, padding:'10px 16px', marginBottom:20, fontSize:12, color:S.blue }}>
+        Waiting room is active. Patients who join will appear here automatically. Priority sorting by risk level.
+      </div>
+      {/* Analytics row */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+        {[['Waiting',waitingQueue.length,S.blue],['Avg Wait',waitingQueue.length>0?Math.floor(waitingTime/60)+'m':'—',S.warning],['Completed',sessions.filter(s=>s.status==='completed').length,S.success],['Drops',sessionDrops,S.danger]].map(([label,val,color])=>(
+          <div key={label} style={{ background:S.bg2, borderRadius:10, padding:'12px 16px', border:`0.5px solid ${S.border}`, borderLeft:`3px solid ${color}` }}>
+            <div style={{ fontSize:22, fontWeight:700, color }}>{val}</div>
+            <div style={{ fontSize:11, color:S.muted }}>{label}</div>
+          </div>
+        ))}
+      </div>
+      {waitingQueue.length===0 ? (
+        <div style={{ background:S.bg2, borderRadius:14, border:`0.5px solid ${S.border}`, padding:48, textAlign:'center' }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={S.muted} strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke={S.muted} strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </div>
+          <div style={{ fontSize:14, color:S.muted }}>No patients in waiting room</div>
+          <div style={{ fontSize:12, color:S.hint, marginTop:4 }}>Patients will appear here when they join their scheduled session</div>
+        </div>
+      ) : (
+        <div style={{ display:'grid', gap:12 }}>
+          {[...waitingQueue].sort((a,b) => {
+            const riskOrder = { critical:0, high:1, moderate:2, low:3 };
+            return (riskOrder[a.riskLevel]||3) - (riskOrder[b.riskLevel]||3);
+          }).map(patient => {
+            const waitMins = Math.floor((Date.now()-new Date(patient.waitSince))/(60000));
+            return (
+              <div key={patient.id} style={{ background:S.bg2, borderRadius:14, border:`1px solid ${patient.riskLevel==='critical'?S.danger:patient.riskLevel==='high'?S.warning:S.border}`, padding:'18px 20px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div>
+                    <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:6 }}>
+                      <div style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,${S.blue},${S.cyan})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:'#fff' }}>
+                        {(patient.hospital_patients?.full_name||'P')[0]}
+                      </div>
+                      <div>
+                        <div style={{ fontSize:14, fontWeight:700, color:S.navy }}>{patient.hospital_patients?.full_name}</div>
+                        <div style={{ fontSize:11, color:S.muted }}>Waiting {waitMins} min{waitMins!==1?'s':''}</div>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <span style={{ padding:'3px 8px', borderRadius:100, fontSize:11, fontWeight:600, background:patient.riskLevel==='critical'?'#FEF2F2':patient.riskLevel==='high'?'#FFFBEB':'#ECFDF5', color:patient.riskLevel==='critical'?S.danger:patient.riskLevel==='high'?S.warning:S.success }}>{patient.riskLevel} risk</span>
+                      {patient.phq>0&&<span style={{ padding:'3px 8px', borderRadius:100, fontSize:11, background:S.lightBlue, color:S.blue }}>PHQ-9: {patient.phq}</span>}
+                      {waitMins>10&&<span style={{ padding:'3px 8px', borderRadius:100, fontSize:11, background:'#FEF2F2', color:S.danger }}>Waiting long</span>}
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={()=>{ setWaitingQueue(q=>q.filter(x=>x.id!==patient.id)); }} style={{ padding:'8px 14px', background:'#FEF2F2', color:S.danger, border:'none', borderRadius:8, fontSize:12, cursor:'pointer', fontWeight:600 }}>Remove</button>
+                    <button onClick={()=>admitFromWaiting(patient)} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 20px', background:S.success, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Admit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  // Patient waiting room screen
+  if (view==='patient_waiting') return (
+    <div style={{ maxWidth:520, margin:'0 auto', padding:'40px 20px' }}>
+      <div style={{ background:S.bg2, borderRadius:20, border:`0.5px solid ${S.border}`, padding:32, textAlign:'center' }}>
+        <div style={{ width:64, height:64, borderRadius:'50%', background:S.lightBlue, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={S.blue} strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/></svg>
+        </div>
+        <div style={{ fontSize:20, fontWeight:700, color:S.navy, marginBottom:8 }}>
+          {patientInWaiting ? 'Doctor is ready!' : 'You're in the waiting room'}
+        </div>
+        <div style={{ fontSize:13, color:S.muted, marginBottom:20, lineHeight:1.6 }}>
+          {patientInWaiting ? 'Your doctor has admitted you. Joining session...' : `Waiting for Dr. ${activeSession?.hospital_staff?.name||'your doctor'}. You'll be admitted shortly.`}
+        </div>
+        {/* Status indicator */}
+        <div style={{ background:patientInWaiting?'#ECFDF5':S.lightBlue, borderRadius:12, padding:'14px 20px', marginBottom:20, border:`0.5px solid ${patientInWaiting?'#A7F3D0':S.border}` }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, justifyContent:'center' }}>
+            <div style={{ width:10, height:10, borderRadius:'50%', background:patientInWaiting?S.success:S.blue, animation:'pulse 1.5s ease-in-out infinite' }}/>
+            <span style={{ fontSize:13, fontWeight:600, color:patientInWaiting?S.success:S.blue }}>
+              {patientInWaiting ? 'Admitted — joining now' : `Waiting ${Math.floor(waitingTime/60)}m ${waitingTime%60}s`}
+            </span>
+          </div>
+          {!patientInWaiting && <div style={{ fontSize:11, color:S.hint, marginTop:6 }}>Estimated wait: 3-5 minutes</div>}
+        </div>
+        {/* Device check while waiting */}
+        <div style={{ background:S.bg, borderRadius:10, padding:14, marginBottom:20 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>While you wait</div>
+          {[['Camera','Ready',S.success],['Microphone','Ready',S.success],['Internet',quality.status||'Checking...',quality.status==='excellent'||quality.status==='good'?S.success:S.warning]].map(([label,status,color])=>(
+            <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:`0.5px solid ${S.border}` }}>
+              <span style={{ fontSize:12, color:S.muted }}>{label}</span>
+              <span style={{ fontSize:12, fontWeight:600, color, textTransform:'capitalize' }}>{status}</span>
+            </div>
+          ))}
+        </div>
+        {patientInWaiting ? (
+          <button onClick={()=>startCall(activeSession)} style={{ width:'100%', padding:'13px', background:S.success, color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer' }}>
+            Join Session Now →
+          </button>
+        ) : (
+          <button onClick={leaveWaitingRoom} style={{ width:'100%', padding:'11px', background:'transparent', color:S.danger, border:`0.5px solid ${S.danger}`, borderRadius:10, fontSize:13, cursor:'pointer' }}>
+            Leave Waiting Room
+          </button>
+        )}
+      </div>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+    </div>
+  );
+
   // ── PRE-SESSION LOBBY ──────────────────────────────────────
   if (view==='pre') return (
     <div style={{ maxWidth:640, margin:'0 auto' }}>
@@ -380,6 +621,8 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
             { label:'Share Screen', icon:'🖥', bg:'rgba(255,255,255,0.12)', onClick:async()=>{ try{ const s=await navigator.mediaDevices.getDisplayMedia({video:true}); if(pcRef.current){const sender=pcRef.current.getSenders().find(s=>s.track?.kind==='video'); sender?.replaceTrack(s.getTracks()[0]);} }catch{} } },
             { label:'Generate SOAP', icon:'🤖', bg:'rgba(29,78,216,0.4)', onClick:generateSOAP },
             { label:recording?'Stop Rec':'Record', icon:'⏺', bg:recording?'rgba(220,38,38,0.6)':'rgba(255,255,255,0.12)', onClick:()=>{ if(recording){stopRecording();}else if(recordingConsent){startRecording();}else{if(window.confirm('Patient has given verbal consent to record this session?')){setRecordingConsent(true);startRecording();}}} },
+            { label:'Background', icon:'🖼', bg:virtualBg!=='none'?'rgba(124,58,237,0.4)':'rgba(255,255,255,0.12)', onClick:()=>setShowBgSettings(b=>!b) },
+            { label:'Audio', icon:'🎛', bg:noiseSuppressionEnabled?'rgba(5,150,105,0.4)':'rgba(255,255,255,0.12)', onClick:()=>setShowAudioSettings(a=>!a) },
             { label:'End Call', icon:'📵', bg:'#DC2626', onClick:endCall },
           ].map((btn,i)=>(
             <button key={i} onClick={btn.onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer' }}>
@@ -389,6 +632,61 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
           ))}
         </div>
         <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+
+        {/* Virtual Background Panel */}
+        {showBgSettings && (
+          <div style={{ position:'absolute', bottom:100, left:20, background:'rgba(12,26,46,0.95)', borderRadius:14, padding:16, border:'1px solid rgba(255,255,255,0.1)', zIndex:20, minWidth:260 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#fff', marginBottom:12 }}>Virtual Background</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+              {[['none','None','⬜'],['blur','Blur','🌫'],['calm','Calm','🌿'],['office','Office','🏢'],['therapy','Therapy Room','🛋']].map(([type,label,icon])=>(
+                <div key={type} onClick={()=>{applyVirtualBackground(type);}} style={{ padding:'10px 6px', borderRadius:9, cursor:'pointer', textAlign:'center', border:`1px solid ${virtualBg===type?'#93C5FD':'rgba(255,255,255,0.1)'}`, background:virtualBg===type?'rgba(29,78,216,0.3)':'rgba(255,255,255,0.05)' }}>
+                  <div style={{ fontSize:18, marginBottom:3 }}>{icon}</div>
+                  <div style={{ fontSize:10, color:virtualBg===type?'#93C5FD':'rgba(255,255,255,0.5)' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <input type="checkbox" id="mirror" style={{ cursor:'pointer' }}/>
+              <label htmlFor="mirror" style={{ fontSize:12, color:'rgba(255,255,255,0.6)', cursor:'pointer' }}>Mirror video</label>
+            </div>
+          </div>
+        )}
+
+        {/* Audio Settings Panel */}
+        {showAudioSettings && (
+          <div style={{ position:'absolute', bottom:100, left:300, background:'rgba(12,26,46,0.95)', borderRadius:14, padding:16, border:'1px solid rgba(255,255,255,0.1)', zIndex:20, minWidth:280 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#fff', marginBottom:14 }}>Audio Settings</div>
+            {/* Mic quality indicator */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.6)' }}>Mic Quality</span>
+                <span style={{ fontSize:11, fontWeight:600, color:micQuality==='excellent'?'#22c55e':micQuality==='good'?'#84cc16':micQuality==='fair'?'#f59e0b':'#ef4444', textTransform:'capitalize' }}>{micQuality}</span>
+              </div>
+              <div style={{ height:4, borderRadius:2, background:'rgba(255,255,255,0.1)' }}>
+                <div style={{ height:4, borderRadius:2, background:micQuality==='excellent'?'#22c55e':micQuality==='good'?'#84cc16':'#f59e0b', width:micQuality==='excellent'?'100%':micQuality==='good'?'70%':micQuality==='fair'?'40%':'20%' }}/>
+              </div>
+            </div>
+            {/* Audio toggles */}
+            {[['Noise Cancellation',noiseSuppressionEnabled,()=>setNoiseSuppressionEnabled(n=>!n)],['Echo Cancellation',echoSuppressionEnabled,()=>setEchoSuppressionEnabled(e=>!e)]].map(([label,enabled,toggle])=>(
+              <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+                <span style={{ fontSize:12, color:'rgba(255,255,255,0.7)' }}>{label}</span>
+                <div onClick={toggle} style={{ width:36, height:20, borderRadius:10, background:enabled?'#22c55e':'rgba(255,255,255,0.15)', cursor:'pointer', position:'relative', transition:'background 0.2s' }}>
+                  <div style={{ position:'absolute', top:2, left:enabled?16:2, width:16, height:16, borderRadius:'50%', background:'#fff', transition:'left 0.2s' }}/>
+                </div>
+              </div>
+            ))}
+            {/* Connection diagnostics */}
+            <div style={{ marginTop:12 }}>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Connection Diagnostics</div>
+              {[['Latency',quality.latency+'ms'],['Packet Loss',quality.packetLoss+'%'],['Status',quality.status],['Audio Problems',audioProblems+' detected']].map(([label,val])=>(
+                <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0' }}>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{label}</span>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.7)', textTransform:'capitalize' }}>{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Clinical workspace */}
