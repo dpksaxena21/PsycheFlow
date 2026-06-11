@@ -449,7 +449,7 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={S.blue} strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/></svg>
         </div>
         <div style={{ fontSize:20, fontWeight:700, color:S.navy, marginBottom:8 }}>
-          {patientInWaiting ? 'Doctor is ready!' : 'You're in the waiting room'}
+          {patientInWaiting ? 'Doctor is ready!' : "You're in the waiting room"}
         </div>
         <div style={{ fontSize:13, color:S.muted, marginBottom:20, lineHeight:1.6 }}>
           {patientInWaiting ? 'Your doctor has admitted you. Joining session...' : `Waiting for Dr. ${activeSession?.hospital_staff?.name||'your doctor'}. You'll be admitted shortly.`}
