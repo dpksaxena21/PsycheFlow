@@ -70,10 +70,6 @@ export default function PsychologistLanding({ onBack, onGetStarted }) {
         <div style={{ position:'absolute', top:'15%', right:'8%', width:300, height:300, borderRadius:'50%', background:'rgba(124,58,237,0.08)', filter:'blur(50px)', pointerEvents:'none' }}/>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:60, alignItems:'center' }}>
           <div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:100, background:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.3)', marginBottom:24 }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#A5B4FC' }}/>
-              <span style={{ fontSize:12, fontWeight:600, color:'#A5B4FC', letterSpacing:'0.04em' }}>FOR PSYCHOLOGISTS & THERAPISTS</span>
-            </div>
             <h1 style={{ fontSize:isMobile?34:52, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
               Less paperwork.<br/>
               <span style={{ color:'#A5B4FC' }}>More time with patients.</span>

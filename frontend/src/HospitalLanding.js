@@ -78,10 +78,6 @@ export default function HospitalLanding({ onBack, onGetStarted, onContact }) {
       <div style={{ background:`linear-gradient(135deg, ${S.navy} 0%, #1a3a6b 100%)`, minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 60px' }}>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:60, alignItems:'center' }}>
           <div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:100, background:'rgba(29,78,216,0.2)', border:'1px solid rgba(29,78,216,0.3)', marginBottom:24 }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e' }}/>
-              <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.7)', letterSpacing:'0.04em' }}>HOSPITAL PSYCHIATRY OPERATING SYSTEM</span>
-            </div>
             <h1 style={{ fontSize:isMobile?32:50, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15, margin:'0 0 20px' }}>
               Reduce Intake Time<br/>
               <span style={{ color:'#6EE7B7' }}>by 40%.</span>
