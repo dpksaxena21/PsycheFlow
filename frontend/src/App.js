@@ -177,7 +177,7 @@ export default function App() {
   const handleComplete = async ({ answers, age, gender, occupation, concern }) => {
     setScreen('loading');
     setFullReport(null);
-    const score = (ids) => ids.reduce((s, id) => s + (answers[id] || 3), 0) / ids.length;
+    const score = (ids) => ids.reduce((s, id) => s + (answers[id] !== undefined ? answers[id] : 3), 0) / ids.length;
     const payload = {
       age, gender,
       Extraversion: score(['E1','E2']), Neuroticism: score(['N1','N2']),
@@ -200,8 +200,8 @@ export default function App() {
       if (user) {
         try {
           await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers,
-            cssrs_high_risk: assessment?.cssrs_high_risk || false,
-            audit_score: assessment?.audit_score || 0 });
+            cssrs_high_risk: ['CSSRS2','CSSRS3','CSSRS4','CSSRS5'].some(id => answers[id] === 1),
+            audit_score: ['AUDIT1','AUDIT2','AUDIT3','AUDIT4','AUDIT5','AUDIT6','AUDIT7','AUDIT8'].reduce((s,id)=>s+(answers[id]||0),0) });
         } catch(e) {
           // Crisis check failed — show crisis resources directly as safety net
           if (phq >= 20 || answers?.some?.(a => a.question?.includes('suicide') && a.answer > 0)) {
