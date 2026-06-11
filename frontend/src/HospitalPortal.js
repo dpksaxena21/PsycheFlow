@@ -183,9 +183,11 @@ export default function HospitalPortal({ user, onLogout }) {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  const loadPatients = async () => {
-    if (!hospital) return;
-    const { data } = await supabase.from('hospital_patients').select('*').eq('hospital_id', hospital.id).order('created_at', { ascending:false });
+  const loadPatients = async (hosp_override) => {
+    const h = hosp_override || hospital;
+    if (!h) return;
+    const { data, error } = await supabase.from('hospital_patients').select('*').eq('hospital_id', h.id).order('created_at', { ascending:false });
+    console.log('loadPatients result:', data?.length, 'error:', error, 'hospital_id:', h.id);
     setPatients(data || []);
   };
 
