@@ -145,6 +145,9 @@ export default function HospitalPortal({ user, onLogout }) {
     console.log('Hospital query result:', hosp, 'Error:', hospErr, 'user.id:', user.id);
     if (!hosp) { console.log('No hospital found for user:', user.id, hospErr); setLoading(false); return; }
     setHospital(hosp);
+    const { data: patientsData } = await supabase.from('hospital_patients').select('*').eq('hospital_id', hosp.id).order('created_at', { ascending:false });
+    console.log('patients direct:', patientsData?.length, hosp.id);
+    setPatients(patientsData || []);
 
     const today = new Date().toISOString().split('T')[0];
     const [{ data: q }, { data: b }, { data: r }, { data: st }] = await Promise.all([
