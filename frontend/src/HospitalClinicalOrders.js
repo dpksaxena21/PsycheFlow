@@ -10,7 +10,7 @@ export default function HospitalClinicalOrders({ hospital, patients, S, card, Ba
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => { loadOrders(); }, [hospital]);
+  useEffect(() => { loadOrders(); }, [hospital?.id]);
 
   const loadOrders = async () => {
     if (!hospital) return;

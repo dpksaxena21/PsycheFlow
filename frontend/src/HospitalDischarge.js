@@ -25,7 +25,7 @@ export default function HospitalDischarge({ hospital, ipdList, patients, reload,
 
   const admitted = ipdList.filter(i => i.status === 'admitted');
 
-  useEffect(() => { loadDischarges(); }, [hospital]);
+  useEffect(() => { loadDischarges(); }, [hospital?.id]);
 
   const loadDischarges = async () => {
     if (!hospital) return;

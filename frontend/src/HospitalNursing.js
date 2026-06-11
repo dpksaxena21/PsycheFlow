@@ -11,7 +11,7 @@ export default function HospitalNursing({ hospital, patients, ipdList, S, card, 
   const [saving, setSaving] = useState(false);
   const admittedPatients = ipdList.filter(i => i.status==='admitted');
 
-  useEffect(() => { loadData(); }, [hospital]);
+  useEffect(() => { loadData(); }, [hospital?.id]);
 
   const loadData = async () => {
     if (!hospital) return;

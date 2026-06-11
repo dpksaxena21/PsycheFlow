@@ -61,18 +61,19 @@ export default function HospitalTelemedicine({ hospital, patients, staff, user, 
   const timerRef = useRef();
   const pcRef = useRef();
 
-  useEffect(() => { loadSessions(); }, [hospital]);
+  useEffect(() => { if(hospital) loadSessions(hospital); }, [hospital]);
   useEffect(() => {
     if (callStatus==='live') { timerRef.current = setInterval(()=>setDuration(d=>d+1),1000); }
     else clearInterval(timerRef.current);
     return ()=>clearInterval(timerRef.current);
   }, [callStatus]);
 
-  const loadSessions = async () => {
-    if (!hospital) return;
+  const loadSessions = async (hosp_override) => {
+    const h = hosp_override || hospital;
+    if (!h) return;
     const { data } = await supabase.from('telemedicine_sessions')
       .select('*, hospital_patients(full_name, patient_uid, date_of_birth), hospital_staff(name, designation)')
-      .eq('hospital_id', hospital.id).order('scheduled_at', { ascending:false });
+      .eq('hospital_id', h.id).order('scheduled_at', { ascending:false });
     setSessions(data||[]);
   };
 

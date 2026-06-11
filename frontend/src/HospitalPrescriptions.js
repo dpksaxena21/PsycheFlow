@@ -73,7 +73,7 @@ export default function HospitalPrescriptions({ hospital, patients, S, card, Bad
   const [filter, setFilter] = useState('');
   const searchRef = useRef();
 
-  useEffect(() => { loadPrescriptions(); }, [hospital]);
+  useEffect(() => { loadPrescriptions(); }, [hospital?.id]);
   useEffect(() => {
     const ia = checkInteractions(meds.filter(m=>m.drugName));
     setInteractions(ia);

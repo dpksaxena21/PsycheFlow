@@ -11,7 +11,7 @@ export default function HospitalAppointments({ hospital, patients, staff, S, car
   const [loading, setLoading] = useState(false);
   const today = new Date().toISOString().slice(0,10);
 
-  useEffect(() => { loadAppointments(); }, [hospital]);
+  useEffect(() => { loadAppointments(); }, [hospital?.id]);
 
   const loadAppointments = async () => {
     if (!hospital) return;
