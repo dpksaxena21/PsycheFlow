@@ -22,6 +22,13 @@ export default function HospitalAuth({ onLogin, onBack }) {
     if (err) { setError(err.message); setLoading(false); return; }
     const { data:profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
     if (profile?.role !== 'hospital_admin') { setError('This account is not a hospital admin account.'); await supabase.auth.signOut(); setLoading(false); return; }
+    // Store session for restoration on reload
+    if (data.session) {
+      localStorage.setItem('psycheflow_hospital_session', JSON.stringify({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      }));
+    }
     onLogin(data.user);
     setLoading(false);
   };

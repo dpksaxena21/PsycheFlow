@@ -139,7 +139,20 @@ export default function App() {
     // Restore hospital session if exists
     const savedHospital = localStorage.getItem('psycheflow_hospital_user');
     if (savedHospital) {
-      try { setHospitalUser(JSON.parse(savedHospital)); } catch { localStorage.removeItem('psycheflow_hospital_user'); }
+      try {
+        setHospitalUser(JSON.parse(savedHospital));
+        // Ensure supabase session is active for RLS
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          const storedSession = localStorage.getItem('psycheflow_hospital_session');
+          if (storedSession) {
+            try {
+              const { access_token, refresh_token } = JSON.parse(storedSession);
+              await supabase.auth.setSession({ access_token, refresh_token });
+            } catch {}
+          }
+        }
+      } catch { localStorage.removeItem('psycheflow_hospital_user'); }
     }
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!savedHospital) {
