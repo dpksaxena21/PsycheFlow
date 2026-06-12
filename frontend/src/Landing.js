@@ -77,7 +77,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
                     ))}
                   </div>}
                 </div>
-                {[['Features','features'],['Research','blog'],['Pricing','pricing'],['Security','security']].map(([label, id]) => (
+                {[['Patients','features'],['Psychologists','how'],['Hospitals','instruments'],['Research','blog'],['Pricing','pricing']].map(([label, id]) => (
                   <span key={id} onClick={()=>id==='pricing'?onPricing?.():scrollTo(id)} style={{ fontSize:14, color:S.muted, cursor:'pointer', fontWeight:500 }}
                     onMouseEnter={e=>e.target.style.color=S.navy} onMouseLeave={e=>e.target.style.color=S.muted}>{label}</span>
                 ))}
@@ -98,10 +98,9 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
 
             {/* LEFT */}
             <div>
-              <h1 style={{ margin:'0 0 24px', lineHeight:1.05, letterSpacing:'-0.04em' }}>
-                <span style={{ display:'block', fontSize:isMobile?38:64, fontWeight:300, color:S.navy, letterSpacing:'-0.03em' }}>Clinical</span>
-                <span style={{ display:'block', fontSize:isMobile?38:64, fontWeight:700, color:S.navy, letterSpacing:'-0.04em' }}>intelligence</span>
-                <span style={{ display:'block', fontSize:isMobile?32:52, fontWeight:400, color:S.blue, letterSpacing:'-0.03em', marginTop:4 }}>for mental healthcare.</span>
+              <h1 style={{ margin:'0 0 24px' }}>
+                <span style={{ display:'block', fontSize:isMobile?36:58, fontWeight:300, color:S.navy, letterSpacing:'-0.04em', lineHeight:1.1 }}>The operating system for</span>
+                <span style={{ display:'block', fontSize:isMobile?36:58, fontWeight:700, color:S.navy, letterSpacing:'-0.04em', lineHeight:1.1 }}>modern mental healthcare.</span>
               </h1>
               <p style={{ fontSize: isMobile?17:20, color:S.textSub, lineHeight:1.65, margin:'0 0 40px', maxWidth:420, fontWeight:400 }}>
                 One platform for assessment, therapy, clinical documentation, and population analytics.
@@ -114,11 +113,17 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
                   Start as Psychologist
                 </button>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:24, maxWidth:360 }}>
-                {[['50,000+','Assessments completed'],['94%','Crisis detection accuracy'],['67%','Less documentation time'],['16','Validated instruments']].map(([num,label])=>(
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:24, maxWidth:380 }}>
+                {[
+                  ['50,000+','Assessments completed','Across hospitals and clinics'],
+                  ['94%','Crisis detection sensitivity','Validated on clinical outcomes'],
+                  ['67%','Less documentation time','SOAP notes in under 2 minutes'],
+                  ['16','Validated instruments','PHQ-9, GAD-7, Big Five & more'],
+                ].map(([num,label,sub])=>(
                   <div key={label}>
-                    <div style={{ fontSize:24, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', lineHeight:1 }}>{num}</div>
-                    <div style={{ fontSize:13, color:S.muted, marginTop:4 }}>{label}</div>
+                    <div style={{ fontSize:26, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', lineHeight:1 }}>{num}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:S.navy, marginTop:4 }}>{label}</div>
+                    <div style={{ fontSize:11, color:S.muted, marginTop:2, lineHeight:1.4 }}>{sub}</div>
                   </div>
                 ))}
               </div>
@@ -126,7 +131,9 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
 
             {/* RIGHT — dashboard */}
             {!isMobile && (
-              <div style={{ boxShadow:'0 24px 64px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05)', borderRadius:16, overflow:'hidden' }}>
+              <div style={{ boxShadow:'0 32px 80px rgba(12,26,46,0.15), 0 0 0 1px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)', borderRadius:16, overflow:'hidden', transform:'perspective(1000px) rotateY(-1deg) rotateX(1deg)', transition:'transform 0.3s' }}
+                onMouseEnter={e=>e.currentTarget.style.transform='perspective(1000px) rotateY(0deg) rotateX(0deg)'}
+                onMouseLeave={e=>e.currentTarget.style.transform='perspective(1000px) rotateY(-1deg) rotateX(1deg)'}>
                 {/* Window chrome */}
                 <div style={{ background:'#1E293B', padding:'12px 16px', display:'flex', alignItems:'center', gap:8 }}>
                   <div style={{ display:'flex', gap:6 }}>{['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }}/>)}</div>
@@ -197,6 +204,34 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
                 <div key={h} style={{ fontSize:13, fontWeight:600, color:S.hint }}>{h}</div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── STORY FLOW ── */}
+      <div style={{ background:S.bg, borderTop:`1px solid ${S.border}`, padding: isMobile?'64px 24px':'80px 80px' }}>
+        <div style={{ maxWidth:1200, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:48 }}>
+            <p style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>How it works</p>
+            <h2 style={{ fontSize:isMobile?28:40, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:0 }}>From assessment to outcome.</h2>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(5,1fr)', gap:0, alignItems:'start' }}>
+            {[
+              { step:'01', title:'Patient completes assessment', body:'16 validated instruments. 15 minutes. Any device.' },
+              { step:'02', title:'AI identifies risk', body:'30 ML models. SHAP explanations. Crisis flagged instantly.' },
+              { step:'03', title:'Psychologist receives briefing', body:'Pre-session brief ready. No chart-diving.' },
+              { step:'04', title:'SOAP note generated', body:'Documentation in under 2 minutes. Clinician reviews.' },
+              { step:'05', title:'Outcome tracked', body:'PHQ trends. Treatment response. Population analytics.' },
+            ].map((s,i)=>(
+              <div key={s.step} style={{ padding:'0 20px', borderRight:i<4?`1px solid ${S.border}`:'none', position:'relative' }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.blue, marginBottom:12, letterSpacing:'0.04em' }}>{s.step}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:S.navy, marginBottom:8, letterSpacing:'-0.01em', lineHeight:1.3 }}>{s.title}</div>
+                <div style={{ fontSize:13, color:S.muted, lineHeight:1.6 }}>{s.body}</div>
+                {i<4 && !isMobile && <div style={{ position:'absolute', top:8, right:-8, zIndex:1 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke={S.border} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>}
+              </div>
+            ))}
           </div>
         </div>
       </div>
