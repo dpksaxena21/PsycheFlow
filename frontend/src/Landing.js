@@ -49,11 +49,38 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
             </div>
             <span style={{ fontSize:16, fontWeight:700, color:S.navy, letterSpacing:'-0.02em' }}>PsycheFlow</span>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:32 }}>
-            {!isMobile && [['Features','features'],['How It Works','how'],['Research','blog'],['Pricing','pricing'],['Security','security']].map(([label, id]) => (
-              <span key={id} onClick={()=>id==='pricing'?onPricing?.():scrollTo(id)} style={{ fontSize:14, color:S.muted, cursor:'pointer', fontWeight:500 }}
-                onMouseEnter={e=>e.target.style.color=S.navy} onMouseLeave={e=>e.target.style.color=S.muted}>{label}</span>
-            ))}
+          <div style={{ display:'flex', alignItems:'center', gap:28 }}>
+            {!isMobile && (
+              <>
+                {/* Solutions dropdown */}
+                <div style={{ position:'relative' }}
+                  onMouseEnter={e=>{ const d=e.currentTarget.querySelector('.solutions-menu'); if(d)d.style.opacity='1'; if(d)d.style.pointerEvents='all'; }}
+                  onMouseLeave={e=>{ const d=e.currentTarget.querySelector('.solutions-menu'); if(d)d.style.opacity='0'; if(d)d.style.pointerEvents='none'; }}>
+                  <span style={{ fontSize:14, color:S.muted, cursor:'pointer', fontWeight:500, display:'flex', alignItems:'center', gap:4 }}>
+                    Solutions
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={S.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  <div className="solutions-menu" style={{ position:'absolute', top:'calc(100% + 12px)', left:-20, background:'#fff', borderRadius:12, border:`1px solid ${S.border}`, padding:8, minWidth:260, boxShadow:'0 8px 30px rgba(0,0,0,0.1)', opacity:0, pointerEvents:'none', transition:'opacity 0.15s', zIndex:200 }}>
+                    {[
+                      { label:'For Patients', sub:'Assessment · Journaling · Therapy', action:onGetStarted },
+                      { label:'For Psychologists', sub:'SOAP Notes · AI Briefs · Telemedicine', action:onPsychLanding },
+                      { label:'For Hospitals', sub:'Population Analytics · NABH · Crisis Detection', action:onHospitalLanding },
+                    ].map(item=>(
+                      <div key={item.label} onClick={item.action} style={{ padding:'10px 14px', borderRadius:8, cursor:'pointer' }}
+                        onMouseEnter={e=>e.currentTarget.style.background=S.bg2}
+                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                        <div style={{ fontSize:13, fontWeight:600, color:S.navy }}>{item.label}</div>
+                        <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{item.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {[['Features','features'],['Research','blog'],['Pricing','pricing'],['Security','security']].map(([label, id]) => (
+                  <span key={id} onClick={()=>id==='pricing'?onPricing?.():scrollTo(id)} style={{ fontSize:14, color:S.muted, cursor:'pointer', fontWeight:500 }}
+                    onMouseEnter={e=>e.target.style.color=S.navy} onMouseLeave={e=>e.target.style.color=S.muted}>{label}</span>
+                ))}
+              </>
+            )}
           </div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={onGetStarted} style={{ padding:'8px 20px', background:'transparent', color:S.navy, border:`1px solid ${S.border}`, borderRadius:8, fontSize:14, fontWeight:500, cursor:'pointer' }}>Sign in</button>
@@ -63,26 +90,26 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </nav>
 
       {/* ── HERO ── */}
-      <div id="hero" ref={heroRef} style={{ background:S.bg, paddingTop:120, paddingBottom:96, paddingLeft: isMobile?24:80, paddingRight: isMobile?24:80 }}>
+      <div id="hero" ref={heroRef} style={{ background:S.bg, paddingTop:96, paddingBottom:80, paddingLeft: isMobile?24:80, paddingRight: isMobile?24:80 }}>
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
           <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'42fr 58fr', gap: isMobile?48:80, alignItems:'center' }}>
 
             {/* LEFT */}
             <div>
-              <h1 style={{ fontSize: isMobile?40:68, fontWeight:700, color:S.navy, letterSpacing:'-0.04em', lineHeight:1.05, margin:'0 0 24px' }}>
-                Clinical intelligence<br/>
-                <span style={{ color:S.blue }}>for mental</span><br/>
-                <span style={{ color:S.blue }}>healthcare.</span>
+              <h1 style={{ margin:'0 0 24px', lineHeight:1.05, letterSpacing:'-0.04em' }}>
+                <span style={{ display:'block', fontSize:isMobile?38:64, fontWeight:300, color:S.navy, letterSpacing:'-0.03em' }}>Clinical</span>
+                <span style={{ display:'block', fontSize:isMobile?38:64, fontWeight:700, color:S.navy, letterSpacing:'-0.04em' }}>intelligence</span>
+                <span style={{ display:'block', fontSize:isMobile?32:52, fontWeight:400, color:S.blue, letterSpacing:'-0.03em', marginTop:4 }}>for mental healthcare.</span>
               </h1>
               <p style={{ fontSize: isMobile?17:20, color:S.textSub, lineHeight:1.65, margin:'0 0 40px', maxWidth:420, fontWeight:400 }}>
                 One platform for assessment, therapy, clinical documentation, and population analytics.
               </p>
               <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:56 }}>
                 <button onClick={onHospitalLanding} style={{ padding:'13px 28px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:15, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em' }}>
-                  Book a Demo
+                  Book Hospital Demo
                 </button>
-                <button onClick={onGetStarted} style={{ padding:'13px 28px', background:'transparent', color:S.muted, border:`1px solid ${S.border}`, borderRadius:8, fontSize:15, cursor:'pointer' }}>
-                  Start Free
+                <button onClick={onPsychLanding} style={{ padding:'13px 28px', background:'transparent', color:S.navy, border:`1px solid ${S.border}`, borderRadius:8, fontSize:15, cursor:'pointer', fontWeight:500 }}>
+                  Start as Psychologist
                 </button>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:24, maxWidth:360 }}>
