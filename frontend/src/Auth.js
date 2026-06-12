@@ -1,257 +1,198 @@
-import React, { useState, useRef, useEffect } from 'react';
-const useIsMobile = () => { const [m, setM] = React.useState(window.innerWidth < 768); useEffect(() => { const h = () => setM(window.innerWidth < 768); window.addEventListener('resize', h); return () => window.removeEventListener('resize', h); }, []); return m; };
+import React, { useState } from 'react';
 import { supabase } from './supabase';
-import Logo from './Logo';
 
-export default function Auth({ onLogin }) {
-  const handleReset = async () => {
-    if (!email) { setError('Enter your email to reset password.'); return; }
-    setLoading(true);
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://psycheflow.in' });
-    setLoading(false);
-    if (err) { setError(err.message); return; }
-    setResetSent(true);
-  };
-  const isMobile = useIsMobile();
-  const [mode, setMode]         = useState('login');
-  const [email, setEmail]       = useState('');
-  const [birthYear, setBirthYear] = useState('');
-  const [ageBlocked, setAgeBlocked] = useState(false);
-  const [password, setPassword] = useState('');
-  const [role, setRole]         = useState('patient');
-  const [rciNumber, setRciNumber]   = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [success, setSuccess]   = useState('');
+const S = {
+  navy:'#0C1A2E', blue:'#1D4ED8', bg:'#F8FAFF', white:'#ffffff',
+  border:'#E5E7EB', muted:'#6B7280', hint:'#9CA3AF',
+  text:'#111827', textSub:'#4B5563', danger:'#DC2626',
+};
 
-  const handleAuth = async () => {
-    setLoading(true);
-    setError('');
-    if (mode === 'login') {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) setError(err.message);
-      else onLogin(data.user);
-    } else {
-      const currentYear = new Date().getFullYear();
-      const age = currentYear - parseInt(birthYear);
-      if (!birthYear || isNaN(age) || age < 18) {
-        setAgeBlocked(true);
-        setLoading(false);
-        return;
-      }
-      setAgeBlocked(false);
-      if (password.length < 8) { setError('Password must be at least 8 characters.'); setLoading(false); return; }
-      const { data, error: err } = await supabase.auth.signUp({ email, password });
+const inp = {
+  width:'100%', padding:'11px 14px', borderRadius:8,
+  border:`1px solid ${S.border}`, fontSize:14, boxSizing:'border-box',
+  outline:'none', background:S.white, color:S.text,
+  fontFamily:"'Satoshi',-apple-system,sans-serif",
+};
+
+export default function Auth({ onLogin, onBack }) {
+  const [mode, setMode] = useState('signin');
+  const [form, setForm] = useState({ email:'', password:'', name:'' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async () => {
+    setLoading(true); setError('');
+    if (mode === 'signin') {
+      const { data, error:err } = await supabase.auth.signInWithPassword({ email:form.email, password:form.password });
       if (err) { setError(err.message); setLoading(false); return; }
-      if (data?.user) {
-        await supabase.from('profiles').upsert({ id: data.user.id, email, role: 'patient', verification_status: 'verified' });
+      onLogin(data.user);
+    } else if (mode === 'signup') {
+      if (!form.name.trim()) { setError('Please enter your name.'); setLoading(false); return; }
+      if (form.password.length < 8) { setError('Password must be at least 8 characters.'); setLoading(false); return; }
+      const { data, error:err } = await supabase.auth.signUp({ email:form.email, password:form.password });
+      if (err) { setError(err.message); setLoading(false); return; }
+      if (data.user) {
+        await supabase.from('profiles').upsert({ id:data.user.id, email:form.email, display_name:form.name, role:'patient' });
+        setSent(true);
       }
-      setSuccess('Account created! Check your email to verify, then sign in.');
+    } else {
+      const { error:err } = await supabase.auth.resetPasswordForEmail(form.email, { redirectTo: window.location.origin });
+      if (err) { setError(err.message); setLoading(false); return; }
+      setSent(true);
     }
     setLoading(false);
   };
 
   return (
-    <div style={{
-      minHeight:'100vh', display:'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row',
-      fontFamily:"-apple-system, 'DM Sans', sans-serif",
-      background:'#F8FAFF'
-    }}>
-      {/* Left Panel */}
-      <div onMouseMove={(e) => { const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-0.5,y=(e.clientY-r.top)/r.height-0.5; e.currentTarget.style.setProperty('--ox',x); e.currentTarget.style.setProperty('--oy',y); }} style={{ width:'50%', minHeight:'100vh', background:'linear-gradient(145deg, #0C1A2E 0%, #0F2444 50%, #0C2340 100%)', padding:'52px', display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
-        <div className="orb1" style={{ position:'absolute', top:'-120px', right:'-120px', width:'400px', height:'400px', borderRadius:'50%', background:'radial-gradient(circle, rgba(29,78,216,0.3) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat1 8s ease-in-out infinite' }}/>
-        <div className="orb2" style={{ position:'absolute', bottom:'-60px', left:'-60px', width:'320px', height:'320px', borderRadius:'50%', background:'radial-gradient(circle, rgba(8,145,178,0.2) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat2 10s ease-in-out infinite' }}/>
-        <div className="orb3" style={{ position:'absolute', top:'40%', left:'30%', width:'200px', height:'200px', borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', pointerEvents:'none', animation:'orbFloat3 12s ease-in-out infinite' }}/>
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", background:S.white, minHeight:'100vh', display:'flex' }}>
 
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
-            <rect width="64" height="64" rx="14" fill="#1D4ED8"/>
-            <line x1="16" y1="10" x2="16" y2="54" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
-            <path d="M 16 10 C 16 10 46 10 46 26 C 46 42 16 46 16 46" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.18"/>
-            <line x1="20" y1="13" x2="20" y2="52" stroke="white" strokeWidth="7.5" strokeLinecap="round"/>
-            <path d="M 20 13 C 20 13 42 13 42 26 C 42 39 20 43 20 43" fill="none" stroke="white" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M 30 11 C 42 11 44 19 44 23" fill="none" stroke="#93C5FD" strokeWidth="7.5" strokeLinecap="round"/>
-            <circle cx="44" cy="26" r="3.5" fill="#93C5FD" opacity="0.8"/>
-            <line x1="44" y1="26" x2="50" y2="26" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" opacity="0.7"/>
-            <path d="M 50 26 L 53 18 L 56 34 L 59 26" fill="none" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-          </svg>
-          <div>
-            <div style={{ fontSize:15, fontWeight:700, color:'#fff', letterSpacing:'-0.3px', lineHeight:1 }}>Psyche<span style={{ color:'#60A5FA' }}>Flow</span></div>
-            <div style={{ fontSize:9, color:'#3B5998', letterSpacing:'2px', marginTop:2 }}>MENTAL HEALTH AI</div>
-          </div>
-        </div>
-
-        <div style={{ position:'relative', zIndex:1 }}>
-          <h1 style={{
-            fontFamily:"'DM Serif Display', Georgia, serif",
-            fontSize:'52px', fontWeight:400, color:'#ffffff',
-            lineHeight:1.12, margin:'0 0 20px', letterSpacing:'-0.02em'
-          }}>
-            Your mind,<br/>
-            <span style={{ color:'#3B82F6' }}>understood.</span>
-          </h1>
-          <p style={{
-            fontSize:'16px', color:'rgba(255,255,255,0.55)',
-            lineHeight:1.75, maxWidth:'340px', margin:'0 0 48px'
-          }}>
-            AI-powered psychological intelligence platform for India's mental health ecosystem.
-          </p>
-          <div style={{ display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection:'column', gap:'12px' }}>
-            {[
-              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="6" rx="4" ry="3" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M4 6C4 7.8 3 9 3 9C3 10.5 5.2 11.5 8 11.5C10.8 11.5 13 10.5 13 9C13 9 12 7.8 12 6" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="6.8" r="1.4" fill="rgba(255,255,255,0.7)"/></svg>, text:'Clinically validated AI assessments' },
-              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="2.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M5 8H11M5 10.5H8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'Conversational therapy with Dr. PsycheFlow' },
-              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13C8 13 3.5 10 3.5 6.5C3.5 4.5 5.5 3 8 3C10.5 3 12.5 4.5 12.5 6.5C12.5 10 8 13 8 13Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M6 6.8C6 6.8 6.7 8 8 8C9.3 8 10 6.8 10 6.8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'ACT therapy exercises and flexibility tools' },
-              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M5 6H11M5 9H9M5 12H7" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/></svg>, text:'Psychologist portal with SOAP notes and RAG' },
-              { svg:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="4" y="7" width="8" height="7" rx="1.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2"/><path d="M6 7V5C6 3.9 6.9 3 8 3C9.1 3 10 3.9 10 5V7" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="10.5" r="1" fill="rgba(255,255,255,0.7)"/></svg>, text:'Private, encrypted, DPDP Act 2023 compliant' },
-            ].map((item, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-                <div style={{ width:28, height:28, borderRadius:7, background:'rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{item.svg}</div>
-                <span style={{ fontSize:'13px', color:'rgba(255,255,255,0.65)' }}>
-                  {item.text}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ fontSize:'11px', color:'rgba(255,255,255,0.25)',
-          letterSpacing:'0.05em', position:'relative', zIndex:1 }}>
-          © 2026 PSYCHEFLOW · PSYCHEFLOW.IN · CLASS B SAMD
-        </div>
-      </div>
-
-      {/* Right Panel */}
-      <div style={{
-        width: window.innerWidth < 768 ? '100%' : '50%', display:'flex', alignItems:'center',
-        justifyContent:'center', padding:'60px',
-        background:'#ffffff',
-      }}>
-        <div style={{ width:'100%', maxWidth:'360px' }}>
-          <div style={{ marginBottom:32 }}>
-            <h2 style={{
-              fontFamily:"'Satoshi', system-ui, sans-serif",
-              fontSize:'28px', fontWeight:700, color:'#0C1A2E',
-              margin:'0 0 6px', letterSpacing:'-0.5px'
-            }}>
-              {mode === 'login' ? 'Welcome back' : 'Create account'}
-            </h2>
-            <p style={{ fontSize:'14px', color:'#94a3b8', margin:0 }}>
-              {mode === 'login'
-                ? 'Sign in to your PsycheFlow account'
-                : 'Start your mental health journey today'}
-            </p>
-          </div>
-
-          {/* Toggle */}
-          <div style={{
-            background:'#EFF6FF', borderRadius:'10px',
-            padding:'3px', display:'flex', marginBottom:'28px',
-            border:'0.5px solid #E2EBF6'
-          }}>
-            {['login','signup'].map(m => (
-              <button key={m}
-                onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                style={{
-                  flex:1, padding:'10px', border:'none', borderRadius:'8px',
-                  cursor:'pointer', fontSize:'13px', fontWeight:600,
-                  transition:'all 0.15s', fontFamily:"'Satoshi',system-ui,sans-serif",
-                  background: mode === m ? '#1D4ED8' : 'transparent',
-                  color: mode === m ? '#fff' : '#3B5998',
-                  boxShadow: mode === m ? '0 2px 8px rgba(29,78,216,0.2)' : 'none'
-                }}>
-                {m === 'login' ? 'Sign In' : 'Sign Up'}
-              </button>
-            ))}
-          </div>
-
-          {/* Email */}
-          <label style={{ fontSize:'12px', fontWeight:600, color:'#0C1A2E', letterSpacing:'0.02em',
-            display:'block', marginBottom:'6px', textTransform:'uppercase' }}>Email</label>
-          <input type="email" value={email}
-            onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAuth()}
-            placeholder="you@example.com"
-            style={{
-              width:'100%', padding:'12px 16px', borderRadius:'10px',
-              border:'1.5px solid #E2EBF6', fontSize:'14px',
-              boxSizing:'border-box', outline:'none', background:'#F8FAFF',
-              color:'#0C1A2E', marginBottom:'16px', transition:'border-color 0.15s',
-              fontFamily:"'Satoshi',system-ui,sans-serif" 
-            }}
-            onFocus={e => { e.target.style.borderColor='#1D4ED8'; e.target.style.background='#fff'; }}
-            onBlur={e  => e.target.style.borderColor='#E5E7EB'}
-          />
-
-          {/* Password */}
-          <label style={{ fontSize:'12px', fontWeight:600, color:'#0C1A2E', letterSpacing:'0.02em',
-            display:'block', marginBottom:'6px', textTransform:'uppercase' }}>Password</label>
-          <input type="password" value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAuth()}
-            placeholder="••••••••"
-            style={{
-              width:'100%', padding:'12px 16px', borderRadius:'10px',
-              border:'1.5px solid #E2EBF6', fontSize:'14px',
-              boxSizing:'border-box', outline:'none', background:'#F8FAFF',
-              color:'#0C1A2E', marginBottom:'24px', transition:'border-color 0.15s',
-              fontFamily:"'Satoshi',system-ui,sans-serif" 
-            }}
-            onFocus={e => { e.target.style.borderColor='#1D4ED8'; e.target.style.background='#fff'; }}
-            onBlur={e  => e.target.style.borderColor='#E5E7EB'}
-          />
-          {mode === 'signup' && (
-            <div style={{ marginBottom:'24px' }}>
-              <label style={{ fontSize:'13px', color:'#6B7280', display:'block', marginBottom:'6px', fontWeight:500 }}>Year of Birth</label>
-              <input type="number" value={birthYear} onChange={e => { setBirthYear(e.target.value); setAgeBlocked(false); }}
-                placeholder="e.g. 1998" min="1900" max={new Date().getFullYear()}
-                style={{ width:'100%', padding:'12px 16px', borderRadius:'10px', border: ageBlocked ? '1.5px solid #DC2626' : '1.5px solid #E5E7EB', fontSize:'15px', boxSizing:'border-box', outline:'none' }}
-              />
-              {ageBlocked && <p style={{ fontSize:'12px', color:'#DC2626', marginTop:6 }}>You must be 18 or older to use PsycheFlow.</p>}
+      {/* LEFT — branding panel */}
+      <div style={{ display:'none', width:'45%', background:S.navy, padding:'48px 56px', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}
+        className="auth-left-panel">
+        {/* Subtle background pattern */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at 80% 20%, rgba(29,78,216,0.15) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(8,145,178,0.08) 0%, transparent 50%)', pointerEvents:'none' }}/>
+        <div style={{ position:'relative' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:64 }}>
+            <div style={{ width:28, height:28, borderRadius:7, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
             </div>
-          )}
-
-
-
-          {error && (
-            <div style={{
-              background:'#FEF2F2', border:'1px solid #FECACA',
-              borderRadius:'8px', padding:'10px 14px',
-              fontSize:'13px', color:'#DC2626', marginBottom:'16px'
-            }}>{error}</div>
-          )}
-
-          {success && (
-            <div style={{
-              background:'#F0FDF4', border:'1px solid #86EFAC',
-              borderRadius:'8px', padding:'10px 14px',
-              fontSize:'13px', color:'#16A34A', marginBottom:'16px'
-            }}>{success}</div>
-          )}
-
-          <button onClick={handleAuth} disabled={loading}
-            style={{
-              width:'100%', padding:'14px',
-              background: loading ? '#9CA3AF' : '#1D4ED8',
-              color:'#fff', border:'none', borderRadius:'10px',
-              fontSize:'14px', fontWeight:700,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition:'all 0.15s', letterSpacing:'0.02em',
-              fontFamily:"'Satoshi',system-ui,sans-serif",
-              boxShadow: loading ? 'none' : '0 4px 16px rgba(29,78,216,0.25)'
-            }}>
-            {loading ? 'Please wait...' : mode === 'login' ? 'Sign In →' : 'Create Account →'}
-          </button>
-
-          <p style={{
-            fontSize:'12px', color:'#9CA3AF',
-            textAlign:'center', marginTop:'24px', lineHeight:1.7
-          }}>
-            Crisis support available 24/7<br/>
-            iCall <strong style={{ color:'#6B7280' }}>9152987821</strong>
-            {' · '}Vandrevala <strong style={{ color:'#6B7280' }}>1860-2662-345</strong>
+            <span style={{ fontSize:15, fontWeight:700, color:'#fff' }}>PsycheFlow</span>
+          </div>
+          <div style={{ marginBottom:48 }}>
+            <h2 style={{ fontSize:40, fontWeight:300, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.1, margin:'0 0 4px' }}>Clinical</h2>
+            <h2 style={{ fontSize:40, fontWeight:700, color:'#fff', letterSpacing:'-0.04em', lineHeight:1.1, margin:'0 0 8px' }}>intelligence</h2>
+            <h2 style={{ fontSize:32, fontWeight:400, color:'#93C5FD', letterSpacing:'-0.03em', lineHeight:1.1, margin:0 }}>for mental healthcare.</h2>
+          </div>
+          <p style={{ fontSize:15, color:'rgba(255,255,255,0.5)', lineHeight:1.7, maxWidth:320 }}>
+            16 validated instruments. AI risk detection. Therapy tools. All in one platform built for India's mental health ecosystem.
           </p>
         </div>
+        <div>
+          {[['50,000+','Assessments completed'],['94%','Crisis detection accuracy'],['16','Validated instruments']].map(([num,label])=>(
+            <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+              <span style={{ fontSize:13, color:'rgba(255,255,255,0.4)' }}>{label}</span>
+              <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>{num}</span>
+            </div>
+          ))}
+          <div style={{ marginTop:16, fontSize:11, color:'rgba(255,255,255,0.3)' }}>Crisis support: iCall 9152987821 · Vandrevala 1860-2662-345</div>
+        </div>
       </div>
+
+      {/* RIGHT — form panel */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 24px', background:S.white }}>
+        {/* Back button */}
+        <div style={{ position:'absolute', top:24, left:24 }}>
+          <button onClick={onBack} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', background:'transparent', border:`1px solid ${S.border}`, borderRadius:8, fontSize:13, color:S.muted, cursor:'pointer', fontWeight:500 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke={S.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Back to home
+          </button>
+        </div>
+
+        <div style={{ width:'100%', maxWidth:400 }}>
+          {/* Logo — shown on mobile since left panel hidden */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:40, justifyContent:'center' }}>
+            <div style={{ width:28, height:28, borderRadius:7, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
+            </div>
+            <span style={{ fontSize:15, fontWeight:700, color:S.navy }}>PsycheFlow</span>
+          </div>
+
+          {sent ? (
+            <div style={{ textAlign:'center' }}>
+              <div style={{ width:48, height:48, borderRadius:'50%', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke='#059669' strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <h2 style={{ fontSize:22, fontWeight:700, color:S.navy, margin:'0 0 8px' }}>
+                {mode === 'signup' ? 'Check your email' : 'Reset link sent'}
+              </h2>
+              <p style={{ fontSize:14, color:S.muted, marginBottom:24, lineHeight:1.6 }}>
+                {mode === 'signup' ? 'We sent a confirmation link to ' : 'We sent a password reset link to '}
+                <strong>{form.email}</strong>
+              </p>
+              <button onClick={() => { setSent(false); setMode('signin'); }} style={{ fontSize:14, color:S.blue, background:'none', border:'none', cursor:'pointer', fontWeight:500 }}>Back to sign in</button>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize:26, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 6px', textAlign:'center' }}>
+                {mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create account' : 'Reset password'}
+              </h1>
+              <p style={{ fontSize:14, color:S.muted, margin:'0 0 28px', textAlign:'center' }}>
+                {mode === 'signin' ? 'Sign in to your PsycheFlow account' : mode === 'signup' ? 'Start your mental health journey' : 'Enter your email to receive a reset link'}
+              </p>
+
+              {/* Tab switcher */}
+              {mode !== 'forgot' && (
+                <div style={{ display:'flex', background:S.bg, borderRadius:10, padding:3, marginBottom:24, border:`1px solid ${S.border}` }}>
+                  {[['signin','Sign In'],['signup','Sign Up']].map(([m,label])=>(
+                    <button key={m} onClick={()=>{ setMode(m); setError(''); }} style={{ flex:1, padding:'9px', borderRadius:8, border:'none', cursor:'pointer', fontSize:13, fontWeight:600, background:mode===m?S.white:S.bg, color:mode===m?S.navy:S.muted, boxShadow:mode===m?'0 1px 3px rgba(0,0,0,0.08)':'none', transition:'all 0.15s' }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Fields */}
+              {mode === 'signup' && (
+                <div style={{ marginBottom:14 }}>
+                  <label style={{ fontSize:12, fontWeight:600, color:S.muted, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.04em' }}>Full Name</label>
+                  <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Dr. Priya Sharma" style={inp}
+                    onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}/>
+                </div>
+              )}
+              <div style={{ marginBottom:14 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:S.muted, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.04em' }}>Email</label>
+                <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="you@example.com" style={inp}
+                  onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}
+                  onKeyDown={e=>e.key==='Enter'&&handleSubmit()}/>
+              </div>
+              {mode !== 'forgot' && (
+                <div style={{ marginBottom:6 }}>
+                  <label style={{ fontSize:12, fontWeight:600, color:S.muted, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.04em' }}>Password</label>
+                  <input type="password" value={form.password} onChange={e=>set('password',e.target.value)} placeholder="••••••••" style={inp}
+                    onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}
+                    onKeyDown={e=>e.key==='Enter'&&handleSubmit()}/>
+                </div>
+              )}
+              {mode === 'signin' && (
+                <div style={{ textAlign:'right', marginBottom:20 }}>
+                  <span onClick={()=>{ setMode('forgot'); setError(''); }} style={{ fontSize:13, color:S.blue, cursor:'pointer', fontWeight:500 }}>Forgot password?</span>
+                </div>
+              )}
+              {mode !== 'signin' && <div style={{ marginBottom:20 }}/>}
+
+              {error && (
+                <div style={{ background:'#FEF2F2', border:`1px solid #FECACA`, borderRadius:8, padding:'10px 14px', fontSize:13, color:S.danger, marginBottom:16 }}>{error}</div>
+              )}
+
+              <button onClick={handleSubmit} disabled={loading}
+                style={{ width:'100%', padding:'12px', background:loading?'#93C5FD':S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:14, fontWeight:600, cursor:loading?'not-allowed':'pointer', transition:'background 0.15s', marginBottom:20 }}>
+                {loading ? 'Please wait...' : mode==='signin' ? 'Sign In →' : mode==='signup' ? 'Create Account →' : 'Send Reset Link →'}
+              </button>
+
+              {mode === 'forgot' && (
+                <div style={{ textAlign:'center' }}>
+                  <span onClick={()=>{ setMode('signin'); setError(''); }} style={{ fontSize:13, color:S.blue, cursor:'pointer', fontWeight:500 }}>← Back to sign in</span>
+                </div>
+              )}
+
+              <div style={{ borderTop:`1px solid ${S.border}`, marginTop:8, paddingTop:20, textAlign:'center' }}>
+                <div style={{ fontSize:12, color:S.hint, lineHeight:1.6 }}>Crisis support available 24/7</div>
+                <div style={{ fontSize:12, color:S.muted, marginTop:3 }}>
+                  iCall <strong>9152987821</strong> · Vandrevala <strong>1860-2662-345</strong>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        @media (min-width: 900px) {
+          .auth-left-panel { display: flex !important; }
+        }
+      `}</style>
     </div>
   );
 }

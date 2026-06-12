@@ -163,6 +163,12 @@ export default function App() {
         if (session?.user) logAction(session.user.id, ACTIONS.LOGIN, 'auth');
       }
     });
+    // Browser back button support
+    const handlePopState = () => {
+      if (window.history.state?.page === 'auth') setShowLanding(true);
+    };
+    window.addEventListener('popstate', handlePopState);
+
     supabase.auth.onAuthStateChange((_event, session) => {
       if (!localStorage.getItem('psycheflow_hospital_user')) {
         // On SIGNED_IN clear any stale state from previous user
@@ -294,7 +300,7 @@ export default function App() {
   if (legalPage === 'privacy') return <Privacy onBack={() => setLegalPage(null)} />;
   if (legalPage === 'terms') return <Terms onBack={() => setLegalPage(null)} />;
   if (legalPage === 'dpdp') return <DPDP onBack={() => setLegalPage(null)} />;
-  if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} /> : <Landing onGetStarted={() => setShowLanding(false)} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} onPricing={() => setShowPricing(true)}/>;
+  if (!user) return showLanding===false ? <Auth onLogin={(u) => { setUser(u); setShowLanding(false); checkOnboarding(u.id); }} onBack={() => setShowLanding(true)} /> : <Landing onGetStarted={() => { window.history.pushState({page:'auth'}, ''); setShowLanding(false); }} onLegal={(page) => setLegalPage(page)} onPsychLanding={() => setShowPsychLanding(true)} onHospitalLanding={() => setShowHospitalLanding(true)} onPricing={() => setShowPricing(true)}/>;
   if (user && consentGiven === false && !isPsychologist) return <Consent user={user} onConsent={() => { setConsentGiven(true); }} />;
   if (user && onboarded === false && !isPsychologist) return <Onboarding user={user} onComplete={() => { setOnboarded(true); checkOnboarding(user.id); }} />;
   if (isPsychologist) return <PsychologistPortal user={user} profile={profile} onLogout={handleLogout} onPatientMode={() => setIsPsychologist(false)} />;
