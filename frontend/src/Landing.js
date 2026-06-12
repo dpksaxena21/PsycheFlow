@@ -23,6 +23,7 @@ const S = {
 
 export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospitalLanding, onPricing }) {
   const [scrolled, setScrolled] = useState(false);
+  const [showSolutions, setShowSolutions] = useState(false);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const heroRef = useRef();
@@ -31,8 +32,10 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
     const onScroll = () => setScrolled(window.scrollY > 20);
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('scroll', onScroll);
+    const closeDropdown = (e) => { if (!e.target.closest?.('.solutions-dropdown')) setShowSolutions(false); };
+    window.addEventListener('click', closeDropdown);
     window.addEventListener('resize', onResize);
-    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); };
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); window.removeEventListener('click', closeDropdown); };
   }, []);
 
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
@@ -53,14 +56,13 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
             {!isMobile && (
               <>
                 {/* Solutions dropdown */}
-                <div style={{ position:'relative' }}
-                  onMouseEnter={e=>{ const d=e.currentTarget.querySelector('.solutions-menu'); if(d)d.style.opacity='1'; if(d)d.style.pointerEvents='all'; }}
-                  onMouseLeave={e=>{ const d=e.currentTarget.querySelector('.solutions-menu'); if(d)d.style.opacity='0'; if(d)d.style.pointerEvents='none'; }}>
-                  <span style={{ fontSize:14, color:S.muted, cursor:'pointer', fontWeight:500, display:'flex', alignItems:'center', gap:4 }}>
+                <div className='solutions-dropdown' style={{ position:'relative' }}>
+                  <span onClick={()=>setShowSolutions(s=>!s)}
+                    style={{ fontSize:14, color:showSolutions?S.navy:S.muted, cursor:'pointer', fontWeight:500, display:'flex', alignItems:'center', gap:4, userSelect:'none' }}>
                     Solutions
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={S.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ transform:showSolutions?'rotate(180deg)':'none', transition:'transform 0.15s' }}><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
-                  <div className="solutions-menu" style={{ position:'absolute', top:'calc(100% + 12px)', left:-20, background:'#fff', borderRadius:12, border:`1px solid ${S.border}`, padding:8, minWidth:260, boxShadow:'0 8px 30px rgba(0,0,0,0.1)', opacity:0, pointerEvents:'none', transition:'opacity 0.15s', zIndex:200 }}>
+                  {showSolutions && <div style={{ position:'absolute', top:'calc(100% + 12px)', left:-20, background:'#fff', borderRadius:12, border:`1px solid ${S.border}`, padding:8, minWidth:260, boxShadow:'0 8px 30px rgba(0,0,0,0.12)', zIndex:200 }}>
                     {[
                       { label:'For Patients', sub:'Assessment · Journaling · Therapy', action:onGetStarted },
                       { label:'For Psychologists', sub:'SOAP Notes · AI Briefs · Telemedicine', action:onPsychLanding },
@@ -73,7 +75,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
                         <div style={{ fontSize:12, color:S.muted, marginTop:2 }}>{item.sub}</div>
                       </div>
                     ))}
-                  </div>
+                  </div>}
                 </div>
                 {[['Features','features'],['Research','blog'],['Pricing','pricing'],['Security','security']].map(([label, id]) => (
                   <span key={id} onClick={()=>id==='pricing'?onPricing?.():scrollTo(id)} style={{ fontSize:14, color:S.muted, cursor:'pointer', fontWeight:500 }}

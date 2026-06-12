@@ -82,16 +82,19 @@ export default function Auth({ onLogin, onBack }) {
 
       {/* RIGHT — form panel */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 24px', background:S.white }}>
-        {/* Back button */}
-        <div style={{ position:'absolute', top:24, left:24 }}>
-          <button onClick={onBack} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', background:'transparent', border:`1px solid ${S.border}`, borderRadius:8, fontSize:13, color:S.muted, cursor:'pointer', fontWeight:500 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke={S.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Back to home
-          </button>
-        </div>
+
 
         <div style={{ width:'100%', maxWidth:400 }}>
-          {/* Logo — shown on mobile since left panel hidden */}
+          {/* Back link */}
+          <div style={{ marginBottom:24, textAlign:'left' }}>
+            <span onClick={onBack} style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:13, color:S.muted, cursor:'pointer', fontWeight:500 }}
+              onMouseEnter={e=>e.currentTarget.style.color=S.navy} onMouseLeave={e=>e.currentTarget.style.color=S.muted}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Back to home
+            </span>
+          </div>
+
+          {/* Logo */}
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:40, justifyContent:'center' }}>
             <div style={{ width:28, height:28, borderRadius:7, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
