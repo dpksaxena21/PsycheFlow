@@ -316,28 +316,41 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       </section>
 
       {/* ═══ SECTION 4 — CRISIS DETECTION (red) ═══ */}
-      <section style={{ background:'linear-gradient(160deg, #1a0a0a 0%, #2d0d0d 100%)', padding:isMobile?'80px 24px':'120px 80px' }}>
+      <section style={{ background:'#0C1A2E', padding:isMobile?'80px 24px':'120px 80px' }}>
         <div style={{ maxWidth:1000, margin:'0 auto', textAlign:'center' }}>
           <Reveal>
-            <div style={{ fontSize:13, fontWeight:600, color:'#fca5a5', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Crisis Detection</div>
+            <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Crisis Detection</div>
             <h2 style={{ fontSize:isMobile?32:56, fontWeight:700, color:'#fff', letterSpacing:'-0.04em', margin:'0 0 24px', lineHeight:1.05 }}>Never miss a patient<br/>in crisis.</h2>
             <p style={{ fontSize:18, color:'rgba(255,255,255,0.5)', maxWidth:480, margin:'0 auto 56px', lineHeight:1.6 }}>Real-time monitoring of PHQ-9 Item 9, C-SSRS, and journal sentiment. Alerts route instantly to the right clinician.</p>
           </Reveal>
           <Reveal delay={0.2}>
             <div style={{ maxWidth:560, margin:'0 auto' }}>
               {[
-                { txt:'PHQ-9 Item 9 score rises to 3', delay:0 },
-                { txt:'Suicidal ideation detected in journal', delay:0.1 },
-                { txt:'C-SSRS triggered — risk confirmed', delay:0.2 },
-                { txt:'Psychologist alerted instantly', delay:0.3 },
-                { txt:'Hospital admin notified', delay:0.4 },
-                { txt:'Crisis resources shown to patient', delay:0.5 },
+                { txt:'PHQ-9 Item 9 score rises to 3', risk:true },
+                { txt:'Suicidal ideation detected in journal', risk:true },
+                { txt:'C-SSRS triggered — risk confirmed', risk:true },
+                { txt:'Psychologist alerted instantly', risk:false },
+                { txt:'Hospital admin notified', risk:false },
+                { txt:'Crisis resources shown to patient', risk:false },
               ].map((s,i)=>(
-                <Reveal key={s.txt} delay={s.delay}>
-                  <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 20px', marginBottom:8, background:i<3?'rgba(220,38,38,0.1)':'rgba(255,255,255,0.04)', borderRadius:10, border:`1px solid ${i<3?'rgba(220,38,38,0.2)':'rgba(255,255,255,0.08)'}` }}>
-                    <div style={{ width:8, height:8, borderRadius:'50%', background:i<3?'#ef4444':'#22c55e', flexShrink:0, boxShadow:i<3?'0 0 0 4px rgba(220,38,38,0.15)':'0 0 0 4px rgba(34,197,94,0.12)' }}/>
-                    <span style={{ fontSize:15, color:'rgba(255,255,255,0.85)', textAlign:'left', flex:1 }}>{s.txt}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke={i<3?'#ef4444':'#22c55e'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <Reveal key={s.txt} delay={i*0.1}>
+                  <div style={{ display:'flex', alignItems:'center', gap:16, padding:'16px 22px', marginBottom:8, background:'rgba(255,255,255,0.04)', borderRadius:10, border:`1px solid ${s.risk?'rgba(239,68,68,0.2)':'rgba(34,197,94,0.15)'}`, transition:'background 0.2s' }}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.04)'}>
+                    {s.risk ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0 }}>
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <line x1="12" y1="9" x2="12" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle cx="12" cy="17" r="1" fill="#ef4444"/>
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0 }}>
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M9 12l2 2 4-4" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                    <span style={{ fontSize:15, color:'rgba(255,255,255,0.85)', textAlign:'left', flex:1, fontWeight:500 }}>{s.txt}</span>
+                    <span style={{ fontSize:11, fontWeight:600, color:s.risk?'rgba(239,68,68,0.7)':'rgba(34,197,94,0.7)', background:s.risk?'rgba(239,68,68,0.08)':'rgba(34,197,94,0.08)', padding:'2px 8px', borderRadius:4 }}>{s.risk?'Detected':'Resolved'}</span>
                   </div>
                 </Reveal>
               ))}
