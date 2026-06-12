@@ -208,28 +208,61 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
         </div>
       </div>
 
-      {/* ── STORY FLOW ── */}
-      <div style={{ background:S.bg, borderTop:`1px solid ${S.border}`, padding: isMobile?'64px 24px':'80px 80px' }}>
+      {/* ── VISUAL PROCESS TIMELINE ── */}
+      <div style={{ background:S.navy, padding:isMobile?'80px 24px':'96px 80px' }}>
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
-          <div style={{ textAlign:'center', marginBottom:48 }}>
-            <p style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>How it works</p>
-            <h2 style={{ fontSize:isMobile?28:40, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:0 }}>From assessment to outcome.</h2>
+          <div style={{ textAlign:'center', marginBottom:64 }}>
+            <p style={{ fontSize:13, fontWeight:600, color:'#93C5FD', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Patient Journey</p>
+            <h2 style={{ fontSize:isMobile?28:48, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', margin:'0 0 16px' }}>From first assessment to recovery.</h2>
+            <p style={{ fontSize:17, color:'rgba(255,255,255,0.5)', maxWidth:480, margin:'0 auto' }}>Every step automated. Every risk flagged. Every outcome tracked.</p>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(5,1fr)', gap:0, alignItems:'start' }}>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:16 }}>
             {[
-              { step:'01', title:'Patient completes assessment', body:'16 validated instruments. 15 minutes. Any device.' },
-              { step:'02', title:'AI identifies risk', body:'30 ML models. SHAP explanations. Crisis flagged instantly.' },
-              { step:'03', title:'Psychologist receives briefing', body:'Pre-session brief ready. No chart-diving.' },
-              { step:'04', title:'SOAP note generated', body:'Documentation in under 2 minutes. Clinician reviews.' },
-              { step:'05', title:'Outcome tracked', body:'PHQ trends. Treatment response. Population analytics.' },
-            ].map((s,i)=>(
-              <div key={s.step} style={{ padding:'0 20px', borderRight:i<4?`1px solid ${S.border}`:'none', position:'relative' }}>
-                <div style={{ fontSize:11, fontWeight:700, color:S.blue, marginBottom:12, letterSpacing:'0.04em' }}>{s.step}</div>
-                <div style={{ fontSize:15, fontWeight:700, color:S.navy, marginBottom:8, letterSpacing:'-0.01em', lineHeight:1.3 }}>{s.title}</div>
-                <div style={{ fontSize:13, color:S.muted, lineHeight:1.6 }}>{s.body}</div>
-                {i<4 && !isMobile && <div style={{ position:'absolute', top:8, right:-8, zIndex:1 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke={S.border} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </div>}
+              {
+                step:'01', label:'Patient Assessment',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="4" rx="1" stroke="#93C5FD" strokeWidth="1.5"/><rect x="3" y="5" width="18" height="17" rx="2" stroke="#93C5FD" strokeWidth="1.5"/><path d="M8 12h8M8 16h5" stroke="#93C5FD" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+                outputs:[['PHQ-9','Complete · Score 14'],['GAD-7','Complete · Score 9'],['Risk Level','Moderate — flagged']],
+                insight:'15 minutes. 16 validated instruments. Risk detected automatically.'
+              },
+              {
+                step:'02', label:'AI Risk Analysis',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#93C5FD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                outputs:[['Suicide Risk','Low — C-SSRS clear'],['Burnout Risk','High — MBI 16/20'],['Top Themes','Sleep · Work Stress · Isolation']],
+                insight:'30 XGBoost models. SHAP explanations. Clinician-readable output.'
+              },
+              {
+                step:'03', label:'Psychologist Review',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#93C5FD" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="7" r="4" stroke="#93C5FD" strokeWidth="1.5"/></svg>,
+                outputs:[['AI Brief','Pre-session brief generated'],['SOAP Draft','Ready for review'],['Treatment','CBT + Sleep hygiene suggested']],
+                insight:'No chart-diving. Everything ready before the session starts.'
+              },
+              {
+                step:'04', label:'Outcome Tracking',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="#93C5FD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                outputs:[['PHQ-9 Trend','18 → 14 → 9 → 5 ↓72%'],['Sessions','6 completed · 2 remaining'],['Status','In remission']],
+                insight:'Treatment response measured. Outcomes reported to hospital.'
+              },
+            ].map(step=>(
+              <div key={step.step} style={{ background:'rgba(255,255,255,0.04)', borderRadius:16, padding:28, border:'1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display:'flex', gap:12, alignItems:'center', marginBottom:20 }}>
+                  <div style={{ width:40, height:40, borderRadius:10, background:'rgba(147,197,253,0.1)', border:'1px solid rgba(147,197,253,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    {step.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', letterSpacing:'0.06em' }}>STEP {step.step}</div>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#fff', letterSpacing:'-0.01em' }}>{step.label}</div>
+                  </div>
+                </div>
+                {/* Output cards */}
+                <div style={{ background:'rgba(0,0,0,0.2)', borderRadius:10, padding:14, marginBottom:14, border:'1px solid rgba(255,255,255,0.06)' }}>
+                  {step.outputs.map(([label,val],i)=>(
+                    <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:i<step.outputs.length-1?'1px solid rgba(255,255,255,0.06)':'none' }}>
+                      <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>{label}</span>
+                      <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.85)' }}>{val}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)', lineHeight:1.6 }}>{step.insight}</div>
               </div>
             ))}
           </div>
@@ -332,67 +365,66 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
       {/* ── SECURITY ── */}
       <div id="security" style={{ background:S.bg, padding: isMobile?'80px 24px':'96px 80px' }}>
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
-          <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'1fr 1fr', gap:80, alignItems:'center' }}>
-            <div>
-              <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Security</div>
-              <h2 style={{ fontSize: isMobile?32:48, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:'0 0 24px', lineHeight:1.1 }}>Patient data stays private.</h2>
-              <p style={{ fontSize:17, color:S.textSub, lineHeight:1.7, marginBottom:32 }}>We never use patient data to train AI models. Data is encrypted at rest and in transit. You own your data.</p>
-              {[
-                ['AES-256 encryption','All data encrypted at rest and in transit'],
-                ['DPDP 2023 compliant','India data protection law certified'],
-                ['Zero training on your data','Patient records never used for model training'],
-                ['Audit trail','Every access logged with timestamp'],
-                ['Row-level security','Database-level access controls per user'],
-              ].map(([title,sub])=>(
-                <div key={title} style={{ display:'flex', gap:12, marginBottom:16 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0, marginTop:2 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <div>
-                    <div style={{ fontSize:14, fontWeight:600, color:S.navy }}>{title}</div>
-                    <div style={{ fontSize:13, color:S.muted }}>{sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ background:S.bg2, borderRadius:16, padding:32, border:`1px solid ${S.border}` }}>
-              <div style={{ fontSize:15, fontWeight:700, color:S.navy, marginBottom:24 }}>Data handling at a glance</div>
-              {[
-                ['Data location','Singapore (ap-southeast-1)'],
-                ['Encryption','AES-256 at rest, TLS 1.3 in transit'],
-                ['AI training','Never uses patient data'],
-                ['Access logs','Full audit trail retained 7 years'],
-                ['Patient consent','Explicit, revocable at any time'],
-                ['Compliance','DPDP 2023, ISO 27001 (in progress)'],
-              ].map(([label,val])=>(
-                <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${S.border}` }}>
-                  <span style={{ fontSize:14, color:S.muted }}>{label}</span>
-                  <span style={{ fontSize:14, fontWeight:600, color:S.navy }}>{val}</span>
-                </div>
-              ))}
-            </div>
+          <div style={{ textAlign:'center', marginBottom:64 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Security & Compliance</div>
+            <h2 style={{ fontSize: isMobile?32:48, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:'0 0 16px' }}>Built to reduce your legal risk.</h2>
+            <p style={{ fontSize:18, color:S.textSub, maxWidth:520, margin:'0 auto' }}>Not just encrypted. Compliant, auditable, and patient-controlled.</p>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:24, marginBottom:40 }}>
+            {[
+              { title:'Patient data never leaves India-controlled infrastructure.', sub:'Hosted in Singapore (ap-southeast-1). AES-256 encryption at rest and TLS 1.3 in transit. You retain full data ownership.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+              { title:'Every action logged for NABH audits.', sub:'Every access, note edit, assessment, consent action, and prescription change is timestamped and immutably logged. One-click NABH report export.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><polyline points="14 2 14 8 20 8" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/></svg> },
+              { title:'A psychologist can only access their assigned patients.', sub:'Row-level security enforced at database level. Admins see everything. Psychologists see only their caseload. Patients see only their own data.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke={S.blue} strokeWidth="1.5"/><path d="M7 11V7a5 5 0 0110 0v4" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+              { title:'We never use patient data to train AI models.', sub:'Our ML models were trained on publicly available research datasets. No patient record, journal entry, or assessment result is ever used for training.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={S.blue} strokeWidth="1.5"/><path d="M4.93 4.93l14.14 14.14" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/></svg> },
+              { title:'Patients control and can delete their own data.', sub:'Patients can request full data export or permanent deletion at any time. Compliant with India's DPDP Act 2023.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="7" r="4" stroke={S.blue} strokeWidth="1.5"/></svg> },
+              { title:'Crisis data handled with clinical-grade care.', sub:'Suicidal ideation flags are never stored in plain text. Crisis alerts route only to the assigned clinician and never surface in analytics dashboards.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke={S.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+            ].map(item=>(
+              <div key={item.title} style={{ background:S.bg2, borderRadius:12, padding:24, border:`1px solid ${S.border}` }}>
+                <div style={{ marginBottom:14 }}>{item.icon}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:S.navy, marginBottom:10, letterSpacing:'-0.01em', lineHeight:1.4 }}>{item.title}</div>
+                <div style={{ fontSize:13, color:S.textSub, lineHeight:1.7 }}>{item.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background:S.bg2, borderRadius:12, padding:'20px 28px', border:`1px solid ${S.border}`, display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+            {[['DPDP 2023','India data law'],['AES-256','Encryption standard'],['TLS 1.3','In-transit security'],['7 years','Audit log retention'],['Singapore','Data residency'],['ISO 27001','In progress']].map(([val,label])=>(
+              <div key={label} style={{ textAlign:'center' }}>
+                <div style={{ fontSize:14, fontWeight:700, color:S.navy }}>{val}</div>
+                <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ── RESEARCH / BLOG ── */}
+      {/* ── CLINICAL FOUNDATION ── */}
       <div id="blog" style={{ background:S.bg2, padding: isMobile?'80px 24px':'96px 80px' }}>
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
-          <div style={{ marginBottom:48 }}>
-            <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Research</div>
-            <h2 style={{ fontSize: isMobile?32:48, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:0 }}>Clinical research & insights.</h2>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns: isMobile?'1fr':'repeat(3,1fr)', gap:24 }}>
-            {BLOGS.map(blog=>(
-              <div key={blog.id} style={{ background:'#fff', borderRadius:12, padding:24, border:`1px solid ${S.border}`, cursor:'pointer' }}
-                onMouseEnter={e=>e.currentTarget.style.borderColor=S.blue}
-                onMouseLeave={e=>e.currentTarget.style.borderColor=S.border}>
-                <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-                  <span style={{ fontSize:11, fontWeight:600, color:S.blue, background:'#EFF6FF', padding:'2px 8px', borderRadius:4 }}>{blog.category}</span>
-                  <span style={{ fontSize:11, color:S.muted }}>{blog.date} · {blog.read} read</span>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:80, alignItems:'center' }}>
+            <div>
+              <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Clinical Foundation</div>
+              <h2 style={{ fontSize:isMobile?32:48, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:'0 0 20px', lineHeight:1.1 }}>Instruments used in hospitals and research labs worldwide.</h2>
+              <p style={{ fontSize:17, color:S.textSub, lineHeight:1.7, marginBottom:24 }}>Every instrument on PsycheFlow is internationally validated and peer-reviewed. We don't build proprietary assessments. We implement the gold standard.</p>
+              <div style={{ fontSize:14, color:S.muted }}>Used in clinical settings across India, the US, the EU, and Southeast Asia.</div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
+              {[
+                ['PHQ-9','Depression','Kroenke et al., 2001'],
+                ['GAD-7','Anxiety','Spitzer et al., 2006'],
+                ['C-SSRS','Suicide Risk','Posner et al., 2011'],
+                ['PCL-5','PTSD','Weathers et al., 2013'],
+                ['Big Five','Personality','Costa & McCrae, 1992'],
+                ['AUDIT','Alcohol Use','WHO, 1989'],
+                ['ASRS','ADHD','Kessler et al., 2005'],
+                ['MBI','Burnout','Maslach et al., 1996'],
+              ].map(([name,desc,ref])=>(
+                <div key={name} style={{ background:'#fff', borderRadius:8, padding:'14px 16px', border:`1px solid ${S.border}` }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:S.navy }}>{name}</div>
+                  <div style={{ fontSize:12, color:S.textSub, marginTop:2 }}>{desc}</div>
+                  <div style={{ fontSize:10, color:S.hint, marginTop:4 }}>{ref}</div>
                 </div>
-                <div style={{ fontSize:16, fontWeight:700, color:S.navy, marginBottom:10, lineHeight:1.4, letterSpacing:'-0.01em' }}>{blog.title}</div>
-                <div style={{ fontSize:13, color:S.textSub, lineHeight:1.6 }}>{blog.summary}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -421,18 +453,32 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
 
       {/* ── FINAL CTA ── */}
       <div style={{ background:S.navy, padding: isMobile?'80px 24px':'96px 80px' }}>
-        <div style={{ maxWidth:720, margin:'0 auto', textAlign:'center' }}>
-          <h2 style={{ fontSize: isMobile?32:52, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', margin:'0 0 20px', lineHeight:1.1 }}>
-            Start in 5 minutes.<br/>No setup required.
-          </h2>
-          <p style={{ fontSize:18, color:'rgba(255,255,255,0.6)', marginBottom:40, lineHeight:1.6 }}>Free for individual patients and psychologists. Enterprise plans for hospitals.</p>
-          <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-            <button onClick={onGetStarted} style={{ padding:'14px 32px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:15, fontWeight:600, cursor:'pointer' }}>
-              Get Started Free
-            </button>
-            <button onClick={onHospitalLanding} style={{ padding:'14px 28px', background:'transparent', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, fontSize:15, cursor:'pointer' }}>
-              Book Hospital Demo
-            </button>
+        <div style={{ maxWidth:900, margin:'0 auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:isMobile?48:80 }}>
+            {/* For psychologists */}
+            <div style={{ padding:40, background:'rgba(255,255,255,0.04)', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize:12, fontWeight:600, color:'#93C5FD', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>For Psychologists</div>
+              <h3 style={{ fontSize:isMobile?24:30, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', margin:'0 0 16px', lineHeight:1.2 }}>
+                Spend less time writing notes.<br/>
+                <span style={{ color:'#93C5FD' }}>More time treating patients.</span>
+              </h3>
+              <p style={{ fontSize:15, color:'rgba(255,255,255,0.5)', lineHeight:1.7, marginBottom:28 }}>SOAP notes in 2 minutes. AI pre-session brief. Risk alerts. Free for 14 days.</p>
+              <button onClick={onPsychLanding} style={{ padding:'12px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                Start Free — 14 Days
+              </button>
+            </div>
+            {/* For hospitals */}
+            <div style={{ padding:40, background:'rgba(255,255,255,0.04)', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize:12, fontWeight:600, color:'#93C5FD', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>For Hospitals</div>
+              <h3 style={{ fontSize:isMobile?24:30, fontWeight:700, color:'#fff', letterSpacing:'-0.03em', margin:'0 0 16px', lineHeight:1.2 }}>
+                See every patient risk<br/>
+                <span style={{ color:'#93C5FD' }}>before the consultation starts.</span>
+              </h3>
+              <p style={{ fontSize:15, color:'rgba(255,255,255,0.5)', lineHeight:1.7, marginBottom:28 }}>18 modules. NABH compliance. Population analytics. 30-minute setup.</p>
+              <button onClick={onHospitalLanding} style={{ padding:'12px 24px', background:'transparent', color:'#fff', border:'1px solid rgba(255,255,255,0.3)', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                Book Hospital Demo
+              </button>
+            </div>
           </div>
         </div>
       </div>
