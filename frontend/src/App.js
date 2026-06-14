@@ -233,7 +233,11 @@ export default function App() {
       }
       setResults({ predictions, phq, gad, age, gender, occupation, concern, bipolar, ptsd, ocd, adhd, burnout, selfEsteem });
       setScreen('results');
-    } catch(err) { setScreen('results'); setResults({ error: true, message: 'Assessment could not be processed. Please try again.' }); }
+    } catch(err) {
+      console.error('Assessment error:', err?.response?.status, err?.response?.data, err?.message);
+      setScreen('results');
+      setResults({ error: true, message: err?.response?.data?.detail || err?.message || 'Assessment could not be processed. Please try again.' });
+    }
   };
 
   const handleGenerateReport = async () => {
