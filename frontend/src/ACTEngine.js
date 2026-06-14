@@ -42,7 +42,7 @@ function ExerciseCard({ exercise, onStart }) {
         </div>
         <span style={{ background:'#eef2ff', color:'#6366f1', padding:'4px 10px',
           borderRadius:20, fontSize:12, whiteSpace:'nowrap', marginLeft:12 }}>
-          ⏱ {exercise.duration} min
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{marginRight:4,verticalAlign:"middle"}}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><polyline points="12 6 12 12 16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>{exercise.duration} min
         </span>
       </div>
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:16 }}>
@@ -253,7 +253,7 @@ function AAQAssessment({ onComplete }) {
           {result.act_indicated && (
             <div style={{ background:'#fff7ed', borderRadius:12, padding:16,
               marginBottom:20, fontSize:13, color:'#92400e' }}>
-              ⚡ ACT therapy is strongly indicated. Regular practice of these
+              ACT therapy is strongly indicated. Regular practice of these
               exercises will build psychological flexibility over time.
             </div>
           )}
