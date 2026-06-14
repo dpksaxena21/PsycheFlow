@@ -355,53 +355,7 @@ export default function App() {
           </div>
           <button onClick={() => { setScreen('home'); setAssessMode(null); }} style={{ marginLeft:'auto', padding:'8px 16px', background:'#fff', border:'0.5px solid #E2EBF6', borderRadius:8, color:'#3B5998', cursor:'pointer', fontSize:13, fontFamily:'inherit' }}>← Back</button>
         </div>
-        {!assessMode ? (
-          <div>
-            <div style={{ marginBottom:28 }}>
-              <div style={{ display:'inline-block', padding:'3px 12px', borderRadius:100, background:'#EFF6FF', color:'#1D4ED8', fontSize:11, fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:12 }}>Assessment</div>
-              <h2 style={{ fontSize:26, fontWeight:700, letterSpacing:'-0.02em', color:'#0C1A2E', margin:'0 0 8px' }}>How would you like to be assessed?</h2>
-              <p style={{ fontSize:14, color:'#3B5998', margin:0, lineHeight:1.6 }}>Both methods use clinically validated instruments. Choose what feels right for you.</p>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              <div onClick={() => setAssessMode('interview')}
-                style={{ background:'#fff', borderRadius:14, border:'0.5px solid #E2EBF6', padding:24, cursor:'pointer', transition:'all 0.2s', position:'relative' }}
-                onMouseEnter={e=>{ e.currentTarget.style.borderColor='#1D4ED8'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(29,78,216,0.08)'; }}
-                onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E2EBF6'; e.currentTarget.style.boxShadow='none'; }}>
-                <div style={{ position:'absolute', top:16, right:16, padding:'3px 10px', borderRadius:100, background:'#EFF6FF', color:'#1D4ED8', fontSize:10, fontWeight:600 }}>Recommended</div>
-                <div style={{ marginBottom:12 }}>
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="6" width="24" height="18" rx="5" stroke="#1D4ED8" strokeWidth="1.4"/><path d="M8 14H20M8 18H15" stroke="#1D4ED8" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                </div>
-                <h3 style={{ fontSize:16, fontWeight:700, color:'#0C1A2E', margin:'0 0 6px', letterSpacing:'-0.01em' }}>AI Clinical Interview</h3>
-                <p style={{ fontSize:13, color:'#3B5998', margin:'0 0 12px', lineHeight:1.6 }}>Talk to Dr. PsycheFlow naturally. 15 turns covering 14 clinical domains. Most accurate and personalised.</p>
-                <div style={{ fontSize:11, color:'#3B5998', display:'flex', gap:12 }}>
-                  <span>10-15 minutes</span><span>·</span><span>Most accurate</span><span>·</span><span>14 domains</span>
-                </div>
-              </div>
-              <div onClick={() => setAssessMode('questionnaire')}
-                style={{ background:'#fff', borderRadius:14, border:'0.5px solid #E2EBF6', padding:24, cursor:'pointer', transition:'all 0.2s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.borderColor='#1D4ED8'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(29,78,216,0.08)'; }}
-                onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E2EBF6'; e.currentTarget.style.boxShadow='none'; }}>
-                <div style={{ marginBottom:12 }}>
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="2" width="20" height="24" rx="4" stroke="#1D4ED8" strokeWidth="1.4"/><path d="M9 9H19M9 13H17M9 17H13" stroke="#1D4ED8" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                </div>
-                <h3 style={{ fontSize:16, fontWeight:700, color:'#0C1A2E', margin:'0 0 6px', letterSpacing:'-0.01em' }}>Structured Questionnaire</h3>
-                <p style={{ fontSize:13, color:'#3B5998', margin:'0 0 12px', lineHeight:1.6 }}>PHQ-9, GAD-7, Big Five, Dark Triad, OCD, PTSD, ADHD, Burnout. 14 validated instruments, adaptive.</p>
-                <div style={{ fontSize:11, color:'#3B5998', display:'flex', gap:12 }}>
-                  <span>10-20 minutes</span><span>·</span><span>14 instruments</span><span>·</span><span>Detailed report</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : assessMode === 'interview' ? (
-          <ClinicalInterview user={user} onComplete={async (assessment) => {
-            try {
-              if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: 0, gad_score: 0, predictions: {}, answers: { interview_assessment: assessment } });
-            } catch(e) { console.error('Clinical interview save error:', e); }
-            setAssessMode(null); setScreen('home');
-          }} />
-        ) : (
-          <AdaptiveQuestionnaire onComplete={handleComplete} />
-        )}
+        <AdaptiveQuestionnaire onComplete={handleComplete} />
       </div>
     </div>
   );
