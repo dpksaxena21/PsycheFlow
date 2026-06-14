@@ -218,7 +218,14 @@ export default function App() {
     try {
       const res = await axios.post(API + '/predict', payload);
       const predictions = res.data.predictions;
-      if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
+      if (user) {
+        try {
+          await supabase.from('sessions').insert({ user_id: user.id, phq_score: phq, gad_score: gad, predictions, answers });
+        } catch(insertErr) {
+          console.error('Session insert error:', insertErr);
+          // Non-fatal — continue to show results
+        }
+      }
       if (user) {
         try {
           await axios.post(API + '/check-crisis', { patient_id: user.id, phq_score: phq, gad_score: gad, answers,
