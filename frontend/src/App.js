@@ -394,7 +394,9 @@ export default function App() {
           </div>
         ) : assessMode === 'interview' ? (
           <ClinicalInterview user={user} onComplete={async (assessment) => {
-            if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: 0, gad_score: 0, predictions: {}, answers: { interview_assessment: assessment } });
+            try {
+              if (user) await supabase.from('sessions').insert({ user_id: user.id, phq_score: 0, gad_score: 0, predictions: {}, answers: { interview_assessment: assessment } });
+            } catch(e) { console.error('Clinical interview save error:', e); }
             setAssessMode(null); setScreen('home');
           }} />
         ) : (
