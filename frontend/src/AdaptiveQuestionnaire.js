@@ -1,340 +1,536 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const QUESTIONS = {
-  // ── DEMOGRAPHICS ──────────────────────────────────────────
-  AGE:    { id:'AGE',    text:'How old are you?',    type:'number', section:'About You' },
-  GENDER: { id:'GENDER', text:'What is your gender?', type:'choice', options:['Male','Female','Non-binary','Prefer not to say'], section:'About You' },
-  OCC:    { id:'OCC',    text:'What is your occupation?', type:'choice', options:['Student','Employed','Self-employed','Unemployed','Retired','Other'], section:'About You' },
-
-  // ── PHQ-9 ─────────────────────────────────────────────────
-  PHQ1: { id:'PHQ1', hint:"Loss of interest is one of the two core symptoms of depression. It's different from just being bored.", text:'Little interest or pleasure in doing things', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ2: { id:'PHQ2', hint:"Persistent low mood — not just a bad day — is a clinical marker psychologists look for.", text:'Feeling down, depressed, or hopeless', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ3: { id:'PHQ3', hint:"Sleep and mood are deeply connected. Poor sleep can both cause and worsen depression.", text:'Trouble falling or staying asleep, or sleeping too much', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ4: { id:'PHQ4', hint:"Physical fatigue without a medical reason is often a sign of emotional exhaustion.", text:'Feeling tired or having little energy', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ5: { id:'PHQ5', hint:"Appetite changes — eating too much or too little — are common physical responses to emotional stress.", text:'Poor appetite or overeating', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ6: { id:'PHQ6', hint:"Excessive guilt or self-blame, especially when it feels out of proportion, is a key depression indicator.", text:'Feeling bad about yourself — or that you are a failure', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ7: { id:'PHQ7', hint:"When your mind is overwhelmed, focusing on simple tasks becomes genuinely difficult.", text:'Trouble concentrating on things', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ8: { id:'PHQ8', hint:"Psychomotor changes — moving or thinking slower — can be visible to others before you notice them yourself.", text:'Moving or speaking so slowly that others noticed, or being fidgety', type:'frequency4', section:'Depression (PHQ-9)' },
-  PHQ9: { id:'PHQ9', hint:"This is the most important question in the PHQ-9. Your answer is completely confidential.", text:'Thoughts that you would be better off dead or of hurting yourself', type:'frequency4', section:'Depression (PHQ-9)' },
-
-  // ── GAD-7 ─────────────────────────────────────────────────
-  GAD1: { id:'GAD1', hint:"General anxiety often shows up as a constant low-level nervousness, even without a specific reason.", text:'Feeling nervous, anxious, or on edge', type:'frequency4', section:'Anxiety (GAD-7)' },
-  GAD2: { id:'GAD2', hint:"Uncontrollable worry is what separates clinical anxiety from everyday stress.", text:'Not being able to stop or control worrying', type:'frequency4', section:'Anxiety (GAD-7)' },
-  GAD3: { id:'GAD3', hint:"Worrying about multiple unrelated things simultaneously is a hallmark of generalized anxiety.", text:'Worrying too much about different things', type:'frequency4', section:'Anxiety (GAD-7)' },
-  GAD4: { id:'GAD4', hint:"Difficulty relaxing — even when you want to — suggests your nervous system may be overstimulated.", text:'Trouble relaxing', type:'frequency4', section:'Anxiety (GAD-7)' },
-  GAD5: { id:'GAD5', hint:"Physical restlessness is anxiety expressing itself through your body.", text:'Being so restless that it is hard to sit still', type:'frequency4', section:'Anxiety (GAD-7)' },
-  GAD6: { id:'GAD6', hint:"Irritability is often a mask for underlying anxiety. Many people don't connect the two.", text:'Becoming easily annoyed or irritable', type:'frequency4', section:'Anxiety (GAD-7)' },
-  GAD7: { id:'GAD7', hint:"A sense of impending doom or dread, even without specific cause, is a classic anxiety symptom.", text:'Feeling afraid as if something awful might happen', type:'frequency4', section:'Anxiety (GAD-7)' },
-
-  // ── WHO-5 WELLBEING ───────────────────────────────────────
-  WHO1: { id:'WHO1', hint:"Positive affect — actually feeling good — is as important to wellbeing as the absence of problems.", text:'I have felt cheerful and in good spirits', type:'frequency6', section:'Wellbeing (WHO-5)' },
-  WHO2: { id:'WHO2', hint:"Calm and relaxation are active states of wellbeing, not just the absence of stress.", text:'I have felt calm and relaxed', type:'frequency6', section:'Wellbeing (WHO-5)' },
-  WHO3: { id:'WHO3', hint:"Energy levels reflect both your physical and mental health status.", text:'I have felt active and vigorous', type:'frequency6', section:'Wellbeing (WHO-5)' },
-  WHO4: { id:'WHO4', hint:"Restorative sleep is a foundation of mental health. Waking up exhausted is worth paying attention to.", text:'I woke up feeling fresh and rested', type:'frequency6', section:'Wellbeing (WHO-5)' },
-  WHO5: { id:'WHO5', hint:"Engagement with life — finding things interesting — is a strong predictor of psychological wellbeing.", text:'My daily life has been filled with things that interest me', type:'frequency6', section:'Wellbeing (WHO-5)' },
-
-  // ── ISI INSOMNIA ──────────────────────────────────────────
-  ISI1: { id:'ISI1', hint:"Trouble falling asleep (sleep onset insomnia) is the most common sleep complaint.", text:'Difficulty falling asleep', type:'severity5', section:'Sleep (ISI)' },
-  ISI2: { id:'ISI2', hint:"Waking up in the middle of the night and struggling to return to sleep is called sleep maintenance insomnia.", text:'Difficulty staying asleep through the night', type:'severity5', section:'Sleep (ISI)' },
-  ISI3: { id:'ISI3', hint:"Early morning awakening (before you want to wake) is particularly associated with depression.", text:'Problems waking up too early', type:'severity5', section:'Sleep (ISI)' },
-  ISI4: { id:'ISI4', hint:"Your subjective satisfaction with sleep matters as much as the hours you actually get.", text:'How satisfied are you with your current sleep pattern?', type:'satisfaction5', section:'Sleep (ISI)' },
-  ISI5: { id:'ISI5', hint:"When others notice your sleep issues, it suggests the impact is significant enough to affect your behavior.", text:'How noticeable to others is your sleep problem?', type:'severity5', section:'Sleep (ISI)' },
-  ISI6: { id:'ISI6', hint:"Anxiety about sleep can create a cycle that makes the sleep problem worse.", text:'How worried are you about your current sleep problem?', type:'severity5', section:'Sleep (ISI)' },
-  ISI7: { id:'ISI7', hint:"Sleep problems that affect daily functioning — concentration, mood, performance — are clinically significant.", text:'How much does your sleep problem interfere with daily functioning?', type:'severity5', section:'Sleep (ISI)' },
-
-  // ── BIG FIVE ──────────────────────────────────────────────
-  E1: { id:'E1', hint:"Extraversion measures how energized you feel around others vs. alone. Neither is better.", text:'I see myself as someone who is talkative', type:'agree5', section:'Personality (Big Five)' },
-  E2: { id:'E2', hint:"Sociability is one dimension of extraversion. Introverts can be warm and friendly, just differently wired.", text:'I see myself as outgoing and sociable', type:'agree5', section:'Personality (Big Five)' },
-  N1: { id:'N1', hint:"Neuroticism measures emotional reactivity. High scorers feel emotions more intensely — both positive and negative.", text:'I see myself as someone who worries a lot', type:'agree5', section:'Personality (Big Five)' },
-  N2: { id:'N2', hint:"Nervous system sensitivity is partly genetic. This question helps assess your baseline emotional reactivity.", text:'I see myself as someone who gets nervous easily', type:'agree5', section:'Personality (Big Five)' },
-  A1: { id:'A1', hint:"Agreeableness reflects how much you prioritize others' needs. Both high and low scores have strengths.", text:'I see myself as someone who is helpful and unselfish', type:'agree5', section:'Personality (Big Five)' },
-  A2: { id:'A2', hint:"Forgiveness capacity is a strong predictor of relationship satisfaction and mental health.", text:'I see myself as someone who has a forgiving nature', type:'agree5', section:'Personality (Big Five)' },
-  C1: { id:'C1', hint:"Conscientiousness is the strongest personality predictor of life outcomes — career, health, relationships.", text:'I see myself as someone who does a thorough job', type:'agree5', section:'Personality (Big Five)' },
-  C2: { id:'C2', hint:"Organization reflects how well you manage your environment and commitments.", text:'I see myself as someone who tends to be organized', type:'agree5', section:'Personality (Big Five)' },
-  O1: { id:'O1', hint:"Openness to experience is linked to creativity, curiosity, and adaptability.", text:'I see myself as someone who is curious about many different things', type:'agree5', section:'Personality (Big Five)' },
-  O2: { id:'O2', hint:"An active imagination is associated with creative thinking and divergent problem solving.", text:'I see myself as someone who has an active imagination', type:'agree5', section:'Personality (Big Five)' },
-
-  // ── DARK TRIAD ────────────────────────────────────────────
-  M1:  { id:'M1', hint:"Machiavellianism measures strategic manipulation. Most people score somewhere in the middle.",  text:'I tend to manipulate others to get my way', type:'agree5', section:'Personality (Advanced)' },
-  M2:  { id:'M2', hint:"This question is about self-awareness, not judgment. Honesty here gives you more accurate results.",  text:'I have used deceit or lied to get my way', type:'agree5', section:'Personality (Advanced)' },
-  NA1: { id:'NA1', hint:"Wanting admiration is normal. This scale measures the degree to which it drives your behavior.", text:'I tend to want others to admire me', type:'agree5', section:'Personality (Advanced)' },
-  NA2: { id:'NA2', hint:"Attention-seeking exists on a spectrum. This helps calibrate where your tendencies fall.", text:'I tend to want others to pay attention to me', type:'agree5', section:'Personality (Advanced)' },
-  P1:  { id:'P1', hint:"Remorse is a core component of empathy. This is a self-awareness question, not a moral judgment.",  text:'I tend to lack remorse', type:'agree5', section:'Personality (Advanced)' },
-  P2:  { id:'P2', hint:"Moral reasoning varies widely. Your honest answer produces the most accurate personality profile.",  text:'I tend to not worry about the morality of my actions', type:'agree5', section:'Personality (Advanced)' },
-
-  // ── C-SSRS (Columbia Suicide Severity Rating Scale) ─────────
-  CSSRS1: { id:'CSSRS1', hint:"This question is about passive thoughts — wishing to be dead without any plan to act.", text:'Have you wished you were dead or wished you could go to sleep and not wake up?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
-  CSSRS2: { id:'CSSRS2', hint:"Having thoughts of killing yourself is different from passive death wishes and requires immediate attention.", text:'Have you had any actual thoughts of killing yourself?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
-  CSSRS3: { id:'CSSRS3', hint:"Having thoughts with some method in mind indicates higher risk than passive ideation.", text:'Have you been thinking about how you might kill yourself?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
-  CSSRS4: { id:'CSSRS4', hint:"An intent to act on thoughts of suicide is a serious clinical indicator requiring immediate intervention.", text:'Have you had any intention of acting on these thoughts?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
-  CSSRS5: { id:'CSSRS5', hint:"A specific plan with time, place, and method indicates the highest level of risk.", text:'Have you started to work out or worked out the details of how to kill yourself?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
-  CSSRS6: { id:'CSSRS6', hint:"Any past attempts are the strongest predictor of future risk.", text:'Have you ever made a suicide attempt in your lifetime?', type:'yesno', section:'Suicide Risk (C-SSRS)', critical:true },
-
-  // ── AUDIT (Alcohol Use Disorders Identification Test) ──────
-  AUDIT1: { id:'AUDIT1', hint:"How often you drink sets the baseline for understanding alcohol use patterns.", text:'How often do you have a drink containing alcohol?', type:'choice', options:['Never','Monthly or less','2-4 times a month','2-3 times a week','4+ times a week'], section:'Alcohol Use (AUDIT)' },
-  AUDIT2: { id:'AUDIT2', hint:"Standard drinks help clinicians understand the quantity of alcohol consumed.", text:'How many standard drinks do you have on a typical drinking day?', type:'choice', options:['1-2','3-4','5-6','7-9','10 or more'], section:'Alcohol Use (AUDIT)' },
-  AUDIT3: { id:'AUDIT3', hint:"Heavy episodic drinking (binge drinking) is associated with significant health and mental health risks.", text:'How often do you have 6 or more drinks on one occasion?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
-  AUDIT4: { id:'AUDIT4', hint:"Inability to stop drinking once started is a key indicator of alcohol dependence.", text:'How often during the last year have you found that you were not able to stop drinking once you had started?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
-  AUDIT5: { id:'AUDIT5', hint:"Failing to meet normal expectations due to drinking affects relationships and work performance.", text:'How often during the last year have you failed to do what was normally expected from you because of drinking?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
-  AUDIT6: { id:'AUDIT6', hint:"Needing a drink in the morning is a classic sign of alcohol dependence.", text:'How often during the last year have you needed a first drink in the morning to get yourself going after a heavy drinking session?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
-  AUDIT7: { id:'AUDIT7', hint:"Guilt about drinking often indicates awareness that the behavior has become problematic.", text:'How often during the last year have you had a feeling of guilt or remorse after drinking?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
-  AUDIT8: { id:'AUDIT8', hint:"Blackouts indicate heavy drinking and potential neurological impact.", text:'How often during the last year have you been unable to remember what happened the night before because you had been drinking?', type:'choice', options:['Never','Less than monthly','Monthly','Weekly','Daily or almost daily'], section:'Alcohol Use (AUDIT)' },
-  AUDIT9: { id:'AUDIT9', hint:"When others express concern, it often means the drinking has become visible and impactful.", text:'Have you or someone else been injured as a result of your drinking?', type:'choice', options:['No','Yes, but not in the last year','Yes, during the last year'], section:'Alcohol Use (AUDIT)' },
-  AUDIT10: { id:'AUDIT10', hint:"Professional concern about your drinking is a significant indicator worth taking seriously.", text:'Has a relative, friend, doctor, or other health worker been concerned about your drinking or suggested you cut down?', type:'choice', options:['No','Yes, but not in the last year','Yes, during the last year'], section:'Alcohol Use (AUDIT)' },
-
-  // ── OCD ───────────────────────────────────────────────────
-  OCD1: { id:'OCD1', hint:"Hoarding behavior is one of the OCD spectrum presentations — difficulty letting go of objects.", text:'I have saved so many things that they get in the way', type:'severity5', section:'OCD Screening' },
-  OCD2: { id:'OCD2', hint:"Checking compulsions — stove, locks, switches — are among the most common OCD behaviors.", text:'I check things more often than necessary', type:'severity5', section:'OCD Screening' },
-  OCD3: { id:'OCD3', hint:"Need for symmetry or exactness is a classic OCD presentation that many people don't recognize as such.", text:'I get upset if objects are not arranged properly', type:'severity5', section:'OCD Screening' },
-  OCD4: { id:'OCD4', hint:"Counting compulsions often happen automatically. Many people don't realize it's a pattern.", text:'I feel compelled to count while I am doing things', type:'severity5', section:'OCD Screening' },
-  OCD5: { id:'OCD5', hint:"Contamination fears leading to excessive washing are among the most recognized OCD symptoms.", text:'I wash my hands more than necessary', type:'severity5', section:'OCD Screening' },
-
-  // ── PTSD ──────────────────────────────────────────────────
-  PCL1: { id:'PCL1', hint:"Intrusive memories of distressing events are a hallmark of trauma responses.", text:'Repeated, disturbing memories or dreams of a stressful experience', type:'frequency5', section:'PTSD Screening' },
-  PCL2: { id:'PCL2', hint:"Trauma can cause ongoing distress even when thinking about the event, not just during it.", text:'Feeling very upset when reminded of a stressful experience', type:'frequency5', section:'PTSD Screening' },
-  PCL3: { id:'PCL3', hint:"Physical reactions to reminders — heart racing, sweating — show trauma stored in the body, not just the mind.", text:'Avoiding memories, thoughts, or feelings related to the experience', type:'frequency5', section:'PTSD Screening' },
-  PCL4: { id:'PCL4', hint:"Emotional numbing is a protective mechanism, but it can affect all emotions, not just painful ones.", text:'Feeling distant or cut off from other people', type:'frequency5', section:'PTSD Screening' },
-  PCL5: { id:'PCL5', hint:"Hypervigilance — always being on alert — is exhausting and is a common trauma response.", text:'Feeling jumpy or easily startled', type:'frequency5', section:'PTSD Screening' },
-
-  // ── ADHD ──────────────────────────────────────────────────
-  ADHD1: { id:'ADHD1', hint:"Inattention to details is one of the two core ADHD dimensions. It's different from not caring.", text:'How often do you have trouble wrapping up the final details of a project?', type:'frequency5', section:'ADHD Screening' },
-  ADHD2: { id:'ADHD2', hint:"Sustaining focus on tasks that aren't immediately rewarding is a core ADHD challenge.", text:'How often do you have difficulty getting things in order?', type:'frequency5', section:'ADHD Screening' },
-  ADHD3: { id:'ADHD3', hint:"Difficulty listening is often about working memory, not disrespect or disinterest.", text:'How often do you have problems remembering appointments?', type:'frequency5', section:'ADHD Screening' },
-  ADHD4: { id:'ADHD4', hint:"Starting tasks but not finishing them is a classic pattern of ADHD inattentive type.", text:'How often do you avoid tasks that require a lot of thought?', type:'frequency5', section:'ADHD Screening' },
-  ADHD5: { id:'ADHD5', hint:"Losing things frequently reflects working memory and organizational challenges common in ADHD.", text:'How often do you fidget or squirm when you have to sit for a long time?', type:'frequency5', section:'ADHD Screening' },
-
-  // ── BURNOUT ───────────────────────────────────────────────
-  BRN1: { id:'BRN1', hint:"Emotional exhaustion is the core burnout symptom — feeling drained even after rest.", text:'I feel emotionally drained from my work', type:'frequency7', section:'Burnout Screening' },
-  BRN2: { id:'BRN2', hint:"End-of-day depletion that doesn't recover with sleep is a warning sign of progressive burnout.", text:'I feel used up at the end of the workday', type:'frequency7', section:'Burnout Screening' },
-  BRN3: { id:'BRN3', hint:"Depersonalization — treating people like objects — is the second dimension of burnout.", text:'I feel fatigued when I get up in the morning and have to face another day', type:'frequency7', section:'Burnout Screening' },
-  BRN4: { id:'BRN4', hint:"When work feels meaningless despite being the same work you used to care about, that's burnout.", text:'Working with people all day is really a strain for me', type:'frequency7', section:'Burnout Screening' },
-  BRN5: { id:'BRN5', hint:"Reduced sense of accomplishment is the third burnout dimension — feeling ineffective.", text:'I feel burned out from my work', type:'frequency7', section:'Burnout Screening' },
-
-  // ── BIPOLAR (MDQ) ─────────────────────────────────────────
-  MDQ1: { id:'MDQ1', hint:"Elevated mood periods — feeling unusually high or energized — are the core bipolar indicator.", text:'I felt so good or hyper that others thought I was not my normal self', type:'yesno', section:'Bipolar Screening' },
-  MDQ2: { id:'MDQ2', hint:"Decreased need for sleep (not just insomnia, but not feeling tired) is a key bipolar symptom.", text:'I was so irritable that I shouted at people or started fights', type:'yesno', section:'Bipolar Screening' },
-  MDQ3: { id:'MDQ3', hint:"Racing thoughts are a common experience during elevated mood states.", text:'I felt much more self-confident than usual', type:'yesno', section:'Bipolar Screening' },
-  MDQ4: { id:'MDQ4', hint:"Increased goal-directed activity or impulsive behavior during high periods is diagnostically significant.", text:'I got much less sleep than usual and found I did not really miss it', type:'yesno', section:'Bipolar Screening' },
-  MDQ5: { id:'MDQ5', hint:"Functional impairment — when mood changes affected your work or relationships — is what separates clinical from normal.", text:'I was much more talkative or spoke faster than usual', type:'yesno', section:'Bipolar Screening' },
-
-  // ── SELF ESTEEM (RSE) ────────────────────────────────────
-  RSE1: { id:'RSE1', hint:"Global self-worth — your overall sense of value as a person — is the foundation of self-esteem.", text:'On the whole, I am satisfied with myself', type:'agree4', section:'Self-Esteem (RSE)' },
-  RSE2: { id:'RSE2', hint:"Recognizing your own qualities is part of healthy self-concept, distinct from arrogance.", text:'I feel that I have a number of good qualities', type:'agree4', section:'Self-Esteem (RSE)' },
-  RSE3: { id:'RSE3', hint:"Self-acceptance — liking yourself overall — is different from thinking you're perfect.", text:'I am able to do things as well as most other people', type:'agree4', section:'Self-Esteem (RSE)' },
-  RSE4: { id:'RSE4', hint:"How you compare yourself to others affects your self-esteem more than your actual abilities.", text:'I feel that I am a person of worth', type:'agree4', section:'Self-Esteem (RSE)' },
-
-  // ── DASS-21 ───────────────────────────────────────────────
-  DASS1: { id:'DASS1', hint:"DASS measures depression, anxiety, and stress as three distinct but related dimensions.", text:'I found it hard to wind down', type:'dass4', section:'Stress & Mood (DASS-21)' },
-  DASS2: { id:'DASS2', hint:"Positive affect — enthusiasm and optimism — is specifically what depression diminishes.", text:'I felt that I had nothing to look forward to', type:'dass4', section:'Stress & Mood (DASS-21)' },
-  DASS3: { id:'DASS3', hint:"Situational anxiety — in specific contexts — differs from generalized anxiety.", text:'I felt down-hearted and blue', type:'dass4', section:'Stress & Mood (DASS-21)' },
-  DASS4: { id:'DASS4', hint:"Stress in the DASS sense is about chronic tension and agitation, not just being busy.", text:'I was unable to become enthusiastic about anything', type:'dass4', section:'Stress & Mood (DASS-21)' },
-  DASS5: { id:'DASS5', hint:"Overreaction to minor setbacks is a stress indicator, distinct from depression or anxiety.", text:'I felt I was close to panic', type:'dass4', section:'Stress & Mood (DASS-21)' },
-  DASS6: { id:'DASS6', hint:"Physical tension — tight muscles, restlessness — is how stress manifests in the body.", text:'I experienced trembling (e.g. in the hands)', type:'dass4', section:'Stress & Mood (DASS-21)' },
-  DASS7: { id:'DASS7', hint:"Intolerance of interruptions reflects depleted coping resources.", text:'I tended to over-react to situations', type:'dass4', section:'Stress & Mood (DASS-21)' },
+// ── Design tokens ─────────────────────────────────────────
+const S = {
+  navy:'#0C1A2E', blue:'#1D4ED8', bg:'#F8FAFF', white:'#FFFFFF',
+  border:'#E2EBF6', muted:'#3B5998', hint:'#94a3b8',
+  success:'#059669', warning:'#D97706', danger:'#DC2626',
+  lightBlue:'#EFF6FF', purple:'#7C3AED',
 };
 
-const SCALE = {
-  frequency4:   ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'],
-  frequency5:   ['Not at all', 'A little bit', 'Moderately', 'Quite a bit', 'Extremely'],
-  frequency6:   ['At no time', 'Some of the time', 'Less than half the time', 'More than half', 'Most of the time', 'All of the time'],
-  frequency7:   ['Never', 'A few times a year', 'Monthly', 'A few times/month', 'Weekly', 'A few times/week', 'Daily'],
-  agree5:       ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-  agree4:       ['Strongly Disagree', 'Disagree', 'Agree', 'Strongly Agree'],
-  severity5:    ['None', 'Mild', 'Moderate', 'Severe', 'Very Severe'],
-  satisfaction5:['Very Satisfied', 'Satisfied', 'Neutral', 'Dissatisfied', 'Very Dissatisfied'],
-  dass4:        ['Did not apply to me', 'Applied to me some', 'Applied to me considerably', 'Applied to me very much'],
-  yesno:        ['No', 'Yes'],
+// ── Clinical question bank ────────────────────────────────
+const Q = {
+  // PHQ-9
+  PHQ1:{ id:'PHQ1', text:'Little interest or pleasure in doing things', module:'PHQ9', type:'freq4' },
+  PHQ2:{ id:'PHQ2', text:'Feeling down, depressed, or hopeless', module:'PHQ9', type:'freq4' },
+  PHQ3:{ id:'PHQ3', text:'Trouble falling or staying asleep, or sleeping too much', module:'PHQ9', type:'freq4' },
+  PHQ4:{ id:'PHQ4', text:'Feeling tired or having little energy', module:'PHQ9', type:'freq4' },
+  PHQ5:{ id:'PHQ5', text:'Poor appetite or overeating', module:'PHQ9', type:'freq4' },
+  PHQ6:{ id:'PHQ6', text:'Feeling bad about yourself — or that you are a failure or have let yourself or family down', module:'PHQ9', type:'freq4' },
+  PHQ7:{ id:'PHQ7', text:'Trouble concentrating on things, such as reading or watching TV', module:'PHQ9', type:'freq4' },
+  PHQ8:{ id:'PHQ8', text:'Moving or speaking so slowly that other people have noticed — or being fidgety or restless', module:'PHQ9', type:'freq4' },
+  PHQ9:{ id:'PHQ9', text:'Thoughts that you would be better off dead, or thoughts of hurting yourself', module:'PHQ9', type:'freq4', critical:true },
+  // GAD-7
+  GAD1:{ id:'GAD1', text:'Feeling nervous, anxious, or on edge', module:'GAD7', type:'freq4' },
+  GAD2:{ id:'GAD2', text:'Not being able to stop or control worrying', module:'GAD7', type:'freq4' },
+  GAD3:{ id:'GAD3', text:'Worrying too much about different things', module:'GAD7', type:'freq4' },
+  GAD4:{ id:'GAD4', text:'Trouble relaxing', module:'GAD7', type:'freq4' },
+  GAD5:{ id:'GAD5', text:'Being so restless that it is hard to sit still', module:'GAD7', type:'freq4' },
+  GAD6:{ id:'GAD6', text:'Becoming easily annoyed or irritable', module:'GAD7', type:'freq4' },
+  GAD7:{ id:'GAD7', text:'Feeling afraid, as if something awful might happen', module:'GAD7', type:'freq4' },
+  // ISI - Insomnia
+  ISI1:{ id:'ISI1', text:'How difficult is it to fall asleep?', module:'ISI', type:'severity4' },
+  ISI2:{ id:'ISI2', text:'How difficult is it to stay asleep?', module:'ISI', type:'severity4' },
+  ISI3:{ id:'ISI3', text:'How often do you wake up too early and can\'t get back to sleep?', module:'ISI', type:'freq4' },
+  ISI4:{ id:'ISI4', text:'How satisfied are you with your current sleep pattern?', module:'ISI', type:'satisfaction' },
+  ISI5:{ id:'ISI5', text:'How noticeable to others do you think your sleep problem is in terms of impairing your quality of life?', module:'ISI', type:'severity4' },
+  // WHO-5 Wellbeing
+  WHO1:{ id:'WHO1', text:'I have felt cheerful and in good spirits', module:'WHO5', type:'freq6' },
+  WHO2:{ id:'WHO2', text:'I have felt calm and relaxed', module:'WHO5', type:'freq6' },
+  WHO3:{ id:'WHO3', text:'I have felt active and vigorous', module:'WHO5', type:'freq6' },
+  WHO4:{ id:'WHO4', text:'I woke up feeling fresh and rested', module:'WHO5', type:'freq6' },
+  WHO5:{ id:'WHO5', text:'My daily life has been filled with things that interest me', module:'WHO5', type:'freq6' },
+  // Burnout (MBI abbreviated)
+  BRN1:{ id:'BRN1', text:'I feel emotionally drained from my work', module:'BURNOUT', type:'freq7' },
+  BRN2:{ id:'BRN2', text:'I feel used up at the end of the workday', module:'BURNOUT', type:'freq7' },
+  BRN3:{ id:'BRN3', text:'I feel fatigued when I get up in the morning and have to face another day', module:'BURNOUT', type:'freq7' },
+  BRN4:{ id:'BRN4', text:'Working with people all day is really a strain for me', module:'BURNOUT', type:'freq7' },
+  BRN5:{ id:'BRN5', text:'I feel burned out from my work', module:'BURNOUT', type:'freq7' },
+  // PCL-5 PTSD (abbreviated)
+  PCL1:{ id:'PCL1', text:'Repeated disturbing memories, thoughts, or images of a stressful experience', module:'PCL5', type:'freq5' },
+  PCL2:{ id:'PCL2', text:'Feeling very upset when something reminded you of a stressful experience', module:'PCL5', type:'freq5' },
+  PCL3:{ id:'PCL3', text:'Avoiding memories, thoughts, or feelings related to a stressful experience', module:'PCL5', type:'freq5' },
+  PCL4:{ id:'PCL4', text:'Feeling emotionally numb or unable to have loving feelings for those close to you', module:'PCL5', type:'freq5' },
+  PCL5:{ id:'PCL5', text:'Being "super alert" or watchful or on guard', module:'PCL5', type:'freq5' },
+  // ADHD ASRS (abbreviated)
+  ADHD1:{ id:'ADHD1', text:'How often do you have trouble wrapping up the final details of a project?', module:'ADHD', type:'freq5' },
+  ADHD2:{ id:'ADHD2', text:'How often do you have difficulty getting things in order when you need to do a task?', module:'ADHD', type:'freq5' },
+  ADHD3:{ id:'ADHD3', text:'How often do you have problems remembering appointments or obligations?', module:'ADHD', type:'freq5' },
+  ADHD4:{ id:'ADHD4', text:'How often do you fidget or squirm with your hands or feet when sitting for a long time?', module:'ADHD', type:'freq5' },
+  ADHD5:{ id:'ADHD5', text:'How often do you feel overly active and compelled to do things, as if driven by a motor?', module:'ADHD', type:'freq5' },
+  // OCD (abbreviated)
+  OCD1:{ id:'OCD1', text:'I check things more often than necessary', module:'OCD', type:'freq5' },
+  OCD2:{ id:'OCD2', text:'I have difficulty controlling my own thoughts', module:'OCD', type:'freq5' },
+  OCD3:{ id:'OCD3', text:'I collect things I don\'t need', module:'OCD', type:'freq5' },
+  OCD4:{ id:'OCD4', text:'I get upset if others change the way I have arranged my things', module:'OCD', type:'freq5' },
+  // C-SSRS (crisis)
+  CSSRS1:{ id:'CSSRS1', text:'Have you wished you were dead or wished you could go to sleep and not wake up?', module:'CSSRS', type:'yesno', critical:true },
+  CSSRS2:{ id:'CSSRS2', text:'Have you had any thoughts of killing yourself?', module:'CSSRS', type:'yesno', critical:true },
+  CSSRS3:{ id:'CSSRS3', text:'Have you been thinking about how you might do this?', module:'CSSRS', type:'yesno', critical:true },
+  // Big Five (abbreviated)
+  E1:{ id:'E1', text:'I see myself as someone who is talkative and outgoing', module:'BIGFIVE', type:'agree5' },
+  E2:{ id:'E2', text:'I see myself as someone who is full of energy', module:'BIGFIVE', type:'agree5' },
+  N1:{ id:'N1', text:'I see myself as someone who worries a lot', module:'BIGFIVE', type:'agree5' },
+  N2:{ id:'N2', text:'I see myself as someone who gets nervous easily', module:'BIGFIVE', type:'agree5' },
+  A1:{ id:'A1', text:'I see myself as someone who is helpful and considerate', module:'BIGFIVE', type:'agree5' },
+  A2:{ id:'A2', text:'I see myself as someone who is warm and sympathetic', module:'BIGFIVE', type:'agree5' },
+  C1:{ id:'C1', text:'I see myself as someone who does a thorough job', module:'BIGFIVE', type:'agree5' },
+  C2:{ id:'C2', text:'I see myself as someone who is organized and efficient', module:'BIGFIVE', type:'agree5' },
+  O1:{ id:'O1', text:'I see myself as someone who is curious about many different things', module:'BIGFIVE', type:'agree5' },
+  O2:{ id:'O2', text:'I see myself as someone who is inventive and creative', module:'BIGFIVE', type:'agree5' },
+  // Rosenberg Self-Esteem
+  RSE1:{ id:'RSE1', text:'I feel that I am a person of worth, at least on an equal basis with others', module:'RSE', type:'agree4' },
+  RSE2:{ id:'RSE2', text:'I feel that I have a number of good qualities', module:'RSE', type:'agree4' },
+  RSE3:{ id:'RSE3', text:'On the whole, I am satisfied with myself', module:'RSE', type:'agree4' },
+  RSE4:{ id:'RSE4', text:'I certainly feel useless at times', module:'RSE', type:'agree4', reverse:true },
+  // Bipolar MDQ
+  MDQ1:{ id:'MDQ1', text:'You felt so good or so hyper that other people thought you were not your normal self', module:'MDQ', type:'yesno' },
+  MDQ2:{ id:'MDQ2', text:'You were so irritable that you shouted at people or started fights', module:'MDQ', type:'yesno' },
+  MDQ3:{ id:'MDQ3', text:'You felt much more self-confident than usual', module:'MDQ', type:'yesno' },
+  MDQ4:{ id:'MDQ4', text:'You got much less sleep than usual and found you didn\'t really miss it', module:'MDQ', type:'yesno' },
+  MDQ5:{ id:'MDQ5', text:'You were much more talkative or spoke much faster than usual', module:'MDQ', type:'yesno' },
+  // Dark Triad
+  M1:{ id:'M1', text:'I tend to manipulate others to get my own way', module:'DARK', type:'agree5' },
+  M2:{ id:'M2', text:'I use deception or lie to get what I want', module:'DARK', type:'agree5' },
+  NA1:{ id:'NA1', text:'I want others to pay attention to me', module:'DARK', type:'agree5' },
+  NA2:{ id:'NA2', text:'I seek prestige or status', module:'DARK', type:'agree5' },
+  P1:{ id:'P1', text:'I tend to lack remorse', module:'DARK', type:'agree5' },
+  P2:{ id:'P2', text:'I tend to not be too concerned about the morality of my actions', module:'DARK', type:'agree5' },
 };
 
-const FLOW = [
-  ['AGE','GENDER','OCC'],
-  ['PHQ1','PHQ2','PHQ3','PHQ4','PHQ5','PHQ6','PHQ7','PHQ8','PHQ9'],
-  ['GAD1','GAD2','GAD3','GAD4','GAD5','GAD6','GAD7'],
-  ['WHO1','WHO2','WHO3','WHO4','WHO5'],
-  ['ISI1','ISI2','ISI3','ISI4','ISI5','ISI6','ISI7'],
-  ['E1','E2','N1','N2','A1','A2','C1','C2','O1','O2'],
-  ['M1','M2','NA1','NA2','P1','P2'],
-  ['OCD1','OCD2','OCD3','OCD4','OCD5'],
-  ['PCL1','PCL2','PCL3','PCL4','PCL5'],
-  ['ADHD1','ADHD2','ADHD3','ADHD4','ADHD5'],
-  ['BRN1','BRN2','BRN3','BRN4','BRN5'],
-  ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5'],
-  ['RSE1','RSE2','RSE3','RSE4'],
-  ['DASS1','DASS2','DASS3','DASS4','DASS5','DASS6','DASS7'],
-  ['CSSRS1','CSSRS2','CSSRS3','CSSRS4','CSSRS5','CSSRS6'],
-  ['AUDIT1','AUDIT2','AUDIT3','AUDIT4','AUDIT5','AUDIT6','AUDIT7','AUDIT8','AUDIT9','AUDIT10'],
+// ── BAYESIAN TRIAGE ENGINE ────────────────────────────────
+// Maps concern to likely modules + question paths
+const TRIAGE_MAP = {
+  anxiety:    { modules:['GAD7','PHQ9','ISI','BIGFIVE'], label:'Anxiety', color:S.warning },
+  depression: { modules:['PHQ9','GAD7','WHO5','RSE','BIGFIVE'], label:'Depression', color:S.danger },
+  sleep:      { modules:['ISI','PHQ9','GAD7','BURNOUT'], label:'Sleep Issues', color:'#7C3AED' },
+  stress:     { modules:['GAD7','BURNOUT','PHQ9','BIGFIVE'], label:'Stress & Burnout', color:S.warning },
+  trauma:     { modules:['PCL5','PHQ9','GAD7','CSSRS'], label:'Trauma', color:S.danger },
+  adhd:       { modules:['ADHD','PHQ9','GAD7'], label:'Focus & ADHD', color:S.blue },
+  burnout:    { modules:['BURNOUT','PHQ9','GAD7','ISI'], label:'Burnout', color:'#EA580C' },
+  ocd:        { modules:['OCD','GAD7','PHQ9'], label:'OCD', color:S.purple },
+  unsure:     { modules:['PHQ9','GAD7','WHO5','ISI','BIGFIVE'], label:'General Wellbeing', color:S.blue },
+};
+
+// Module to question IDs
+const MODULE_QS = {
+  PHQ9:   ['PHQ1','PHQ2','PHQ3','PHQ4','PHQ5','PHQ6','PHQ7','PHQ8','PHQ9'],
+  GAD7:   ['GAD1','GAD2','GAD3','GAD4','GAD5','GAD6','GAD7'],
+  ISI:    ['ISI1','ISI2','ISI3','ISI4','ISI5'],
+  WHO5:   ['WHO1','WHO2','WHO3','WHO4','WHO5'],
+  BURNOUT:['BRN1','BRN2','BRN3','BRN4','BRN5'],
+  PCL5:   ['PCL1','PCL2','PCL3','PCL4','PCL5'],
+  ADHD:   ['ADHD1','ADHD2','ADHD3','ADHD4','ADHD5'],
+  OCD:    ['OCD1','OCD2','OCD3','OCD4'],
+  CSSRS:  ['CSSRS1','CSSRS2','CSSRS3'],
+  BIGFIVE:['E1','E2','N1','N2','A1','A2','C1','C2','O1','O2'],
+  RSE:    ['RSE1','RSE2','RSE3','RSE4'],
+  MDQ:    ['MDQ1','MDQ2','MDQ3','MDQ4','MDQ5'],
+  DARK:   ['M1','M2','NA1','NA2','P1','P2'],
+};
+
+// CAT: Build adaptive question list based on triage
+function buildAdaptiveFlow(concerns, mode) {
+  if (mode === 'quick') {
+    // 3-min: PHQ-9 + GAD-7 only
+    return ['PHQ1','PHQ2','PHQ9','GAD1','GAD2','GAD7'];
+  }
+  if (mode === 'deep') {
+    // All instruments
+    return Object.values(MODULE_QS).flat();
+  }
+  // Adaptive: triage-based
+  const modules = new Set();
+  concerns.forEach(c => {
+    (TRIAGE_MAP[c]?.modules || TRIAGE_MAP.unsure.modules).forEach(m => modules.add(m));
+  });
+  // Always include core
+  modules.add('PHQ9'); modules.add('GAD7'); modules.add('BIGFIVE');
+  return [...modules].flatMap(m => MODULE_QS[m] || []);
+}
+
+// ── Answer option configs ─────────────────────────────────
+const OPTIONS = {
+  freq4:   [['Not at all',0],['Several days',1],['More than half the days',2],['Nearly every day',3]],
+  freq5:   [['Never',0],['Rarely',1],['Sometimes',2],['Often',3],['Always',4]],
+  freq6:   [['At no time',0],['Some of the time',1],['Less than half',2],['More than half',3],['Most of the time',4],['All of the time',5]],
+  freq7:   [['Never',0],['A few times/year',1],['Once a month',2],['A few times/month',3],['Once a week',4],['A few times/week',5],['Every day',6]],
+  agree4:  [['Strongly disagree',0],['Disagree',1],['Agree',2],['Strongly agree',3]],
+  agree5:  [['Strongly disagree',1],['Disagree',2],['Neutral',3],['Agree',4],['Strongly agree',5]],
+  severity4:[['Not difficult',0],['Slightly',1],['Moderately',2],['Very difficult',3]],
+  satisfaction:[['Very satisfied',0],['Satisfied',1],['Neutral',2],['Unsatisfied',3],['Very unsatisfied',4]],
+  yesno:   [['Yes',1],['No',0]],
+};
+
+// Module section labels
+const MODULE_LABELS = {
+  PHQ9:'Depression', GAD7:'Anxiety', ISI:'Sleep', WHO5:'Wellbeing',
+  BURNOUT:'Burnout', PCL5:'Trauma', ADHD:'Focus & ADHD', OCD:'OCD',
+  CSSRS:'Safety', BIGFIVE:'Personality', RSE:'Self-Esteem',
+  MDQ:'Mood Episodes', DARK:'Interpersonal Style',
+};
+
+// Module completion messages (micro-rewards)
+const MODULE_COMPLETE = {
+  PHQ9:'We now understand your mood patterns.',
+  GAD7:'We now understand your anxiety profile.',
+  ISI:'We\'ve mapped your sleep patterns.',
+  WHO5:'We\'ve captured your overall wellbeing.',
+  BURNOUT:'We understand your energy and burnout levels.',
+  PCL5:'Thank you for sharing that. Your responses are confidential.',
+  ADHD:'We\'ve assessed your focus and attention profile.',
+  OCD:'We\'ve noted your thought patterns.',
+  CSSRS:'Your safety is our priority. Thank you for your honesty.',
+  BIGFIVE:'We\'ve built your personality profile.',
+  RSE:'We understand your self-perception.',
+  MDQ:'We\'ve assessed your mood history.',
+  DARK:'We\'ve captured your interpersonal style.',
+};
+
+// ── Concern options for triage ────────────────────────────
+const CONCERNS = [
+  { id:'depression', label:'Low mood or depression', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" stroke="currentColor" strokeWidth="1.5"/><path d="M8 15s1.5-2 4-2 4 2 4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 9h.01M15 9h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
+  { id:'anxiety', label:'Anxiety or worry', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" stroke="currentColor" strokeWidth="1.5"/><path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+  { id:'sleep', label:'Sleep problems', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { id:'stress', label:'Stress or overwhelm', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { id:'burnout', label:'Exhaustion or burnout', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { id:'trauma', label:'Past trauma or PTSD', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { id:'adhd', label:'Focus or attention issues', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+  { id:'unsure', label:'Not sure — check everything', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
 ];
 
 export default function AdaptiveQuestionnaire({ onComplete }) {
-  // Load draft on mount
-  const savedDraft = React.useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('pf-assessment-draft') || 'null'); } catch { return null; }
-  }, []);
-  const [sectionIdx, setSectionIdx] = useState(0);
-  const [answers, setAnswers]       = useState({});
-  const [age, setAge]               = useState('');
-  const [gender, setGender]         = useState('');
+  const [phase, setPhase] = useState('path'); // path | triage | questions | complete
+  const [path, setPath] = useState(null); // quick | adaptive | deep
+  const [concerns, setConcerns] = useState([]);
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
   const [occupation, setOccupation] = useState('');
+  const [qList, setQList] = useState([]);
+  const [qIndex, setQIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [showModuleComplete, setShowModuleComplete] = useState(null);
+  const [animating, setAnimating] = useState(false);
+  const topRef = useRef();
 
-  const totalSections = FLOW.length;
-  const progress      = Math.round(((sectionIdx) / totalSections) * 100);
-  const currentIds    = FLOW[sectionIdx];
-  const currentQs     = currentIds.map(id => QUESTIONS[id]).filter(Boolean);
-  const section       = currentQs[0]?.section || '';
+  const currentQ = qList[qIndex] ? Q[qList[qIndex]] : null;
+  const progress = qList.length > 0 ? Math.round((qIndex / qList.length) * 100) : 0;
+  const currentModule = currentQ?.module;
 
-  const allAnswered = currentIds.every(id => {
-    if (id === 'AGE')    return age.trim() !== '';
-    if (id === 'GENDER') return gender !== '';
-    if (id === 'OCC')    return occupation !== '';
-    return answers[id] !== undefined;
-  });
+  // Check if we just finished a module
+  const justFinishedModule = () => {
+    if (qIndex === 0) return null;
+    const prev = Q[qList[qIndex - 1]];
+    const curr = Q[qList[qIndex]];
+    if (prev?.module !== curr?.module) return prev?.module;
+    return null;
+  };
 
-  const handleAnswer = (id, val) => setAnswers(prev => ({ ...prev, [id]: val }));
+  // Start assessment
+  const startAssessment = () => {
+    const flow = buildAdaptiveFlow(concerns, path);
+    // Deduplicate
+    const unique = [...new Set(flow)];
+    setQList(unique);
+    setQIndex(0);
+    setPhase('questions');
+  };
 
+  // Answer a question
+  const answer = (val) => {
+    if (animating) return;
+    const qId = qList[qIndex];
+    const newAnswers = { ...answers, [qId]: val };
+    setAnswers(newAnswers);
 
+    // CAT: if PHQ9 very low, skip some PHQ questions
+    // Bayesian: if PHQ1+PHQ2 both 0, skip rest of PHQ
+    let nextIndex = qIndex + 1;
 
-  const topRef = React.useRef(null);
-
-  const handleNext = () => {
-    if (topRef.current) topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (sectionIdx < totalSections - 1) setSectionIdx(s => s + 1);
-    else {
-      localStorage.removeItem('pf-assessment-draft');
-    // C-SSRS scoring: count yes answers — any yes on CSSRS2-5 = high risk
-    const cssrs_score = ['CSSRS1','CSSRS2','CSSRS3','CSSRS4','CSSRS5','CSSRS6'].filter(id => answers[id] === 1).length;
-    const cssrs_high_risk = answers['CSSRS2']===1||answers['CSSRS3']===1||answers['CSSRS4']===1||answers['CSSRS5']===1;
-    // AUDIT scoring: sum weighted scores
-    const audit_map = { AUDIT1:[0,1,2,3,4], AUDIT2:[0,1,2,3,4], AUDIT3:[0,1,2,3,4], AUDIT4:[0,1,2,3,4], AUDIT5:[0,1,2,3,4], AUDIT6:[0,1,2,3,4], AUDIT7:[0,1,2,3,4], AUDIT8:[0,1,2,3,4], AUDIT9:[0,2,4], AUDIT10:[0,2,4] };
-    const audit_score = Object.entries(audit_map).reduce((sum,[id,vals]) => sum + (vals[answers[id]]||0), 0);
-    onComplete({
-        answers, age: parseInt(age) || 25,
-        gender: gender === 'Male' ? 1 : gender === 'Female' ? 0 : 2,
-        occupation, concern: '',
-        cssrs_score, cssrs_high_risk,
-        audit_score,
-        audit_risk: audit_score >= 16 ? 'high' : audit_score >= 8 ? 'moderate' : 'low',
-      });
+    // Crisis escalation: if PHQ9 = 3, immediately add CSSRS
+    if (qId === 'PHQ9' && val === 3) {
+      const newList = [...qList];
+      if (!newList.includes('CSSRS1')) {
+        newList.splice(nextIndex, 0, 'CSSRS1', 'CSSRS2', 'CSSRS3');
+        setQList(newList);
+      }
     }
+
+    // CAT skip: if first 2 PHQ both 0, skip PHQ3-8, keep PHQ9
+    if (qId === 'PHQ2' && val === 0 && newAnswers['PHQ1'] === 0) {
+      const newList = qList.filter(id => !['PHQ3','PHQ4','PHQ5','PHQ6','PHQ7','PHQ8'].includes(id));
+      setQList(newList);
+    }
+
+    // CAT skip: if GAD1+GAD2 both 0, skip GAD3-6, keep GAD7
+    if (qId === 'GAD2' && val === 0 && newAnswers['GAD1'] === 0) {
+      const newList = qList.filter(id => !['GAD3','GAD4','GAD5','GAD6'].includes(id));
+      setQList(newList);
+    }
+
+    // Animate transition
+    setAnimating(true);
+    setTimeout(() => {
+      if (nextIndex >= qList.length) {
+        // Done
+        finalizeAnswers(newAnswers);
+      } else {
+        // Check module completion
+        const prevMod = Q[qList[qIndex]]?.module;
+        const nextMod = Q[qList[nextIndex]]?.module;
+        if (prevMod !== nextMod && MODULE_COMPLETE[prevMod]) {
+          setShowModuleComplete(prevMod);
+          setTimeout(() => {
+            setShowModuleComplete(null);
+            setQIndex(nextIndex);
+            setAnimating(false);
+          }, 2000);
+        } else {
+          setQIndex(nextIndex);
+          setAnimating(false);
+        }
+      }
+      topRef.current?.scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 300);
   };
 
-  const S = { blue:'#1D4ED8', navy:'#0C1A2E', bg:'#F8FAFF', card:'#FFFFFF', border:'#E2EBF6', muted:'#3B5998', hint:'#94a3b8', lightBlue:'#EFF6FF' };
+  const finalizeAnswers = (finalAnswers) => {
+    const score = (ids) => ids.reduce((s, id) => s + (finalAnswers[id] !== undefined ? finalAnswers[id] : 3), 0) / ids.length;
+    onComplete({
+      answers: finalAnswers,
+      age: parseInt(age) || 25,
+      gender: gender === 'Male' ? 1 : gender === 'Female' ? 0 : 2,
+      occupation,
+      concern: concerns.join(','),
+      cssrs_score: ['CSSRS1','CSSRS2','CSSRS3'].filter(id => finalAnswers[id] === 1).length,
+      cssrs_high_risk: ['CSSRS2','CSSRS3'].some(id => finalAnswers[id] === 1),
+      audit_score: 0,
+    });
+  };
 
-  const renderQuestion = (q) => {
-    if (q.id === 'AGE') return (
-      <div key={q.id} style={{ marginBottom:24 }}>
-        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500, lineHeight:1.5 }}>How old are you?</p>
-        <input type="number" value={age} onChange={e => setAge(e.target.value)}
-          placeholder="Enter your age" min="10" max="100"
-          style={{ width:'100%', padding:'12px 16px', borderRadius:10, border:'0.5px solid '+S.border, fontSize:16, boxSizing:'border-box', outline:'none', fontFamily:"'Satoshi',-apple-system,sans-serif", color:S.navy, background:S.bg }}
-          onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}
-        />
-      </div>
-    );
-    if (q.id === 'GENDER') return (
-      <div key={q.id} style={{ marginBottom:24 }}>
-        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500 }}>What is your gender?</p>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          {['Male','Female','Non-binary','Prefer not to say'].map(opt => (
-            <button key={opt} onClick={() => setGender(opt)}
-              style={{ padding:'10px 18px', borderRadius:10, border:'0.5px solid '+(gender===opt ? S.blue : S.border), cursor:'pointer', fontSize:13, fontWeight:600, background: gender===opt ? S.blue : S.card, color: gender===opt ? '#fff' : S.navy, transition:'all 0.2s' }}>
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-    if (q.id === 'OCC') return (
-      <div key={q.id} style={{ marginBottom:24 }}>
-        <p style={{ fontSize:15, color:S.navy, margin:'0 0 10px', fontWeight:500 }}>What is your occupation?</p>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          {['Student','Employed','Self-employed','Unemployed','Retired','Other'].map(opt => (
-            <button key={opt} onClick={() => setOccupation(opt)}
-              style={{ padding:'10px 18px', borderRadius:10, border:'0.5px solid '+(occupation===opt ? S.blue : S.border), cursor:'pointer', fontSize:13, fontWeight:600, background: occupation===opt ? S.blue : S.card, color: occupation===opt ? '#fff' : S.navy, transition:'all 0.2s' }}>
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-
-    const scale = SCALE[q.type] || SCALE.frequency4;
-    return (
-      <div key={q.id} style={{ marginBottom:20, animation:'fadeIn 0.3s ease' }}>
-        <p style={{ fontSize:15, color:S.navy, margin:'0 0 6px', fontWeight:500, lineHeight:1.6 }}>{q.text}</p>
-        {q.hint && (
-          <div style={{ fontSize:12, color:S.muted, lineHeight:1.6, marginBottom:12, paddingLeft:2, animation:'fadeIn 0.4s ease', opacity:0.85 }}>
-            {q.hint}
+  // ── PATH SELECTION ─────────────────────────────────────
+  if (phase === 'path') return (
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:S.bg, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ maxWidth:560, width:'100%' }}>
+        <div style={{ textAlign:'center', marginBottom:40 }}>
+          <div style={{ width:56, height:56, borderRadius:16, background:S.blue, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
+            <svg width="26" height="26" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 4 5 4 10C4 12.8 6.2 15 9 15C11.8 15 14 12.8 14 10C14 5 9 1.5 9 1.5Z" fill="white"/><circle cx="9" cy="10" r="2.2" fill="#0C1A2E"/></svg>
           </div>
-        )}
-        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          {scale.map((label, i) => (
-            <button key={i} onClick={() => handleAnswer(q.id, i)}
-              style={{
-                padding:'11px 16px', borderRadius:10, cursor:'pointer',
-                textAlign:'left', fontSize:13, fontWeight: answers[q.id]===i ? 600 : 400,
-                transition:'all 0.2s',
-                background: answers[q.id]===i ? S.blue : S.lightBlue,
-                color: answers[q.id]===i ? '#fff' : S.navy,
-                border: answers[q.id]===i ? 'none' : '0.5px solid '+S.border,
-              }}>
-              {label}
-            </button>
+          <h1 style={{ fontSize:28, fontWeight:700, color:S.navy, letterSpacing:'-0.03em', margin:'0 0 10px' }}>Mental Health Assessment</h1>
+          <p style={{ fontSize:16, color:S.muted, lineHeight:1.6 }}>Choose how you want to be assessed. All responses are private and encrypted.</p>
+        </div>
+
+        {/* Demographics */}
+        <div style={{ background:S.white, borderRadius:14, padding:20, border:`1px solid ${S.border}`, marginBottom:20 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:S.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Tell us a bit about yourself</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+            <div>
+              <label style={{ fontSize:11, fontWeight:600, color:S.muted, display:'block', marginBottom:5 }}>AGE</label>
+              <input type="number" value={age} onChange={e=>setAge(e.target.value)} placeholder="25" min="13" max="100"
+                style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:`1px solid ${S.border}`, fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+                onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}/>
+            </div>
+            <div>
+              <label style={{ fontSize:11, fontWeight:600, color:S.muted, display:'block', marginBottom:5 }}>GENDER</label>
+              <select value={gender} onChange={e=>setGender(e.target.value)}
+                style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:`1px solid ${S.border}`, fontSize:14, outline:'none', background:'#fff', fontFamily:'inherit' }}>
+                <option value="">Select</option>
+                <option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize:11, fontWeight:600, color:S.muted, display:'block', marginBottom:5 }}>OCCUPATION</label>
+            <input value={occupation} onChange={e=>setOccupation(e.target.value)} placeholder="Software Engineer, Student, Doctor..."
+              style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:`1px solid ${S.border}`, fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+              onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.border}/>
+          </div>
+        </div>
+
+        {/* 3 paths */}
+        <div style={{ display:'grid', gap:12, marginBottom:24 }}>
+          {[
+            { id:'quick', title:'Quick Checkup', time:'3 min', desc:'Core mood and anxiety screening. 6 questions. Fast and essential.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, color:S.success },
+            { id:'adaptive', title:'Adaptive Assessment', time:'8-12 min', desc:'AI selects questions based on your concerns. Personalized and efficient.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, color:S.blue, recommended:true },
+            { id:'deep', title:'Full Clinical Assessment', time:'20-25 min', desc:'All 16 validated instruments. Complete psychological profile. For researchers and clinicians.', icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, color:S.purple },
+          ].map(p=>(
+            <div key={p.id} onClick={()=>setPath(p.id)} style={{ background:S.white, borderRadius:12, padding:20, border:`2px solid ${path===p.id?p.color:S.border}`, cursor:'pointer', transition:'all 0.15s', position:'relative' }}
+              onMouseEnter={e=>e.currentTarget.style.borderColor=p.color}
+              onMouseLeave={e=>e.currentTarget.style.borderColor=path===p.id?p.color:S.border}>
+              {p.recommended && <div style={{ position:'absolute', top:12, right:12, fontSize:10, fontWeight:700, color:S.blue, background:S.lightBlue, padding:'2px 8px', borderRadius:100 }}>Recommended</div>}
+              <div style={{ display:'flex', gap:14, alignItems:'flex-start' }}>
+                <div style={{ width:40, height:40, borderRadius:10, background:`${p.color}15`, border:`1px solid ${p.color}30`, display:'flex', alignItems:'center', justifyContent:'center', color:p.color, flexShrink:0 }}>{p.icon}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:4 }}>
+                    <div style={{ fontSize:15, fontWeight:700, color:S.navy }}>{p.title}</div>
+                    <div style={{ fontSize:11, color:p.color, fontWeight:600, background:`${p.color}10`, padding:'2px 8px', borderRadius:100 }}>{p.time}</div>
+                  </div>
+                  <div style={{ fontSize:13, color:S.muted, lineHeight:1.5 }}>{p.desc}</div>
+                </div>
+                {path===p.id && <div style={{ width:20, height:20, borderRadius:'50%', background:p.color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>}
+              </div>
+            </div>
           ))}
         </div>
-      </div>
-    );
-  };
 
-  const [showResume, setShowResume] = React.useState(!!savedDraft);
-
-  if (showResume && savedDraft) return (
-    <div style={{ background: '#fff', borderRadius: 14, border: '0.5px solid #E2EBF6', padding: 32, textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/></svg>
-      </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: '#0C1A2E', marginBottom: 8 }}>Resume Assessment?</div>
-      <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 24 }}>You have an unfinished assessment. Resume where you left off or start fresh.</div>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-        <button onClick={() => { setShowResume(false); }} style={{ padding: '9px 20px', background: '#1D4ED8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Resume</button>
-        <button onClick={() => { localStorage.removeItem('pf-assessment-draft'); setShowResume(false); }} style={{ padding: '9px 20px', background: 'transparent', color: '#1D4ED8', border: '1px solid #1D4ED8', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Start Fresh</button>
+        <button onClick={()=>{ if(!path||!age) return; path==='adaptive'?setPhase('triage'):startAssessment(); }}
+          disabled={!path||!age}
+          style={{ width:'100%', padding:'13px', background:path&&age?S.blue:'#CBD5E1', color:'#fff', border:'none', borderRadius:10, fontSize:15, fontWeight:600, cursor:path&&age?'pointer':'not-allowed', transition:'background 0.2s' }}>
+          {!age?'Enter your age to continue':!path?'Choose an assessment path':'Continue →'}
+        </button>
+        <div style={{ marginTop:16, textAlign:'center', fontSize:12, color:S.hint }}>
+          All responses are encrypted and confidential. Crisis support: iCall 9152987821
+        </div>
       </div>
     </div>
   );
 
-  return (
-    <div ref={topRef} style={{ fontFamily:"'Satoshi',-apple-system,sans-serif" }}>
-      {/* Progress */}
-      <div style={{ marginBottom:24 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:S.muted, marginBottom:8, fontWeight:500 }}>
-          <span style={{ color:S.blue, fontWeight:600 }}>{section}</span>
-          <span>{sectionIdx+1} of {totalSections}</span>
+  // ── TRIAGE (adaptive only) ─────────────────────────────
+  if (phase === 'triage') return (
+    <div style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:S.bg, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ maxWidth:560, width:'100%' }}>
+        <div style={{ textAlign:'center', marginBottom:32 }}>
+          <h2 style={{ fontSize:24, fontWeight:700, color:S.navy, letterSpacing:'-0.02em', margin:'0 0 10px' }}>What's been on your mind?</h2>
+          <p style={{ fontSize:15, color:S.muted, lineHeight:1.6 }}>Select everything that applies. We'll tailor your assessment to focus only on what matters to you.</p>
         </div>
-        <div style={{ background:S.border, borderRadius:6, height:3 }}>
-          <div style={{ width:`${progress}%`, background:S.blue, height:3, borderRadius:6, transition:'width 0.5s ease' }} />
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:24 }}>
+          {CONCERNS.map(c=>{
+            const selected = concerns.includes(c.id);
+            return (
+              <div key={c.id} onClick={()=>{ setConcerns(prev => prev.includes(c.id) ? prev.filter(x=>x!==c.id) : c.id==='unsure'?['unsure']:[...prev.filter(x=>x!=='unsure'),c.id]); }}
+                style={{ background:S.white, borderRadius:10, padding:'14px 16px', border:`2px solid ${selected?S.blue:S.border}`, cursor:'pointer', display:'flex', gap:10, alignItems:'center', transition:'all 0.15s' }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor=S.blue}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=selected?S.blue:S.border}>
+                <div style={{ color:selected?S.blue:S.muted, flexShrink:0 }}>{c.icon}</div>
+                <div style={{ fontSize:13, fontWeight:selected?600:400, color:selected?S.navy:S.muted, lineHeight:1.3 }}>{c.label}</div>
+                {selected && <div style={{ marginLeft:'auto', width:18, height:18, borderRadius:'50%', background:S.blue, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>}
+              </div>
+            );
+          })}
         </div>
-        <div style={{ fontSize:11, color:S.hint, marginTop:6 }}>
-          {progress}% complete
-        </div>
-      </div>
-
-      {/* Questions */}
-      <div style={{ background:S.card, borderRadius:12, padding:28, border:'0.5px solid '+S.border, marginBottom:16, boxShadow:'0 1px 4px rgba(29,78,216,0.06)', animation:'slideIn 0.3s ease' }}>
-        <div style={{ fontSize:11, fontWeight:600, color:S.muted, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:20, paddingBottom:12, borderBottom:'0.5px solid '+S.border }}>{section}</div>
-        {currentQs.map(q => renderQuestion(q))}
-      </div>
-
-      {/* Navigation */}
-      <div style={{ display:'flex', gap:10 }}>
-        {sectionIdx > 0 && (
-          <button onClick={() => { setSectionIdx(s => s-1); if(topRef.current) topRef.current.scrollIntoView({behavior:'smooth'}); }}
-            style={{ flex:1, padding:'13px', background:S.card, color:S.navy, border:'0.5px solid '+S.border, borderRadius:10, fontSize:14, cursor:'pointer', fontWeight:600 }}>
-            Back
-          </button>
+        {concerns.length > 0 && (
+          <div style={{ background:S.lightBlue, borderRadius:10, padding:'10px 14px', marginBottom:16, border:`1px solid ${S.border}` }}>
+            <div style={{ fontSize:12, color:S.blue, fontWeight:600 }}>
+              Estimated {concerns.includes('unsure')?'20-25':concerns.length<=2?'8-10':concerns.length<=4?'12-15':'15-18'} min · {concerns.includes('unsure')?'All instruments':concerns.map(c=>TRIAGE_MAP[c]?.label).join(', ')}
+            </div>
+          </div>
         )}
-        <button onClick={handleNext} disabled={!allAnswered}
-          style={{ flex:2, padding:'13px', background: allAnswered ? S.blue : S.border, color: allAnswered ? '#fff' : S.hint, border:'none', borderRadius:10, fontSize:14, cursor: allAnswered ? 'pointer' : 'not-allowed', fontWeight:600, transition:'all 0.2s' }}>
-          {sectionIdx === totalSections-1 ? 'Complete Assessment' : 'Next'}
-        </button>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={()=>setPhase('path')} style={{ padding:'11px 20px', background:'transparent', color:S.muted, border:`1px solid ${S.border}`, borderRadius:10, fontSize:14, cursor:'pointer' }}>← Back</button>
+          <button onClick={()=>{ if(concerns.length===0) return; startAssessment(); }} disabled={concerns.length===0}
+            style={{ flex:1, padding:'12px', background:concerns.length>0?S.blue:'#CBD5E1', color:'#fff', border:'none', borderRadius:10, fontSize:15, fontWeight:600, cursor:concerns.length>0?'pointer':'not-allowed' }}>
+            Start Personalized Assessment →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── QUESTIONS ──────────────────────────────────────────
+  if (phase === 'questions' && currentQ) {
+    const opts = OPTIONS[currentQ.type] || OPTIONS.freq4;
+    const moduleLabel = MODULE_LABELS[currentModule] || currentModule;
+    const finishedMod = justFinishedModule();
+
+    return (
+      <div ref={topRef} style={{ fontFamily:"'Satoshi',-apple-system,sans-serif", minHeight:'100vh', background:S.bg, display:'flex', flexDirection:'column' }}>
+        {/* Progress bar */}
+        <div style={{ height:3, background:S.border }}>
+          <div style={{ height:3, background:S.blue, width:`${progress}%`, transition:'width 0.4s ease' }}/>
+        </div>
+
+        {/* Header */}
+        <div style={{ padding:'14px 24px', background:S.white, borderBottom:`1px solid ${S.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:S.blue, textTransform:'uppercase', letterSpacing:'0.06em' }}>{moduleLabel}</div>
+            <div style={{ fontSize:12, color:S.hint }}>Question {qIndex+1} of ~{qList.length}</div>
+          </div>
+          <div style={{ fontSize:12, color:S.muted }}>{progress}% complete</div>
+        </div>
+
+        {/* Module complete overlay */}
+        {showModuleComplete && (
+          <div style={{ position:'fixed', inset:0, background:'rgba(12,26,46,0.5)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ background:S.white, borderRadius:20, padding:32, textAlign:'center', maxWidth:320, margin:24, boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}>
+              <div style={{ width:56, height:56, borderRadius:'50%', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke={S.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <div style={{ fontSize:16, fontWeight:700, color:S.navy, marginBottom:8 }}>{MODULE_LABELS[showModuleComplete]} complete</div>
+              <div style={{ fontSize:14, color:S.muted, lineHeight:1.6 }}>{MODULE_COMPLETE[showModuleComplete]}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Question */}
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          <div style={{ maxWidth:560, width:'100%' }}>
+            {/* Crisis warning */}
+            {currentQ.critical && (
+              <div style={{ background:'#FEF2F2', border:`1px solid #FECACA`, borderRadius:10, padding:'10px 14px', marginBottom:20, display:'flex', gap:8, alignItems:'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={S.danger} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span style={{ fontSize:12, color:S.danger, fontWeight:500 }}>This is a sensitive question. Your answer is completely confidential. Crisis support: iCall 9152987821</span>
+              </div>
+            )}
+
+            {/* Question text */}
+            <div style={{ opacity:animating?0:1, transform:animating?'translateY(8px)':'translateY(0)', transition:'opacity 0.25s, transform 0.25s' }}>
+              <div style={{ fontSize:11, fontWeight:700, color:S.blue, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>
+                {moduleLabel} · Q{qIndex+1}
+              </div>
+              <h2 style={{ fontSize:22, fontWeight:600, color:S.navy, lineHeight:1.4, margin:'0 0 28px', letterSpacing:'-0.01em' }}>
+                {currentQ.text}
+              </h2>
+
+              {/* Time reference for clinical questions */}
+              {['PHQ9','GAD7','ISI'].includes(currentModule) && (
+                <div style={{ fontSize:12, color:S.hint, marginBottom:20, fontStyle:'italic' }}>
+                  Over the last 2 weeks, how often have you been bothered by this?
+                </div>
+              )}
+
+              {/* Answer options */}
+              <div style={{ display:'grid', gap:10 }}>
+                {opts.map(([label, val]) => (
+                  <button key={label} onClick={()=>answer(val)}
+                    style={{ padding:'14px 18px', background:S.white, border:`1.5px solid ${S.border}`, borderRadius:10, fontSize:15, color:S.navy, cursor:'pointer', textAlign:'left', fontWeight:500, transition:'all 0.15s', fontFamily:'inherit', display:'flex', justifyContent:'space-between', alignItems:'center' }}
+                    onMouseEnter={e=>{ e.currentTarget.style.borderColor=S.blue; e.currentTarget.style.background=S.lightBlue; e.currentTarget.style.color=S.blue; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.borderColor=S.border; e.currentTarget.style.background=S.white; e.currentTarget.style.color=S.navy; }}>
+                    <span>{label}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ opacity:0.3 }}><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                ))}
+              </div>
+
+              {/* Skip for non-critical */}
+              {!currentQ.critical && (
+                <button onClick={()=>answer(currentQ.type==='yesno'?0:0)}
+                  style={{ marginTop:16, padding:'8px 16px', background:'transparent', border:'none', fontSize:13, color:S.hint, cursor:'pointer', display:'block', margin:'16px auto 0' }}>
+                  Skip this question
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom safe space */}
+        <div style={{ padding:'12px 24px', textAlign:'center' }}>
+          <div style={{ fontSize:11, color:S.hint }}>Your responses are encrypted and confidential</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  return (
+    <div style={{ minHeight:'100vh', background:S.bg, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Satoshi',-apple-system,sans-serif" }}>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ width:48, height:48, borderRadius:'50%', border:`3px solid ${S.blue}`, borderTopColor:'transparent', animation:'spin 1s linear infinite', margin:'0 auto 16px' }}/>
+        <div style={{ fontSize:15, color:S.muted }}>Building your assessment...</div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
   );
