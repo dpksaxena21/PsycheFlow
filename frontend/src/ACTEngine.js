@@ -321,7 +321,7 @@ export default function ACTEngine({ user, phqScore, gadScore, condition }) {
     <div style={{ fontFamily:'sans-serif', maxWidth:720, margin:'0 auto', padding:24 }}>
       <div style={{ marginBottom:24 }}>
         <h2 style={{ color:'#6366f1', margin:'0 0 4px' }}>
-          🌱 ACT Engine
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{marginRight:6,verticalAlign:"middle"}}><path d="M12 22V12M12 12C12 12 7 9 7 5a5 5 0 0110 0c0 4-5 7-5 7z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 12C12 12 17 9 17 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>ACT Engine
         </h2>
         <p style={{ color:'#64748b', fontSize:14, margin:0 }}>
           Acceptance and Commitment Therapy — Build Psychological Flexibility
