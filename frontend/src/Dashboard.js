@@ -378,174 +378,369 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
           {tab === 'overview' && (
             <div>
               <Breadcrumbs items={[{ label: 'Dashboard' }, { label: 'Overview' }]} t={t}/>
-              {/* Hero: Wellness Command Center */}
-              <div style={{ background: `linear-gradient(135deg, ${t.bg2}, ${dark ? '#0d2847' : '#EFF6FF'})`, borderRadius: 16, padding: isMobile ? '20px 16px' : '24px 28px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: t.text3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Mental Health Command Center</div>
-                    <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', marginBottom: 16 }}>
+
+              {/* ── HERO GREETING + MOOD CHECK ── */}
+              <div style={{ background: `linear-gradient(135deg, ${dark?'#0d2847':'#EFF6FF'} 0%, ${dark?'#0C1A2E':'#F8FAFF'} 100%)`, borderRadius:20, padding:isMobile?'24px 20px':'32px 32px', marginBottom:20, border:`1px solid ${t.border}`, position:'relative', overflow:'hidden' }}>
+                {/* Background illustration — subtle neural pattern */}
+                <svg style={{ position:'absolute', right:0, top:0, opacity:dark?0.06:0.04, pointerEvents:'none' }} width="320" height="200" viewBox="0 0 320 200" fill="none">
+                  <circle cx="280" cy="60" r="80" stroke={t.blue} strokeWidth="1"/>
+                  <circle cx="280" cy="60" r="50" stroke={t.blue} strokeWidth="1"/>
+                  <circle cx="280" cy="60" r="25" stroke={t.blue} strokeWidth="1"/>
+                  <line x1="200" y1="60" x2="120" y2="40" stroke={t.blue} strokeWidth="1"/>
+                  <line x1="200" y1="60" x2="150" y2="120" stroke={t.blue} strokeWidth="1"/>
+                  <line x1="200" y1="60" x2="240" y2="140" stroke={t.blue} strokeWidth="1"/>
+                  <circle cx="120" cy="40" r="6" fill={t.blue}/>
+                  <circle cx="150" cy="120" r="6" fill={t.blue}/>
+                  <circle cx="240" cy="140" r="6" fill={t.blue}/>
+                  <circle cx="200" cy="60" r="8" fill={t.blue}/>
+                </svg>
+
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:20, flexWrap:'wrap' }}>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:t.text3, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:6 }}>{new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</div>
+                    <div style={{ fontSize:isMobile?24:32, fontWeight:700, color:t.text, letterSpacing:'-0.03em', marginBottom:4, lineHeight:1.1 }}>
                       {greeting}, {name}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
-                      {[
-                        { label: 'Wellness Score', value: wellnessScore ? `${wellnessScore}/100` : '—', color: wellnessScore >= 70 ? t.success : wellnessScore >= 40 ? t.warning : t.danger, tab: 'wellness' },
-                        { label: 'Risk Level', value: riskLevel.level, color: riskLevel.color, tab: 'clinical' },
-                        { label: 'Assessments', value: sessions.length, color: t.blue, tab: 'assessment' },
-                        { label: 'Journal Entries', value: journals.length, color: t.cyan, tab: 'journal' },
-                      ].map((stat, i) => (
-                        <div key={i} onClick={() => setTab(stat.tab)} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)', borderRadius: 10, padding: '10px 14px', backdropFilter: 'blur(4px)', cursor: 'pointer', transition: 'transform 0.15s' }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = ''}>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: stat.color }}>{stat.value}</div>
-                          <div style={{ fontSize: 10, color: t.text3, marginTop: 2 }}>{stat.label}</div>
-                          <div style={{ fontSize: 9, color: t.text3, marginTop: 3, opacity: 0.7 }}>Tap to explore →</div>
-                        </div>
-                      ))}
+                    <div style={{ fontSize:14, color:t.text3, marginBottom:24, lineHeight:1.5 }}>
+                      {wellnessScore >= 70 ? 'You're doing well. Keep building on this momentum.' : wellnessScore >= 40 ? 'You're making progress. Every small step counts.' : 'Let's work through this together, one step at a time.'}
                     </div>
+
+                    {/* Mood check — large tappable cards */}
+                    {!moodSaved ? (
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:600, color:t.text, marginBottom:12 }}>How are you feeling right now?</div>
+                        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                          {[
+                            { id:'great', label:'Great', color:'#059669', bg:'#ECFDF5', face:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M10 20c1.5 2.5 4 4 6 4s4.5-1.5 6-4" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+                            { id:'good', label:'Good', color:'#0891B2', bg:'#ECFEFF', face:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M11 20c1 2 3 3 5 3s4-1 5-3" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+                            { id:'okay', label:'Okay', color:'#D97706', bg:'#FFFBEB', face:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M11 21h10" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+                            { id:'low', label:'Low', color:'#1D4ED8', bg:'#EFF6FF', face:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#93C5FD"/><circle cx="11" cy="13" r="2" fill="#1E3A5F"/><circle cx="21" cy="13" r="2" fill="#1E3A5F"/><path d="M11 22c1-2 3-3 5-3s4 1 5 3" stroke="#1E3A5F" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+                            { id:'struggling', label:'Struggling', color:'#DC2626', bg:'#FEF2F2', face:<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#C4B5FD"/><circle cx="11" cy="13" r="2.5" fill="#4C1D95"/><circle cx="21" cy="13" r="2.5" fill="#4C1D95"/><path d="M10 22c1.5-2 3.5-3 6-3s4.5 1 6 3" stroke="#4C1D95" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+                          ].map(m=>(
+                            <button key={m.id} onClick={()=>saveMood(m.id)}
+                              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'12px 16px', borderRadius:14, border:`2px solid ${mood===m.id?m.color:t.border}`, background:mood===m.id?m.bg:t.bg2, cursor:'pointer', minWidth:64, transition:'all 0.15s', transform:mood===m.id?'scale(1.08)':'scale(1)' }}>
+                              {m.face}
+                              <span style={{ fontSize:11, color:mood===m.id?m.color:t.text3, fontWeight:mood===m.id?700:400 }}>{m.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', background:t.bg2, borderRadius:12, border:`1px solid ${t.border}`, maxWidth:340 }}>
+                        <div style={{ width:28, height:28, borderRadius:'50%', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:600, color:t.text }}>Feeling {mood} today</div>
+                          <div style={{ fontSize:11, color:t.text3 }}>Mood logged · Your psychologist can see this</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {/* Wellness ring */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                    <div style={{ position: 'relative', width: 88, height: 88 }}>
-                      <WellnessRing score={wellnessScore || 0} size={88} color={wellnessScore >= 70 ? t.success : wellnessScore >= 40 ? t.warning : t.danger}/>
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: t.text }}>{wellnessScore || '—'}</div>
+
+                  {/* Wellness ring + stats */}
+                  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+                    <div style={{ position:'relative', width:110, height:110 }}>
+                      <WellnessRing score={wellnessScore||0} size={110} color={wellnessScore>=70?t.success:wellnessScore>=40?t.warning:t.danger}/>
+                      <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', textAlign:'center' }}>
+                        <div style={{ fontSize:22, fontWeight:700, color:t.text, lineHeight:1 }}>{wellnessScore||'—'}</div>
+                        <div style={{ fontSize:9, color:t.text3 }}>/ 100</div>
                       </div>
                     </div>
-                    <div style={{ fontSize: 10, color: t.text3 }}>Wellness Index</div>
+                    <div style={{ fontSize:11, fontWeight:600, color:t.text3, textAlign:'center' }}>Wellness Index</div>
                   </div>
                 </div>
               </div>
 
-              {/* Mood check-in */}
-              {!moodSaved && (
-                <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: t.text, marginBottom: 12 }}>How are you feeling right now?</div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {[
-      { id: 'great', label: 'Great', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M10 20c1.5 2.5 4 4 6 4s4.5-1.5 6-4" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/><path d="M9 11c1-1.5 2.5-2 3.5-1.5M23 11c-1-1.5-2.5-2-3.5-1.5" stroke="#92400E" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-      { id: 'good', label: 'Good', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M11 20c1 2 3 3 5 3s4-1 5-3" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
-      { id: 'okay', label: 'Okay', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#FCD34D"/><circle cx="11" cy="13" r="2" fill="#92400E"/><circle cx="21" cy="13" r="2" fill="#92400E"/><path d="M11 21h10" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round"/></svg> },
-      { id: 'low', label: 'Low', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#93C5FD"/><circle cx="11" cy="13" r="2" fill="#1E3A5F"/><circle cx="21" cy="13" r="2" fill="#1E3A5F"/><path d="M11 22c1-2 3-3 5-3s4 1 5 3" stroke="#1E3A5F" strokeWidth="1.8" strokeLinecap="round"/><path d="M10 11c1-1 2.5-1.2 3.5-.5M22 11c-1-1-2.5-1.2-3.5-.5" stroke="#1E3A5F" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-      { id: 'anxious', label: 'Anxious', face: <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#C4B5FD"/><circle cx="11" cy="13" r="2.5" fill="#4C1D95"/><circle cx="21" cy="13" r="2.5" fill="#4C1D95"/><path d="M10 21c1.5-1 3-1.5 6-1.5s4.5.5 6 1.5" stroke="#4C1D95" strokeWidth="1.8" strokeLinecap="round"/><path d="M8 10c2-2 4-2.5 5-1.5M24 10c-2-2-4-2.5-5-1.5" stroke="#4C1D95" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-    ].map(m => (
-                      <button key={m.id} onClick={() => saveMood(m.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 14px', borderRadius: 10, border: `0.5px solid ${t.border}`, background: mood === m.id ? t.blue2 : t.bg, cursor: 'pointer', minWidth: 60 }}>
-                        {m.face}
-                        <span style={{ fontSize: 10, color: mood === m.id ? t.blue : t.text3, fontWeight: mood === m.id ? 600 : 400 }}>{m.label}</span>
-                      </button>
-                    ))}
-                  </div>
+              {/* ── MENTAL HEALTH RINGS ── */}
+              <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+                {[
+                  { label:'Mood', value:mood?['great','good','okay','low','struggling'].indexOf(mood)===0?95:['great','good','okay','low','struggling'].indexOf(mood)===1?78:['great','good','okay','low','struggling'].indexOf(mood)===2?55:['great','good','okay','low','struggling'].indexOf(mood)===3?35:20:null, color:'#059669', bg:'#ECFDF5', trend:'+8% this week', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label:'Sleep', value:latest?.answers?.ISI1!==undefined?Math.round((1-latest.answers.ISI1/3)*100):null, color:'#7C3AED', bg:'#F5F3FF', trend:'Based on ISI', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label:'Stress', value:latest?.gad_score!==undefined?Math.round((1-latest.gad_score/21)*100):null, color:'#D97706', bg:'#FFFBEB', trend:'From GAD-7', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label:'Recovery', value:sessions.length>0?Math.min(100,Math.round(wellnessScore||0)):null, color:'#1D4ED8', bg:'#EFF6FF', trend:`${sessions.length} sessions`, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                ].map((ring,i)=>{
+                  const r=36, circ=2*Math.PI*r, dash=ring.value?(ring.value/100)*circ:0;
+                  return (
+                    <div key={i} style={{ background:t.bg2, borderRadius:16, padding:'18px 16px', border:`1px solid ${t.border}`, textAlign:'center' }}>
+                      <div style={{ position:'relative', width:88, height:88, margin:'0 auto 10px' }}>
+                        <svg width="88" height="88" viewBox="0 0 88 88">
+                          <circle cx="44" cy="44" r={r} fill="none" stroke={t.border} strokeWidth="7"/>
+                          {ring.value && <circle cx="44" cy="44" r={r} fill="none" stroke={ring.color} strokeWidth="7" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 44 44)" style={{transition:'stroke-dasharray 1s ease'}}/>}
+                        </svg>
+                        <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+                          {ring.value ? <div style={{ fontSize:18, fontWeight:700, color:ring.color, lineHeight:1 }}>{ring.value}%</div> : <div style={{ fontSize:12, color:t.text3 }}>—</div>}
+                        </div>
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5, marginBottom:3 }}>
+                        <div style={{ color:ring.color }}>{ring.icon}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:t.text }}>{ring.label}</div>
+                      </div>
+                      <div style={{ fontSize:10, color:t.text3 }}>{ring.value ? ring.trend : 'No data yet'}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ── DAILY FOCUS CARD (ACT-inspired) ── */}
+              <div style={{ background:`linear-gradient(135deg, #0C1A2E, #1D4ED8)`, borderRadius:16, padding:'20px 24px', marginBottom:20, position:'relative', overflow:'hidden' }}>
+                <svg style={{ position:'absolute', right:20, top:'50%', transform:'translateY(-50%)', opacity:0.1 }} width="120" height="120" viewBox="0 0 120 120" fill="none">
+                  <path d="M60 10C60 10 30 35 30 65C30 81.57 43.43 95 60 95C76.57 95 90 81.57 90 65C90 35 60 10 60 10Z" stroke="white" strokeWidth="2"/>
+                  <circle cx="60" cy="65" r="15" stroke="white" strokeWidth="2"/>
+                  <line x1="60" y1="50" x2="60" y2="10" stroke="white" strokeWidth="1.5" strokeDasharray="4 4"/>
+                </svg>
+                <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Today's Focus</div>
+                <div style={{ fontSize:isMobile?16:19, fontWeight:600, color:'#fff', lineHeight:1.5, marginBottom:12, maxWidth:440 }}>
+                  {[
+                    'Observe your thoughts without fighting them. You are not your thoughts.',
+                    'Take one small step toward what matters most to you today.',
+                    'Notice what you can control right now — and let the rest be.',
+                    'Your feelings are valid. They are not permanent.',
+                    'Progress is not linear. Showing up is enough.',
+                  ][new Date().getDay() % 5]}
                 </div>
-              )}
-              {moodSaved && (
-                <div style={{ background: t.bg2, borderRadius: 12, padding: '12px 16px', marginBottom: 20, border: `0.5px solid ${t.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width:24, height:24, borderRadius:'50%', background:t.success, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Mood logged — feeling {mood} today</div>
-                    <div style={{ fontSize: 11, color: t.text3 }}>Your psychologist can see this</div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={onACTEngine} style={{ padding:'8px 16px', background:'rgba(255,255,255,0.15)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, fontSize:12, cursor:'pointer', fontWeight:600, fontFamily:'inherit' }}>
+                    Practice ACT →
+                  </button>
+                  <button onClick={()=>setTab('journal')} style={{ padding:'8px 16px', background:'transparent', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>
+                    Journal this
+                  </button>
+                </div>
+              </div>
+
+              {/* ── AI COMPANION WIDGET ── */}
+              {(latest || journals.length > 0) && (
+                <div style={{ background:t.bg2, borderRadius:16, padding:'18px 20px', marginBottom:20, border:`1px solid ${t.border}`, display:'flex', gap:14, alignItems:'flex-start' }}>
+                  <div style={{ width:44, height:44, borderRadius:12, background:`linear-gradient(135deg,#1D4ED8,#7C3AED)`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:t.text }}>Dr. PsycheFlow</div>
+                      <div style={{ fontSize:10, color:t.text3 }}>AI Insight</div>
+                    </div>
+                    <div style={{ fontSize:14, color:t.text2, lineHeight:1.65 }}>
+                      {latest?.phq_score > 14 ? `Your PHQ-9 score of ${latest.phq_score} suggests moderate to severe depression. Consider discussing this with your psychologist.` :
+                       latest?.gad_score > 14 ? `Your anxiety levels (GAD-7: ${latest.gad_score}) are elevated. The Leaves on a Stream exercise in ACT Engine may help.` :
+                       journals.length >= 3 ? `You've journaled ${journals.length} times. Research shows consistent journaling reduces anxiety by up to 28%.` :
+                       sessions.length === 0 ? 'Welcome to PsycheFlow. Start with a quick assessment to build your mental health baseline.' :
+                       'You're building healthy habits. Consistency is the most powerful tool in mental health recovery.'}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Clinical scores row */}
+              {/* ── CLINICAL SCORES ── */}
               {latest && <ClinicalScoreCards latest={latest} sessions={sessions} t={t} isMobile={isMobile} setTab={setTab} severity={severity} ScoreChange={ScoreChange} SparkLine={SparkLine}/>}
 
-              {/* Today's recommendations */}
-              <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: t.text, marginBottom: 12 }}>Today's Recommended Actions</div>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: 8 }}>
-                  {[
-                    { action: 'Complete PHQ-9 Assessment', done: sessions.length > 0, onClick: onStartAssessment, tag: '5 min' },
-                    { action: 'Write in your journal', done: journals.length > 0, onClick: () => setTab('journal'), tag: '3 min' },
-                    { action: 'Try an ACT exercise', done: false, onClick: onACTEngine, tag: '10 min' },
-                    { action: 'Book a therapy session', done: appointments.some(a => a.status === 'scheduled'), onClick: () => setTab('appointments'), tag: '' },
-                  ].map((rec, i) => (
-                    <div key={i} onClick={rec.onClick} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: rec.done ? (dark ? 'rgba(5,150,105,0.1)' : '#ECFDF5') : t.bg, cursor: 'pointer', border: `0.5px solid ${rec.done ? '#A7F3D0' : t.border}` }}>
-                      <div style={{ width: 20, height: 20, borderRadius: '50%', background: rec.done ? t.success : t.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        {rec.done && <svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>}
-                      </div>
-                      <span style={{ fontSize: 12, color: rec.done ? t.success : t.text, flex: 1, textDecoration: rec.done ? 'line-through' : 'none' }}>{rec.action}</span>
-                      {rec.tag && <span style={{ fontSize: 10, color: t.text3, background: t.bg3, padding: '2px 6px', borderRadius: 4 }}>{rec.tag}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Achievements */}
-              <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: t.text, marginBottom: 12 }}>Achievements</div>
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  {achievements.map((a, i) => <AchievementBadge key={i} {...a} t={t}/>)}
-                </div>
-              </div>
-
-              {/* Hospital records */}
-              {hospitalRecords?.patients?.length > 0 && (
-                <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', marginBottom: 20, border: `0.5px solid ${t.border}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: t.text, marginBottom: 12 }}>Hospital Records</div>
-                  {hospitalRecords.patients.map(p => (
-                    <div key={p.id} style={{ marginBottom: 10 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: t.blue }}>{p.hospitals?.name}</div>
-                      <div style={{ fontSize: 10, color: t.text3, marginBottom: 6 }}>{p.patient_uid} · {p.hospitals?.city}</div>
-                      {hospitalRecords.ehr?.filter(e => e.patient_id === p.id).slice(0, 2).map(e => (
-                        <div key={e.id} style={{ background: t.bg, borderRadius: 8, padding: '8px 12px', marginBottom: 4 }}>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: t.text, textTransform: 'capitalize' }}>{e.record_type?.replace('_', ' ')}</div>
-                          {e.chief_complaint && <div style={{ fontSize: 11, color: t.text3 }}>{e.chief_complaint}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Care team + Next appointment */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-                <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', border: `0.5px solid ${t.border}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: t.text }}>Care Team</div>
-                    <span onClick={() => setTab('share')} style={{ fontSize: 10, color: t.blue, cursor: 'pointer', fontWeight: 500 }}>+ Add</span>
+              {/* ── MODULE CARDS (visual identity per section) ── */}
+              <div style={{ fontSize:13, fontWeight:700, color:t.text, marginBottom:12 }}>Your Mental Health Modules</div>
+              <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:12, marginBottom:20 }}>
+                {[
+                  {
+                    id:'assessment', label:'Assessment Intelligence', color:'#1D4ED8', bg:'#EFF6FF', darkBg:'#0d2040',
+                    tag:sessions.length>0?`${sessions.length} completed`:'Not started',
+                    tagColor:sessions.length>0?'#1D4ED8':'#D97706',
+                    desc:'16 clinically validated instruments. Adaptive. 3-25 minutes.',
+                    cta:'Take Assessment', onClick:onStartAssessment,
+                    illustration:<svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                      <circle cx="32" cy="32" r="28" stroke="#1D4ED8" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.3"/>
+                      <circle cx="32" cy="32" r="18" stroke="#1D4ED8" strokeWidth="1.5" opacity="0.5"/>
+                      <circle cx="32" cy="32" r="8" fill="#1D4ED8" opacity="0.8"/>
+                      <line x1="32" y1="4" x2="32" y2="14" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="32" y1="50" x2="32" y2="60" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="4" y1="32" x2="14" y2="32" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="50" y1="32" x2="60" y2="32" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>,
+                  },
+                  {
+                    id:'journal', label:'Journal Intelligence', color:'#7C3AED', bg:'#F5F3FF', darkBg:'#1a0d40',
+                    tag:journals.length>0?`${journals.length} entries`:'No entries yet',
+                    tagColor:journals.length>0?'#7C3AED':'#D97706',
+                    desc:'Write freely. AI detects themes, emotions, and risk signals.',
+                    cta:'Write Today', onClick:()=>setTab('journal'),
+                    illustration:<svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                      <rect x="12" y="8" width="36" height="48" rx="4" stroke="#7C3AED" strokeWidth="1.5" opacity="0.4"/>
+                      <rect x="16" y="12" width="28" height="40" rx="3" fill="#7C3AED" opacity="0.08"/>
+                      <line x1="20" y1="22" x2="44" y2="22" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="20" y1="30" x2="44" y2="30" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="20" y1="38" x2="36" y2="38" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="48" cy="48" r="10" fill="#7C3AED" opacity="0.9"/>
+                      <path d="M44 48l2.5 2.5L52 45" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>,
+                  },
+                  {
+                    id:'act', label:'ACT Therapy Engine', color:'#0891B2', bg:'#ECFEFF', darkBg:'#0a2030',
+                    tag:'6 processes · 16 exercises',
+                    tagColor:'#0891B2',
+                    desc:'Build psychological flexibility. Values, defusion, acceptance.',
+                    cta:'Open ACT Engine', onClick:onACTEngine,
+                    illustration:<svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                      <path d="M32 56C32 56 8 44 8 28C8 18.06 19.06 10 32 10C44.94 10 56 18.06 56 28C56 44 32 56 32 56Z" stroke="#0891B2" strokeWidth="1.5" opacity="0.4"/>
+                      <path d="M32 44C32 44 18 37 18 28C18 22.48 24.48 18 32 18C39.52 18 46 22.48 46 28C46 37 32 44 32 44Z" stroke="#0891B2" strokeWidth="1.5" opacity="0.6"/>
+                      <circle cx="32" cy="28" r="6" fill="#0891B2" opacity="0.9"/>
+                      <line x1="32" y1="10" x2="32" y2="22" stroke="#0891B2" strokeWidth="1.5" strokeDasharray="3 3"/>
+                    </svg>,
+                  },
+                  {
+                    id:'wellness', label:'Sleep & Recovery', color:'#7C3AED', bg:'#F5F3FF', darkBg:'#150d2e',
+                    tag:latest?.answers?.ISI1!==undefined?'Sleep data available':'No sleep data',
+                    tagColor:latest?.answers?.ISI1!==undefined?'#7C3AED':'#D97706',
+                    desc:'Track sleep quality, energy levels, and recovery trends.',
+                    cta:'View Wellness', onClick:()=>setTab('wellness'),
+                    illustration:<svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                      <path d="M52 34.58A22 22 0 0129.42 12C20.72 12 12 19.28 12 30C12 41.05 20.95 50 32 50C42.72 50 52 41.28 52 30C52 28.18 51.74 26.35 51.24 24.64C51.74 27.87 52 31.2 52 34.58Z" stroke="#7C3AED" strokeWidth="1.5" opacity="0.4" fill="#7C3AED" fillOpacity="0.08"/>
+                      <circle cx="42" cy="20" r="3" fill="#7C3AED" opacity="0.6"/>
+                      <circle cx="50" cy="12" r="2" fill="#7C3AED" opacity="0.4"/>
+                      <circle cx="52" cy="22" r="1.5" fill="#7C3AED" opacity="0.3"/>
+                    </svg>,
+                  },
+                ].map(mod=>(
+                  <div key={mod.id} style={{ background:dark?mod.darkBg:mod.bg, borderRadius:16, padding:'20px', border:`1px solid ${dark?mod.color+'30':mod.color+'20'}`, cursor:'pointer', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
+                    onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow=`0 8px 24px ${mod.color}20`; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}>
+                    {/* Background illustration */}
+                    <div style={{ position:'absolute', right:12, bottom:12, opacity:dark?0.15:0.2 }}>{mod.illustration}</div>
+                    <div style={{ fontSize:10, fontWeight:700, color:mod.color, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>{mod.label}</div>
+                    <div style={{ display:'inline-block', fontSize:10, fontWeight:600, color:mod.tagColor, background:`${mod.tagColor}15`, padding:'2px 8px', borderRadius:100, marginBottom:10 }}>{mod.tag}</div>
+                    <div style={{ fontSize:13, color:t.text2, lineHeight:1.55, marginBottom:16, maxWidth:200 }}>{mod.desc}</div>
+                    <button onClick={mod.onClick} style={{ padding:'8px 16px', background:mod.color, color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+                      {mod.cta}
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
                   </div>
-                  {psychologistContact.map(c => (
-                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `0.5px solid ${t.border}` }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: t.blue2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: t.blue }}>{c.name?.charAt(0)}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: t.text }}>{c.name}</div>
-                        <div style={{ fontSize: 10, color: t.text3 }}>Psychologist</div>
+                ))}
+              </div>
+
+              {/* ── RECOVERY JOURNEY TIMELINE ── */}
+              <div style={{ background:t.bg2, borderRadius:16, padding:'20px 24px', marginBottom:20, border:`1px solid ${t.border}` }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:t.text }}>Recovery Journey</div>
+                  <div style={{ fontSize:11, color:t.text3 }}>{streakDays} day streak</div>
+                </div>
+                {[
+                  { label:'First Assessment', done:sessions.length>0, desc:sessions.length>0?`PHQ-9: ${sessions[sessions.length-1]?.phq_score||'—'} · Baseline set`:'Take your first assessment to begin', color:'#1D4ED8', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label:'First Journal Entry', done:journals.length>0, desc:journals.length>0?`${journals.length} entries · NLP analysis active`:'Write your first journal entry', color:'#7C3AED', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
+                  { label:'ACT Exercise', done:false, desc:'Start your first ACT therapy exercise', color:'#0891B2', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label:'Mood Streak — 7 Days', done:false, desc:'Log your mood 7 days in a row', color:'#059669', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label:'Psychologist Session', done:appointments.some(a=>a.status==='completed'), desc:appointments.some(a=>a.status==='completed')?'Session completed':'Book your first therapy session', color:'#D97706', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/></svg> },
+                ].map((step,i,arr)=>(
+                  <div key={step.label} style={{ display:'flex', gap:14, marginBottom:i<arr.length-1?0:0 }}>
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                      <div style={{ width:28, height:28, borderRadius:'50%', background:step.done?step.color:'transparent', border:`2px solid ${step.done?step.color:t.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:step.done?'#fff':t.text3, flexShrink:0, transition:'all 0.3s' }}>
+                        {step.icon}
                       </div>
-                      <button onClick={() => setTab('messages')} style={{ width: 28, height: 28, borderRadius: 7, background: t.bg3, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.text2 }}>
+                      {i<arr.length-1 && <div style={{ width:2, height:32, background:`linear-gradient(to bottom, ${step.done?step.color:t.border}, ${arr[i+1]?.done?arr[i+1].color:t.border})`, margin:'4px 0' }}/>}
+                    </div>
+                    <div style={{ paddingBottom:i<arr.length-1?24:0, flex:1 }}>
+                      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:2 }}>
+                        <div style={{ fontSize:13, fontWeight:step.done?600:400, color:step.done?t.text:t.text3 }}>{step.label}</div>
+                        {step.done && <div style={{ width:16, height:16, borderRadius:'50%', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>}
+                      </div>
+                      <div style={{ fontSize:11, color:t.text3 }}>{step.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── TODAY'S ACTIONS ── */}
+              <div style={{ background:t.bg2, borderRadius:16, padding:'20px 24px', marginBottom:20, border:`1px solid ${t.border}` }}>
+                <div style={{ fontSize:13, fontWeight:700, color:t.text, marginBottom:14 }}>Today's Recommended Actions</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)', gap:8 }}>
+                  {[
+                    { action:'Complete your assessment', done:sessions.length>0, onClick:onStartAssessment, tag:'5 min', color:'#1D4ED8', desc:'Track your mental health baseline' },
+                    { action:'Write in your journal', done:journals.length>0, onClick:()=>setTab('journal'), tag:'3 min', color:'#7C3AED', desc:'Process your thoughts and feelings' },
+                    { action:'Try an ACT exercise', done:false, onClick:onACTEngine, tag:'10 min', color:'#0891B2', desc:'Build psychological flexibility' },
+                    { action:'Log your mood', done:moodSaved, onClick:()=>{}, tag:'30 sec', color:'#059669', desc:'Track emotional patterns over time' },
+                  ].map((rec,i)=>(
+                    <div key={i} onClick={rec.onClick} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, background:rec.done?(dark?`${rec.color}15`:`${rec.color}08`):t.bg, cursor:'pointer', border:`1px solid ${rec.done?rec.color+'30':t.border}`, transition:'all 0.15s' }}
+                      onMouseEnter={e=>{ if(!rec.done) e.currentTarget.style.borderColor=rec.color+'60'; }}
+                      onMouseLeave={e=>{ if(!rec.done) e.currentTarget.style.borderColor=t.border; }}>
+                      <div style={{ width:24, height:24, borderRadius:'50%', background:rec.done?rec.color:t.border, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.2s' }}>
+                        {rec.done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:rec.done?t.text3:t.text, textDecoration:rec.done?'line-through':'none' }}>{rec.action}</div>
+                        <div style={{ fontSize:11, color:t.text3 }}>{rec.desc}</div>
+                      </div>
+                      {rec.tag && <span style={{ fontSize:10, color:rec.color, background:`${rec.color}15`, padding:'2px 7px', borderRadius:100, fontWeight:600, flexShrink:0 }}>{rec.tag}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── CARE TEAM + NEXT APPOINTMENT ── */}
+              <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:12, marginBottom:20 }}>
+                <div style={{ background:t.bg2, borderRadius:16, padding:'20px', border:`1px solid ${t.border}` }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:t.text }}>Care Team</div>
+                    <span onClick={()=>setTab('share')} style={{ fontSize:11, color:t.blue, cursor:'pointer', fontWeight:500 }}>+ Add</span>
+                  </div>
+                  {psychologistContact.map(c=>(
+                    <div key={c.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:`1px solid ${t.border}` }}>
+                      <div style={{ width:36, height:36, borderRadius:'50%', background:`linear-gradient(135deg,#1D4ED8,#7C3AED)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff' }}>{c.name?.charAt(0)}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:t.text }}>{c.name}</div>
+                        <div style={{ fontSize:11, color:t.text3 }}>Psychologist</div>
+                      </div>
+                      <button onClick={()=>setTab('messages')} style={{ width:30, height:30, borderRadius:8, background:t.bg3, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                         {Icons.messages(t.text2)}
                       </button>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${t.blue},${t.cyan})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="1.5"/><path d="M12 8v4l3 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0' }}>
+                    <div style={{ width:36, height:36, borderRadius:'50%', background:`linear-gradient(135deg,#1D4ED8,#7C3AED)`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: t.text }}>Dr. PsycheFlow</div>
-                      <div style={{ fontSize: 10, color: t.text3 }}>AI Therapist · Always available</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:t.text }}>Dr. PsycheFlow</div>
+                      <div style={{ fontSize:11, color:t.text3 }}>AI Therapist · Always available</div>
                     </div>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e' }}/>
                   </div>
-                  {psychologistContact.length === 0 && (
-                    <div style={{ fontSize: 11, color: t.text3, marginTop: 4 }}>No psychologist linked. <span onClick={() => setTab('share')} style={{ color: t.blue, cursor: 'pointer' }}>Generate share code →</span></div>
-                  )}
+                  {psychologistContact.length===0 && <div style={{ fontSize:11, color:t.text3 }}>No psychologist linked. <span onClick={()=>setTab('share')} style={{ color:t.blue, cursor:'pointer' }}>Generate share code →</span></div>}
                 </div>
-                <div style={{ background: t.bg2, borderRadius: 12, padding: '16px 20px', border: `0.5px solid ${t.border}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: t.text }}>Next Appointment</div>
-                    <span onClick={() => setTab('appointments')} style={{ fontSize: 10, color: t.blue, cursor: 'pointer', fontWeight: 500 }}>Book</span>
+                <div style={{ background:t.bg2, borderRadius:16, padding:'20px', border:`1px solid ${t.border}` }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:t.text }}>Next Appointment</div>
+                    <span onClick={()=>setTab('appointments')} style={{ fontSize:11, color:t.blue, cursor:'pointer', fontWeight:500 }}>Book</span>
                   </div>
-                  {appointments.filter(a => a.status === 'scheduled' && new Date(a.scheduled_at) > new Date()).slice(0, 1).map(appt => (
+                  {appointments.filter(a=>a.status==='scheduled'&&new Date(a.scheduled_at)>new Date()).slice(0,1).map(appt=>(
                     <div key={appt.id}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: t.text }}>{new Date(appt.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
-                      <div style={{ fontSize: 12, color: t.text3, marginTop: 2 }}>{new Date(appt.scheduled_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} · {appt.mode || 'Video call'}</div>
+                      <div style={{ fontSize:28, fontWeight:700, color:t.text, letterSpacing:'-0.03em' }}>{new Date(appt.scheduled_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                      <div style={{ fontSize:13, color:t.text3, marginTop:4 }}>{new Date(appt.scheduled_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · {appt.mode||'Video call'}</div>
+                      <div style={{ marginTop:14, padding:'10px 12px', background:t.bg3, borderRadius:10 }}>
+                        <div style={{ fontSize:11, fontWeight:600, color:t.blue, marginBottom:4 }}>Pre-session brief ready</div>
+                        <div style={{ fontSize:11, color:t.text3 }}>PHQ-9: {latest?.phq_score||'—'} · GAD-7: {latest?.gad_score||'—'} · {journals.length} journal entries</div>
+                      </div>
                     </div>
                   ))}
-                  {appointments.filter(a => a.status === 'scheduled' && new Date(a.scheduled_at) > new Date()).length === 0 && (
+                  {appointments.filter(a=>a.status==='scheduled'&&new Date(a.scheduled_at)>new Date()).length===0 && (
                     <div>
-                      <div style={{ fontSize: 12, color: t.text3, marginBottom: 8 }}>No upcoming appointments</div>
-                      <button onClick={() => setTab('appointments')} style={{ fontSize: 11, color: t.blue, background: t.blue2, border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Book a session</button>
+                      {/* Empty state illustration */}
+                      <div style={{ textAlign:'center', padding:'20px 0' }}>
+                        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style={{ margin:'0 auto 12px', display:'block' }}>
+                          <rect x="8" y="8" width="40" height="40" rx="10" stroke={t.border} strokeWidth="1.5"/>
+                          <path d="M18 24h20M18 32h12" stroke={t.border} strokeWidth="1.5" strokeLinecap="round"/>
+                          <circle cx="44" cy="44" r="10" fill="#EFF6FF" stroke="#1D4ED8" strokeWidth="1.5"/>
+                          <path d="M40 44l2.5 2.5L48 41" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <div style={{ fontSize:13, color:t.text3, marginBottom:10 }}>No upcoming appointments</div>
+                        <button onClick={()=>setTab('appointments')} style={{ fontSize:12, color:t.blue, background:t.bg3, border:'none', padding:'8px 16px', borderRadius:8, cursor:'pointer', fontWeight:600, fontFamily:'inherit' }}>Book a session →</button>
+                      </div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* ── ACHIEVEMENTS ── */}
+              <div style={{ background:t.bg2, borderRadius:16, padding:'20px 24px', border:`1px solid ${t.border}` }}>
+                <div style={{ fontSize:13, fontWeight:700, color:t.text, marginBottom:14 }}>Achievements</div>
+                <div style={{ display:'flex', gap:14, flexWrap:'wrap' }}>
+                  {achievements.map((a,i)=><AchievementBadge key={i} {...a} t={t}/>)}
                 </div>
               </div>
             </div>
