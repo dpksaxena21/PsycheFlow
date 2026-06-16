@@ -606,9 +606,9 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
               <Reveal key={step.time} delay={i * 0.1}>
                 <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'96px 1fr 1fr', gap:isMobile?16:32, marginBottom:40, alignItems:'start' }}>
                   {/* Time + dot */}
-                  {!isMobile && <div style={{ textAlign:'right', paddingTop:4, position:'relative' }}>
+                  {!isMobile && <div style={{ width:96, flexShrink:0, textAlign:'right', paddingTop:4, paddingRight:24, position:'relative' }}>
                     <div style={{ fontSize:12, fontWeight:700, color:step.color }}>{step.time}</div>
-                    <div style={{ position:'absolute', right:-9, top:6, width:18, height:18, borderRadius:'50%', background:step.color, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+                    <div style={{ position:'absolute', right:-5, top:4, width:18, height:18, borderRadius:'50%', background:step.color, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', zIndex:2 }}>
                       {React.cloneElement(step.icon, { width:10, height:10 })}
                     </div>
                   </div>}
