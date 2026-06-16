@@ -402,7 +402,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                       {greeting}, {name}
                     </div>
                     <div style={{ fontSize:14, color:t.text3, marginBottom:24, lineHeight:1.5 }}>
-                      {wellnessScore >= 70 ? 'You're doing well. Keep building on this momentum.' : wellnessScore >= 40 ? 'You're making progress. Every small step counts.' : 'Let's work through this together, one step at a time.'}
+                      {wellnessScore >= 70 ? "You're doing well. Keep building on this momentum." : wellnessScore >= 40 ? "You're making progress. Every small step counts." : "Let's work through this together, one step at a time."}
                     </div>
 
                     {/* Mood check — large tappable cards */}
@@ -525,7 +525,7 @@ export default function Dashboard({ user, profile, onStartAssessment, onLogout, 
                        latest?.gad_score > 14 ? `Your anxiety levels (GAD-7: ${latest.gad_score}) are elevated. The Leaves on a Stream exercise in ACT Engine may help.` :
                        journals.length >= 3 ? `You've journaled ${journals.length} times. Research shows consistent journaling reduces anxiety by up to 28%.` :
                        sessions.length === 0 ? 'Welcome to PsycheFlow. Start with a quick assessment to build your mental health baseline.' :
-                       'You're building healthy habits. Consistency is the most powerful tool in mental health recovery.'}
+                       "You're building healthy habits. Consistency is the most powerful tool in mental health recovery."}
                     </div>
                   </div>
                 </div>
