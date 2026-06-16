@@ -513,6 +513,434 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
         </div>
       </section>
 
+      {/* ═══ SECTION 7 — DAY IN THE LIFE ═══ */}
+      <section style={{ background:S.bg, padding:isMobile?'80px 24px':'120px 80px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+          <Reveal>
+            <div style={{ textAlign:'center', marginBottom:64 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Patient Journey</div>
+              <h2 style={{ fontSize:isMobile?32:56, fontWeight:700, color:S.navy, letterSpacing:'-0.04em', margin:'0 0 16px', lineHeight:1.05 }}>A day in the life<br/>of a PsycheFlow patient.</h2>
+              <p style={{ fontSize:18, color:S.textSub, maxWidth:480, margin:'0 auto' }}>From morning check-in to recovered sleep — every touchpoint designed to help.</p>
+            </div>
+          </Reveal>
+          <div style={{ position:'relative' }}>
+            {/* Vertical timeline line */}
+            {!isMobile && <div style={{ position:'absolute', left:48, top:24, bottom:24, width:2, background:`linear-gradient(to bottom, ${S.blue}, #7C3AED, #059669, #D97706, #0891B2)`, borderRadius:2 }}/>}
+            {[
+              {
+                time:'8:00 AM', label:'Morning Mood Check', color:S.blue, bg:'#EFF6FF',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v1m0 16v1M4.22 4.22l.7.7m12.16 12.16.7.7M1 12h1m20 0h1M4.22 19.78l.7-.7M18.36 5.64l.7-.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/></svg>,
+                story:'Priya opens PsycheFlow and taps "Struggling" on the mood check. The app flags this — her third low mood in a row.',
+                outcome:'Dr. PsycheFlow sends a gentle check-in nudge and suggests a 4-minute breathing exercise.',
+                visual:<div style={{ background:'#EFF6FF', borderRadius:12, padding:14 }}>
+                  <div style={{ fontSize:11, color:S.muted, marginBottom:8 }}>How are you feeling today, Priya?</div>
+                  <div style={{ display:'flex', gap:6 }}>
+                    {[['Great','#FCD34D'],['Good','#FCD34D'],['Okay','#FCD34D'],['Low','#93C5FD'],['Struggling','#C4B5FD']].map(([l,c],i)=>(
+                      <div key={l} style={{ flex:1, background:i===4?'#7C3AED':'#fff', borderRadius:8, padding:'8px 4px', textAlign:'center', border:`1px solid ${i===4?'#7C3AED':S.border}` }}>
+                        <div style={{ width:20, height:20, borderRadius:'50%', background:c, margin:'0 auto 4px' }}/>
+                        <div style={{ fontSize:9, color:i===4?'#fff':S.muted, fontWeight:i===4?700:400 }}>{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              },
+              {
+                time:'9:30 AM', label:'AI Risk Detection', color:'#7C3AED', bg:'#F5F3FF',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+                story:'Priya completes a 15-minute adaptive assessment. PHQ-9 comes back at 14 — moderate depression. The AI cross-references her journal themes.',
+                outcome:'Risk level: Moderate. Psychologist Dr. Ananya is automatically notified with a pre-session brief.',
+                visual:<div style={{ background:'#F5F3FF', borderRadius:12, padding:14 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#7C3AED', marginBottom:8 }}>AI ANALYSIS COMPLETE</div>
+                  {[['PHQ-9','14','Moderate','#D97706'],['GAD-7','11','Mild-Mod','#D97706'],['Risk','Medium','Flagged','#DC2626']].map(([l,v,s,c])=>(
+                    <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:`1px solid ${S.border}` }}>
+                      <span style={{ fontSize:11, color:S.muted }}>{l}</span>
+                      <span style={{ fontSize:11, fontWeight:700, color:c }}>{v} · {s}</span>
+                    </div>
+                  ))}
+                </div>
+              },
+              {
+                time:'11:00 AM', label:'Psychologist Receives Alert', color:'#059669', bg:'#ECFDF5',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+                story:'Dr. Ananya opens her PsycheFlow dashboard. An AI pre-session brief is waiting — PHQ trends, journal themes, and a suggested focus for today.',
+                outcome:'She walks into the 2 PM session already knowing Priya has been struggling with work stress and sleep disruption.',
+                visual:<div style={{ background:'#ECFDF5', borderRadius:12, padding:14 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#059669', marginBottom:6 }}>PRE-SESSION BRIEF · PRIYA S.</div>
+                  <div style={{ fontSize:11, color:S.textSub, lineHeight:1.6 }}>PHQ-9 up from 9→14. Themes: work boundaries, sleep. Suggest: behavioural activation + sleep hygiene.</div>
+                </div>
+              },
+              {
+                time:'2:00 PM', label:'Therapy Session', color:'#D97706', bg:'#FFFBEB',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="1.5"/></svg>,
+                story:'The session runs 50 minutes. Dr. Ananya uses the SOAP note template. Within 2 minutes of ending the session, a structured note is auto-generated.',
+                outcome:'Documentation time: 2 minutes. Previously: 25 minutes. Priya gets homework assigned directly in the app.',
+                visual:<div style={{ background:'#FFFBEB', borderRadius:12, padding:14 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#D97706', marginBottom:6 }}>SOAP NOTE GENERATED</div>
+                  {[['S','Patient reports work stress affecting sleep.'],['O','PHQ-9: 14, affect anxious but engaged.'],['A','MDD moderate — improving with ACT.'],['P','Sleep hygiene + boundary-setting HW.']].map(([l,t])=>(
+                    <div key={l} style={{ display:'flex', gap:8, marginBottom:4 }}>
+                      <span style={{ width:18, height:18, borderRadius:5, background:'#D97706', color:'#fff', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{l}</span>
+                      <span style={{ fontSize:10, color:S.textSub, lineHeight:1.4 }}>{t}</span>
+                    </div>
+                  ))}
+                </div>
+              },
+              {
+                time:'10:00 PM', label:'Recovery Improves', color:'#0891B2', bg:'#ECFEFF',
+                icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                story:'Over 6 weeks, Priya's PHQ-9 drops from 18 to 5. Her sleep score improves by 40%. She logs into PsycheFlow and sees her recovery chart.',
+                outcome:'PHQ-9: 18 → 5. Sleep: improving. Mood streak: 14 days. In remission.',
+                visual:<div style={{ background:'#ECFEFF', borderRadius:12, padding:14 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#0891B2', marginBottom:8 }}>6-WEEK RECOVERY</div>
+                  <div style={{ display:'flex', gap:4, alignItems:'flex-end', height:48 }}>
+                    {[18,14,11,9,7,5].map((v,i)=>(
+                      <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+                        <div style={{ fontSize:8, color:'#0891B2', fontWeight:700 }}>{v}</div>
+                        <div style={{ width:'100%', borderRadius:'2px 2px 0 0', background:`hsl(${180+i*10},70%,${40+i*5}%)`, height:`${v*2.2}px` }}/>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:9, color:S.muted, marginTop:4, textAlign:'center' }}>PHQ-9 over 6 sessions ↓ 72%</div>
+                </div>
+              },
+            ].map((step, i) => (
+              <Reveal key={step.time} delay={i * 0.1}>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'96px 1fr 1fr', gap:isMobile?16:32, marginBottom:40, alignItems:'start' }}>
+                  {/* Time + dot */}
+                  {!isMobile && <div style={{ textAlign:'right', paddingTop:4, position:'relative' }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:step.color }}>{step.time}</div>
+                    <div style={{ position:'absolute', right:-9, top:6, width:18, height:18, borderRadius:'50%', background:step.color, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+                      {React.cloneElement(step.icon, { width:10, height:10 })}
+                    </div>
+                  </div>}
+                  {/* Story */}
+                  <div style={{ paddingLeft:isMobile?0:24 }}>
+                    {isMobile && <div style={{ fontSize:11, fontWeight:700, color:step.color, marginBottom:4 }}>{step.time}</div>}
+                    <div style={{ fontSize:11, fontWeight:700, color:step.color, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>{step.label}</div>
+                    <div style={{ fontSize:14, color:S.textSub, lineHeight:1.7, marginBottom:10 }}>{step.story}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:S.navy, lineHeight:1.5, padding:'10px 14px', background:step.bg, borderRadius:8, border:`1px solid ${step.color}20` }}>{step.outcome}</div>
+                  </div>
+                  {/* Visual */}
+                  <div>{step.visual}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8 — FEATURE CARDS (Headspace-style) ═══ */}
+      <section style={{ background:S.navy, padding:isMobile?'80px 24px':'120px 80px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+          <Reveal>
+            <div style={{ textAlign:'center', marginBottom:64 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:'#93C5FD', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Platform Modules</div>
+              <h2 style={{ fontSize:isMobile?32:56, fontWeight:700, color:'#fff', letterSpacing:'-0.04em', margin:0, lineHeight:1.05 }}>Every feature designed<br/>around clinical outcomes.</h2>
+            </div>
+          </Reveal>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:16, marginBottom:16 }}>
+            {[
+              {
+                label:'Assessment Intelligence', color:'#1D4ED8', bg:'rgba(29,78,216,0.12)',
+                tag:'16 instruments',
+                desc:'Adaptive PHQ-9, GAD-7, PCL-5, Big Five and 12 more. AI selects questions based on your concerns. 3–25 minutes.',
+                cta:'Start Assessment',
+                illustration:<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <circle cx="40" cy="40" r="32" stroke="#1D4ED8" strokeWidth="1" strokeDasharray="4 4" opacity="0.4"/>
+                  <circle cx="40" cy="40" r="20" stroke="#1D4ED8" strokeWidth="1" opacity="0.6"/>
+                  <circle cx="40" cy="40" r="8" fill="#1D4ED8" opacity="0.9"/>
+                  <line x1="40" y1="8" x2="40" y2="20" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                  <line x1="40" y1="60" x2="40" y2="72" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                  <line x1="8" y1="40" x2="20" y2="40" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                  <line x1="60" y1="40" x2="72" y2="40" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                </svg>,
+              },
+              {
+                label:'Journal Intelligence', color:'#7C3AED', bg:'rgba(124,58,237,0.12)',
+                tag:'NLP powered',
+                desc:'Write freely. AI detects themes, emotions, and risk signals in real time. Journal entries become clinical intelligence.',
+                cta:'Start Journaling',
+                illustration:<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <rect x="16" y="10" width="44" height="56" rx="6" stroke="#7C3AED" strokeWidth="1.5" opacity="0.4"/>
+                  <rect x="20" y="14" width="36" height="48" rx="4" fill="#7C3AED" opacity="0.06"/>
+                  <line x1="26" y1="26" x2="54" y2="26" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="26" y1="34" x2="54" y2="34" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="26" y1="42" x2="46" y2="42" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="60" cy="62" r="14" fill="#7C3AED" opacity="0.9"/>
+                  <path d="M55 62l3.5 3.5L65 58" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>,
+              },
+              {
+                label:'ACT Therapy Engine', color:'#0891B2', bg:'rgba(8,145,178,0.12)',
+                tag:'6 processes · 16 exercises',
+                desc:'Acceptance, defusion, values, committed action. Interactive exercises including Leaves on a Stream and Box Breathing.',
+                cta:'Explore ACT',
+                illustration:<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <path d="M40 72C40 72 16 58 16 38C16 25.85 27.85 16 40 16C52.15 16 64 25.85 64 38C64 58 40 72 40 72Z" stroke="#0891B2" strokeWidth="1.5" opacity="0.4"/>
+                  <path d="M40 58C40 58 24 50 24 38C24 31.37 31.37 26 40 26C48.63 26 56 31.37 56 38C56 50 40 58 40 58Z" stroke="#0891B2" strokeWidth="1.5" opacity="0.6"/>
+                  <circle cx="40" cy="38" r="8" fill="#0891B2" opacity="0.9"/>
+                  <line x1="40" y1="16" x2="40" y2="30" stroke="#0891B2" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6"/>
+                </svg>,
+              },
+              {
+                label:'Crisis Detection', color:'#DC2626', bg:'rgba(220,38,38,0.1)',
+                tag:'Real-time · 94% sensitivity',
+                desc:'PHQ-9 Item 9, C-SSRS, and journal sentiment monitored continuously. Instant alerts to psychologist and hospital admin.',
+                cta:'See How It Works',
+                illustration:<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <path d="M40 8s-24 16-24 36c0 13.25 10.75 24 24 24s24-10.75 24-24C64 24 40 8 40 8z" stroke="#DC2626" strokeWidth="1.5" opacity="0.3" fill="#DC2626" fillOpacity="0.06"/>
+                  <path d="M40 20s-12 8-12 24c0 6.63 5.37 12 12 12s12-5.37 12-12c0-16-12-24-12-24z" stroke="#DC2626" strokeWidth="1.5" opacity="0.5"/>
+                  <path d="M36 40l2 2 6-8" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>,
+              },
+              {
+                label:'Sleep & Recovery', color:'#7C3AED', bg:'rgba(124,58,237,0.1)',
+                tag:'ISI-7 · WHO-5',
+                desc:'Track sleep quality, energy levels, and recovery trends. ISI insomnia screening integrated with mood and anxiety data.',
+                cta:'Track Sleep',
+                illustration:<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <path d="M68 44.58A30 30 0 0135.42 12C22.55 12 10 22.85 10 36C10 50.36 21.64 62 36 62C49.15 62 60 50.55 60 37.68 61.58 39.88 62 42.18 62 44.58z" stroke="#7C3AED" strokeWidth="1.5" opacity="0.4" fill="#7C3AED" fillOpacity="0.06"/>
+                  <circle cx="56" cy="22" r="4" fill="#7C3AED" opacity="0.7"/>
+                  <circle cx="66" cy="14" r="2.5" fill="#7C3AED" opacity="0.4"/>
+                  <circle cx="68" cy="28" r="2" fill="#7C3AED" opacity="0.3"/>
+                  <circle cx="48" cy="10" r="1.5" fill="#7C3AED" opacity="0.3"/>
+                </svg>,
+              },
+              {
+                label:'Hospital Analytics', color:'#059669', bg:'rgba(5,150,105,0.1)',
+                tag:'NABH · 18 modules',
+                desc:'Population mental health analytics, NABH compliance reporting, OPD/IPD management, and crisis escalation workflows.',
+                cta:'Book Hospital Demo',
+                illustration:<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <rect x="10" y="20" width="60" height="46" rx="6" stroke="#059669" strokeWidth="1.5" opacity="0.4"/>
+                  <path d="M10 32h60" stroke="#059669" strokeWidth="1" opacity="0.3"/>
+                  <rect x="20" y="42" width="8" height="16" rx="2" fill="#059669" opacity="0.4"/>
+                  <rect x="36" y="36" width="8" height="22" rx="2" fill="#059669" opacity="0.6"/>
+                  <rect x="52" y="30" width="8" height="28" rx="2" fill="#059669" opacity="0.9"/>
+                  <polyline points="24 42 40 36 56 30" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
+                </svg>,
+              },
+            ].map((card, i) => (
+              <Reveal key={card.label} delay={i * 0.08}>
+                <div style={{ background:card.bg, borderRadius:20, padding:28, border:`1px solid ${card.color}25`, cursor:'pointer', transition:'all 0.2s', height:'100%', boxSizing:'border-box', position:'relative', overflow:'hidden' }}
+                  onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.borderColor=`${card.color}60`; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor=`${card.color}25`; }}>
+                  {/* Background illustration */}
+                  <div style={{ position:'absolute', right:16, bottom:16, opacity:0.25 }}>{card.illustration}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:card.color, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>{card.label}</div>
+                  <div style={{ fontSize:11, fontWeight:600, color:card.color, background:`${card.color}20`, padding:'2px 9px', borderRadius:100, display:'inline-block', marginBottom:14 }}>{card.tag}</div>
+                  <div style={{ fontSize:14, color:'rgba(255,255,255,0.7)', lineHeight:1.65, marginBottom:20, maxWidth:220 }}>{card.desc}</div>
+                  <div style={{ fontSize:12, fontWeight:600, color:card.color, display:'flex', alignItems:'center', gap:5 }}>
+                    {card.cta}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9 — INTERACTIVE PRODUCT TOUR ═══ */}
+      <section style={{ background:S.bg2, padding:isMobile?'80px 24px':'120px 80px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+          <Reveal>
+            <div style={{ textAlign:'center', marginBottom:56 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Product Tour</div>
+              <h2 style={{ fontSize:isMobile?32:56, fontWeight:700, color:S.navy, letterSpacing:'-0.04em', margin:'0 0 16px', lineHeight:1.05 }}>See PsycheFlow<br/>in action.</h2>
+              <p style={{ fontSize:18, color:S.textSub, maxWidth:480, margin:'0 auto' }}>Click each step to explore the product.</p>
+            </div>
+          </Reveal>
+          {(() => {
+            const [tourStep, setTourStep] = React.useState(0);
+            const steps = [
+              {
+                label:'Patient Assessment', icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+                color:'#1D4ED8',
+                preview:<div style={{ background:S.bg, borderRadius:14, padding:24 }}>
+                  <div style={{ fontSize:11, color:S.muted, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.06em' }}>Adaptive Assessment · PHQ-9</div>
+                  <div style={{ fontSize:18, fontWeight:600, color:S.navy, marginBottom:20, lineHeight:1.4 }}>Feeling down, depressed, or hopeless?</div>
+                  <div style={{ display:'grid', gap:8 }}>
+                    {['Not at all','Several days','More than half the days','Nearly every day'].map((opt,j)=>(
+                      <div key={opt} style={{ padding:'12px 16px', borderRadius:10, border:`1.5px solid ${j===2?S.blue:S.border}`, background:j===2?S.lightBlue:'#fff', fontSize:14, color:j===2?S.blue:S.muted, fontWeight:j===2?600:400, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        {opt}
+                        {j===2 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke={S.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop:16, height:4, borderRadius:2, background:S.border }}>
+                    <div style={{ height:4, borderRadius:2, background:S.blue, width:'45%' }}/>
+                  </div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:4 }}>45% complete · ~8 questions remaining</div>
+                </div>,
+                desc:'16 validated instruments. AI selects only relevant questions based on your concerns. Average completion: 8 minutes.'
+              },
+              {
+                label:'AI Pre-Session Brief', icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+                color:'#7C3AED',
+                preview:<div style={{ background:S.navy, borderRadius:14, padding:24 }}>
+                  <div style={{ fontSize:10, color:'#93C5FD', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>AI Pre-Session Brief · Priya S. · 2:30 PM</div>
+                  <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14 }}>
+                    {['Work stress','Sleep disruption','Burnout'].map(t=>(
+                      <span key={t} style={{ fontSize:11, padding:'4px 12px', borderRadius:100, background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.8)', border:'1px solid rgba(255,255,255,0.12)' }}>{t}</span>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:14, color:'rgba(255,255,255,0.8)', lineHeight:1.7, marginBottom:16 }}>PHQ-9 improved 18→14 over 3 sessions. Primary stressor: work boundary issues. Sleep onset delayed. Suggest: behavioural activation + sleep hygiene protocol.</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                    {[['PHQ-9','14','↓ Improving'],['GAD-7','11','Stable'],['Risk','Medium','Flagged']].map(([l,v,s])=>(
+                      <div key={l} style={{ background:'rgba(255,255,255,0.06)', borderRadius:8, padding:'8px 10px' }}>
+                        <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', marginBottom:2 }}>{l}</div>
+                        <div style={{ fontSize:16, fontWeight:700, color:'#fff' }}>{v}</div>
+                        <div style={{ fontSize:9, color:'#93C5FD' }}>{s}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>,
+                desc:'Auto-generated before every session. PHQ trends, journal themes, risk indicators, and suggested session focus — all in one brief.'
+              },
+              {
+                label:'SOAP Note Generation', icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                color:'#059669',
+                preview:<div style={{ background:S.bg, borderRadius:14, padding:24 }}>
+                  <div style={{ fontSize:11, color:S.muted, marginBottom:14, textTransform:'uppercase', letterSpacing:'0.06em' }}>Generated SOAP Note · 2 min after session</div>
+                  {[['S','#1D4ED8','Patient reports improved sleep (6-7 hrs) and reduced work anxiety. "I used breathing techniques during a stressful meeting."'],['O','#7C3AED','Affect brighter. PHQ-9: 11 (↓ from 14). Engaged, eye contact maintained. No SI/HI.'],['A','#059669','MDD moderate — improving. Good ACT response.'],['P','#D97706','Continue weekly. Introduce values clarification. Reassess PHQ-9 in 2 weeks.']].map(([l,c,text])=>(
+                    <div key={l} style={{ display:'flex', gap:12, marginBottom:12 }}>
+                      <div style={{ width:28, height:28, borderRadius:7, background:c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, flexShrink:0 }}>{l}</div>
+                      <div style={{ fontSize:13, color:S.textSub, lineHeight:1.6, paddingTop:4 }}>{text}</div>
+                    </div>
+                  ))}
+                </div>,
+                desc:'Session transcript to structured SOAP note in under 2 minutes. DAPA, BIRP, and DAP formats also supported.'
+              },
+              {
+                label:'Hospital Dashboard', icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                color:'#DC2626',
+                preview:<div style={{ background:S.bg, borderRadius:14, padding:20 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }}>
+                    {[['24','#1D4ED8','OPD Today'],['3','#DC2626','High Risk'],['8','#7C3AED','Admitted'],['94%','#059669','NABH']].map(([v,c,l])=>(
+                      <div key={l} style={{ background:'#fff', borderRadius:8, padding:'10px', textAlign:'center', border:`1px solid ${S.border}` }}>
+                        <div style={{ fontSize:18, fontWeight:700, color:c }}>{v}</div>
+                        <div style={{ fontSize:9, color:S.muted }}>{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:'#FEF2F2', border:`1px solid #FECACA`, borderRadius:8, padding:'10px 12px', marginBottom:10 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:'#DC2626' }}>Crisis Alert · BED-04 · PHQ-9 crossed 20</div>
+                    <div style={{ fontSize:10, color:S.textSub }}>Psychologist Mehta notified · 3 min ago</div>
+                  </div>
+                  {[['Priya S.','OPD-12',5,'↓',S.success],['Rahul M.','BED-04',22,'↑↑',S.danger]].map(([n,id,phq,t,c])=>(
+                    <div key={n} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:`1px solid ${S.border}`, fontSize:12 }}>
+                      <span style={{ color:S.navy, fontWeight:600 }}>{n} · {id}</span>
+                      <span style={{ color:c, fontWeight:700 }}>PHQ {phq} {t}</span>
+                    </div>
+                  ))}
+                </div>,
+                desc:'18 modules covering OPD, IPD, EHR, pharmacy, billing, NABH compliance, telemedicine, and population analytics.'
+              },
+            ];
+            return (
+              <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:32, alignItems:'start' }}>
+                <div>
+                  {steps.map((step, i)=>(
+                    <div key={step.label} onClick={()=>setTourStep(i)}
+                      style={{ padding:'16px 20px', borderRadius:12, marginBottom:8, cursor:'pointer', border:`1px solid ${tourStep===i?step.color:S.border}`, background:tourStep===i?`${step.color}08`:S.white, transition:'all 0.15s' }}>
+                      <div style={{ display:'flex', gap:12, alignItems:'center', marginBottom:tourStep===i?10:0 }}>
+                        <div style={{ width:32, height:32, borderRadius:8, background:tourStep===i?step.color:S.bg, display:'flex', alignItems:'center', justifyContent:'center', color:tourStep===i?'#fff':S.muted, transition:'all 0.15s' }}>{step.icon}</div>
+                        <div style={{ fontSize:14, fontWeight:tourStep===i?700:500, color:tourStep===i?S.navy:S.muted }}>{step.label}</div>
+                        <div style={{ marginLeft:'auto', width:20, height:20, borderRadius:'50%', background:tourStep===i?step.color:'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          {tourStep===i && <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                      </div>
+                      {tourStep===i && <div style={{ fontSize:13, color:S.muted, lineHeight:1.6, paddingLeft:44 }}>{step.desc}</div>}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ position:'sticky', top:80 }}>
+                  <div style={{ boxShadow:'0 20px 60px rgba(0,0,0,0.12)', borderRadius:16, overflow:'hidden', border:`1px solid ${S.border}` }}>
+                    <div style={{ background:'#1E293B', padding:'10px 14px', display:'flex', gap:6 }}>
+                      {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }}/>)}
+                    </div>
+                    <div style={{ padding:20, background:S.bg2 }}>
+                      {steps[tourStep].preview}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10 — PRICING ═══ */}
+      <section id="pricing" style={{ background:S.bg, padding:isMobile?'80px 24px':'120px 80px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+          <Reveal>
+            <div style={{ textAlign:'center', marginBottom:64 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:S.blue, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Pricing</div>
+              <h2 style={{ fontSize:isMobile?32:56, fontWeight:700, color:S.navy, letterSpacing:'-0.04em', margin:'0 0 16px', lineHeight:1.05 }}>Simple, transparent pricing.</h2>
+              <p style={{ fontSize:18, color:S.textSub, maxWidth:480, margin:'0 auto' }}>Start free. Scale as you grow. No setup fees.</p>
+            </div>
+          </Reveal>
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:20, marginBottom:40 }}>
+            {[
+              {
+                name:'Patient', price:'Free', period:'forever', color:S.blue, highlight:false,
+                desc:'For individuals managing their mental health.',
+                features:['16 validated assessments','AI-powered insights','Journal with NLP analysis','ACT therapy exercises','Mood & sleep tracking','Crisis support resources'],
+                cta:'Get Started Free',
+              },
+              {
+                name:'Psychologist', price:'₹999', period:'per month', color:'#7C3AED', highlight:true,
+                desc:'For mental health professionals.',
+                features:['Everything in Patient','AI pre-session briefs','SOAP/DAP note generation','Treatment planning tools','Secure telemedicine','Up to 50 patients','Population analytics'],
+                cta:'Start Free — 14 Days',
+                badge:'Most Popular',
+              },
+              {
+                name:'Hospital', price:'Custom', period:'per month', color:'#059669', highlight:false,
+                desc:'For hospitals and multi-practitioner clinics.',
+                features:['Everything in Psychologist','18 clinical modules','NABH compliance reporting','Unlimited patients & staff','OPD/IPD management','EHR integration','Dedicated support'],
+                cta:'Book Demo',
+              },
+            ].map(plan=>(
+              <Reveal key={plan.name}>
+                <div style={{ background:plan.highlight?S.navy:S.white, borderRadius:20, padding:28, border:`1px solid ${plan.highlight?S.blue:S.border}`, position:'relative', height:'100%', boxSizing:'border-box', transition:'transform 0.2s, box-shadow 0.2s' }}
+                  onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 16px 40px rgba(0,0,0,0.1)'; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}>
+                  {plan.badge && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', background:plan.color, color:'#fff', fontSize:11, fontWeight:700, padding:'4px 16px', borderRadius:100 }}>{plan.badge}</div>}
+                  <div style={{ fontSize:12, fontWeight:700, color:plan.color, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>{plan.name}</div>
+                  <div style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:8 }}>
+                    <span style={{ fontSize:36, fontWeight:700, color:plan.highlight?'#fff':S.navy, letterSpacing:'-0.04em' }}>{plan.price}</span>
+                    <span style={{ fontSize:13, color:plan.highlight?'rgba(255,255,255,0.5)':S.muted }}>{plan.period}</span>
+                  </div>
+                  <div style={{ fontSize:13, color:plan.highlight?'rgba(255,255,255,0.6)':S.muted, marginBottom:24, lineHeight:1.5 }}>{plan.desc}</div>
+                  <div style={{ marginBottom:28 }}>
+                    {plan.features.map(f=>(
+                      <div key={f} style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start' }}>
+                        <div style={{ width:18, height:18, borderRadius:'50%', background:`${plan.color}20`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke={plan.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                        <span style={{ fontSize:13, color:plan.highlight?'rgba(255,255,255,0.8)':S.textSub, lineHeight:1.4 }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button style={{ width:'100%', padding:'13px', background:plan.highlight?plan.color:S.blue, color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                    {plan.cta}
+                  </button>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          {/* Enterprise note */}
+          <div style={{ textAlign:'center', padding:'24px', background:S.bg2, borderRadius:16, border:`1px solid ${S.border}` }}>
+            <div style={{ fontSize:15, fontWeight:600, color:S.navy, marginBottom:6 }}>Need an enterprise or government contract?</div>
+            <div style={{ fontSize:13, color:S.muted, marginBottom:16 }}>Custom pricing for health systems, government hospitals, and insurance networks. FHIR integration available.</div>
+            <button onClick={onHospitalLanding} style={{ padding:'10px 24px', background:S.blue, color:'#fff', border:'none', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+              Talk to Sales →
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ SECTION 7 — CLINICAL FOUNDATION ═══ */}
       <section id="instruments" style={{ background:S.bg, padding:isMobile?'80px 24px':'120px 80px' }}>
         <div style={{ maxWidth:1100, margin:'0 auto' }}>
