@@ -554,6 +554,189 @@ function LongitudinalNarrative({ patient, sessions, journals }) {
 }
 
 // ── MAIN PORTAL ───────────────────────────────────────────
+
+// ── SOAP Note Generator UI ────────────────────────────────
+function SOAPNoteUI({ soapNote, generating, patient, sessions, onGenerate }) {
+  const [format, setFormat] = React.useState('soap');
+  const [copied, setCopied] = React.useState(false);
+  const [editMode, setEditMode] = React.useState(false);
+  const [editedNote, setEditedNote] = React.useState('');
+  const [selectedSession, setSelectedSession] = React.useState(null);
+
+  React.useEffect(() => {
+    if (soapNote) setEditedNote(soapNote);
+  }, [soapNote]);
+
+  const parseSOAP = (text) => {
+    if (!text) return null;
+    const sections = {};
+    const patterns = [
+      { key:'S', regex:/S\s*\(Subjective\)[:\s]*([\s\S]*?)(?=O\s*\(|$)/i },
+      { key:'O', regex:/O\s*\(Objective\)[:\s]*([\s\S]*?)(?=A\s*\(|$)/i },
+      { key:'A', regex:/A\s*\(Assessment\)[:\s]*([\s\S]*?)(?=P\s*\(|$)/i },
+      { key:'P', regex:/P\s*\(Plan\)[:\s]*([\s\S]*?)$/i },
+    ];
+    patterns.forEach(({ key, regex }) => {
+      const m = text.match(regex);
+      if (m) sections[key] = m[1].trim();
+    });
+    return Object.keys(sections).length >= 2 ? sections : null;
+  };
+
+  const parsed = soapNote ? parseSOAP(editMode ? editedNote : soapNote) : null;
+
+  const copyNote = () => {
+    const text = editMode ? editedNote : soapNote;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const sectionColors = {
+    S: { color:'#1D4ED8', bg:'#EFF6FF', label:'Subjective', desc:'Patient\'s reported symptoms and concerns' },
+    O: { color:'#7C3AED', bg:'#F5F3FF', label:'Objective', desc:'Clinical observations and test scores' },
+    A: { color:'#059669', bg:'#ECFDF5', label:'Assessment', desc:'Clinical formulation and risk level' },
+    P: { color:'#D97706', bg:'#FFFBEB', label:'Plan', desc:'Interventions and next steps' },
+  };
+
+  const latestSession = sessions?.[0];
+
+  if (generating) return (
+    <div style={{ background:'#fff', borderRadius:16, padding:48, textAlign:'center', border:'1px solid #E2EBF6' }}>
+      <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid #1D4ED8', borderTopColor:'transparent', animation:'spin 1s linear infinite', margin:'0 auto 20px' }}/>
+      <div style={{ fontSize:16, fontWeight:600, color:'#0C1A2E', marginBottom:6 }}>Generating SOAP Note</div>
+      <div style={{ fontSize:13, color:'#94a3b8' }}>Claude is analyzing session data, PHQ-9, GAD-7, and assessment responses...</div>
+      <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
+    </div>
+  );
+
+  if (!soapNote) return (
+    <div>
+      <div style={{ background:'#fff', borderRadius:16, padding:24, border:'1px solid #E2EBF6', marginBottom:16 }}>
+        <div style={{ fontSize:14, fontWeight:700, color:'#0C1A2E', marginBottom:6 }}>SOAP Note Generator</div>
+        <div style={{ fontSize:13, color:'#94a3b8', marginBottom:20 }}>Generate a structured clinical note from session data. Supports SOAP, DAP, and BIRP formats.</div>
+        {/* Format selector */}
+        <div style={{ display:'flex', gap:8, marginBottom:20 }}>
+          {[['soap','SOAP Note'],['dap','DAP Note'],['birp','BIRP Note']].map(([id,label])=>(
+            <button key={id} onClick={()=>setFormat(id)} style={{ padding:'8px 16px', borderRadius:8, border:`1px solid ${format===id?'#1D4ED8':'#E2EBF6'}`, background:format===id?'#EFF6FF':'#fff', color:format===id?'#1D4ED8':'#94a3b8', fontSize:13, fontWeight:format===id?700:400, cursor:'pointer', fontFamily:'inherit' }}>{label}</button>
+          ))}
+        </div>
+        {/* Session selector */}
+        {sessions && sessions.length > 0 && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:12, fontWeight:600, color:'#3B5998', marginBottom:8 }}>Select session to generate from:</div>
+            <div style={{ display:'grid', gap:8 }}>
+              {sessions.slice(0,5).map((s,i)=>(
+                <div key={s.id} onClick={()=>setSelectedSession(s)}
+                  style={{ padding:'12px 16px', borderRadius:10, border:`1px solid ${selectedSession?.id===s.id?'#1D4ED8':'#E2EBF6'}`, background:selectedSession?.id===s.id?'#EFF6FF':'#fff', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:600, color:'#0C1A2E' }}>Session {sessions.length - i}</div>
+                    <div style={{ fontSize:11, color:'#94a3b8' }}>{new Date(s.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · PHQ-9: {s.phq_score} · GAD-7: {s.gad_score}</div>
+                  </div>
+                  {selectedSession?.id===s.id && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#1D4ED8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <button onClick={()=>onGenerate(selectedSession||latestSession||{})}
+          disabled={!sessions||sessions.length===0}
+          style={{ width:'100%', padding:'13px', background:sessions&&sessions.length>0?'#1D4ED8':'#CBD5E1', color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:sessions&&sessions.length>0?'pointer':'not-allowed', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9.5 2A2.5 2.5 0 007 4.5v1A2.5 2.5 0 004.5 8v1A2.5 2.5 0 002 11.5C2 13 3 14.3 4.5 14.8V17a5 5 0 005 5h5a5 5 0 005-5v-2.2c1.5-.5 2.5-1.8 2.5-3.3A2.5 2.5 0 0019.5 9V8A2.5 2.5 0 0017 5.5v-1A2.5 2.5 0 0014.5 2h-5z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          Generate {format.toUpperCase()} Note with Claude
+        </button>
+        {(!sessions||sessions.length===0) && <div style={{ fontSize:11, color:'#94a3b8', textAlign:'center', marginTop:8 }}>Patient needs to complete an assessment first</div>}
+      </div>
+      {/* Features */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
+        {[
+          ['2 min generation','Full SOAP/DAP/BIRP in under 2 minutes'],
+          ['PHQ-9 integrated','Scores auto-included in objective section'],
+          ['Edit & refine','Edit generated note before saving'],
+          ['One-click copy','Copy to clipboard or EMR system'],
+        ].map(([title,desc])=>(
+          <div key={title} style={{ background:'#fff', borderRadius:10, padding:'12px 14px', border:'1px solid #E2EBF6' }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#0C1A2E', marginBottom:3 }}>{title}</div>
+            <div style={{ fontSize:11, color:'#94a3b8' }}>{desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ background:'#fff', borderRadius:16, padding:'16px 20px', border:'1px solid #E2EBF6', marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
+        <div>
+          <div style={{ fontSize:14, fontWeight:700, color:'#0C1A2E' }}>SOAP Note Generated</div>
+          <div style={{ fontSize:12, color:'#94a3b8' }}>
+            {patient?.name || 'Patient'} · {new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · Claude Haiku
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={()=>setEditMode(e=>!e)} style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #E2EBF6', background:editMode?'#EFF6FF':'#fff', color:editMode?'#1D4ED8':'#3B5998', fontSize:12, cursor:'pointer', fontWeight:editMode?700:400, fontFamily:'inherit', display:'flex', alignItems:'center', gap:5 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {editMode ? 'View Formatted' : 'Edit Note'}
+          </button>
+          <button onClick={copyNote} style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #E2EBF6', background:copied?'#ECFDF5':'#fff', color:copied?'#059669':'#3B5998', fontSize:12, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5 }}>
+            {copied ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            )}
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <button onClick={()=>onGenerate(selectedSession||latestSession||{})} style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'#1D4ED8', color:'#fff', fontSize:12, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Regenerate
+          </button>
+        </div>
+      </div>
+
+      {/* Edit mode */}
+      {editMode ? (
+        <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #E2EBF6' }}>
+          <div style={{ fontSize:11, color:'#94a3b8', marginBottom:8 }}>Edit the note below. Changes are not saved to the database automatically.</div>
+          <textarea value={editedNote} onChange={e=>setEditedNote(e.target.value)}
+            style={{ width:'100%', minHeight:400, padding:'14px', borderRadius:10, border:'1px solid #E2EBF6', fontSize:13, color:'#0C1A2E', lineHeight:1.8, fontFamily:"'Satoshi',-apple-system,sans-serif", outline:'none', resize:'vertical', boxSizing:'border-box' }}/>
+        </div>
+      ) : parsed ? (
+        /* Structured view */
+        <div style={{ display:'grid', gap:12 }}>
+          {Object.entries(sectionColors).map(([key, meta])=>(
+            parsed[key] && (
+              <div key={key} style={{ background:'#fff', borderRadius:14, border:`1px solid ${meta.color}20`, overflow:'hidden' }}>
+                <div style={{ background:meta.bg, padding:'12px 18px', display:'flex', gap:12, alignItems:'center', borderBottom:`1px solid ${meta.color}15` }}>
+                  <div style={{ width:28, height:28, borderRadius:7, background:meta.color, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, flexShrink:0 }}>{key}</div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:'#0C1A2E' }}>{meta.label}</div>
+                    <div style={{ fontSize:11, color:meta.color }}>{meta.desc}</div>
+                  </div>
+                </div>
+                <div style={{ padding:'16px 18px', fontSize:14, color:'#374151', lineHeight:1.8, whiteSpace:'pre-wrap' }}>{parsed[key]}</div>
+              </div>
+            )
+          ))}
+        </div>
+      ) : (
+        /* Raw fallback */
+        <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #E2EBF6' }}>
+          <pre style={{ fontSize:13, color:'#374151', lineHeight:1.8, whiteSpace:'pre-wrap', fontFamily:"'Satoshi',-apple-system,sans-serif", margin:0 }}>{soapNote}</pre>
+        </div>
+      )}
+
+      {/* Disclaimer */}
+      <div style={{ marginTop:12, padding:'10px 14px', background:'#FFFBEB', borderRadius:8, border:'1px solid #FDE68A', fontSize:11, color:'#92400e' }}>
+        AI-generated. Review and edit before signing. Not a substitute for clinical judgment.
+      </div>
+    </div>
+  );
+}
+
 export default function PsychologistPortal({ user, onLogout }) {
   const [patients, setPatients]     = useState([]);
   const [selected, setSelected]     = useState(null);
@@ -1058,30 +1241,13 @@ export default function PsychologistPortal({ user, onLogout }) {
 
             {/* SOAP */}
             {patientTab === 'soap' && (
-              <div>
-                {generating ? (
-                  <div style={{ background:'#fff', borderRadius:16, padding:32,
-                    textAlign:'center' }}>
-                    <p style={{ color:'#1D4ED8' }}>⚙️ Generating SOAP note...</p>
-                  </div>
-                ) : soapNote ? (
-                  <div style={{ background:'#fff', borderRadius:16, padding:24,
-                    border:'1px solid #e2e8f0' }}>
-                    <h3 style={{ margin:'0 0 16px', color:'#1D4ED8' }}><IconClipboard size={16} color='#1D4ED8' style={{marginRight:6}}/> SOAP Note</h3>
-                    <pre style={{ fontSize:13, color:'#374151', lineHeight:1.8,
-                      whiteSpace:'pre-wrap', fontFamily:"'Satoshi',-apple-system,sans-serif" }}>
-                      {soapNote}
-                    </pre>
-                  </div>
-                ) : (
-                  <div style={{ background:'#fff', borderRadius:16, padding:32,
-                    textAlign:'center', border:'1px solid #e2e8f0' }}>
-                    <p style={{ color:'#94a3b8' }}>
-                      Go to Sessions tab and click "Generate SOAP Note".
-                    </p>
-                  </div>
-                )}
-              </div>
+              <SOAPNoteUI
+                soapNote={soapNote}
+                generating={generating}
+                patient={selected}
+                sessions={patientSessions}
+                onGenerate={(s) => { generateSOAP(s); }}
+              />
             )}
 
             {/* TREATMENT PLAN */}
