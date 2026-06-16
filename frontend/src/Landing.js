@@ -70,7 +70,7 @@ function PHQLine({ data, color, w=120, h=48, animate=true }) {
 const FAQS = [
   { q:'Is PsycheFlow clinically validated?', a:'Yes. All instruments — including PHQ-9, GAD-7, WHO-5, PCL-5, and Big Five — are internationally validated and peer-reviewed. We implement the clinical gold standard rather than proprietary assessments.' },
   { q:'How does crisis detection work?', a:'The system monitors PHQ-9 item 9, C-SSRS responses, and journal sentiment in real time. When risk thresholds are crossed, the assigned psychologist and hospital admin are notified immediately.' },
-  { q:'Is patient data stored securely?', a:'Data is stored in Singapore (ap-southeast-1) with AES-256 encryption. We are compliant with India\'s DPDP Act 2023. Patient data is never used to train AI models.' },
+  { q:'Is patient data stored securely?', a:"Data is stored in Singapore (ap-southeast-1) with AES-256 encryption. We are compliant with India's DPDP Act 2023. Patient data is never used to train AI models." },
   { q:'Can hospitals integrate with existing EMR?', a:'PsycheFlow offers REST API access for enterprise hospitals. FHIR-compatible data export is available on the Enterprise plan.' },
   { q:'What happens if a patient shows suicidal ideation?', a:'The system flags the entry immediately. The assigned psychologist receives an in-app alert and push notification. The patient is shown crisis resources including iCall and Vandrevala Foundation helplines.' },
 ];
@@ -587,7 +587,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
               {
                 time:'10:00 PM', label:'Recovery Improves', color:'#0891B2', bg:'#ECFEFF',
                 icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-                story:'Over 6 weeks, Priya's PHQ-9 drops from 18 to 5. Her sleep score improves by 40%. She logs into PsycheFlow and sees her recovery chart.',
+                story:"Over 6 weeks, Priya's PHQ-9 drops from 18 to 5. Her sleep score improves by 40%. She logs into PsycheFlow and sees her recovery chart.",
                 outcome:'PHQ-9: 18 → 5. Sleep: improving. Mood streak: 14 days. In remission.',
                 visual:<div style={{ background:'#ECFEFF', borderRadius:12, padding:14 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:'#0891B2', marginBottom:8 }}>6-WEEK RECOVERY</div>
@@ -884,20 +884,20 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
             {[
               {
                 name:'Patient', price:'Free', period:'forever', color:S.blue, highlight:false,
-                desc:'For individuals managing their mental health.',
+                desc:"For individuals managing their mental health.",
                 features:['16 validated assessments','AI-powered insights','Journal with NLP analysis','ACT therapy exercises','Mood & sleep tracking','Crisis support resources'],
                 cta:'Get Started Free',
               },
               {
                 name:'Psychologist', price:'₹999', period:'per month', color:'#7C3AED', highlight:true,
-                desc:'For mental health professionals.',
+                desc:"For mental health professionals.",
                 features:['Everything in Patient','AI pre-session briefs','SOAP/DAP note generation','Treatment planning tools','Secure telemedicine','Up to 50 patients','Population analytics'],
-                cta:'Start Free — 14 Days',
+                cta:"Start Free — 14 Days",
                 badge:'Most Popular',
               },
               {
                 name:'Hospital', price:'Custom', period:'per month', color:'#059669', highlight:false,
-                desc:'For hospitals and multi-practitioner clinics.',
+                desc:"For hospitals and multi-practitioner clinics.",
                 features:['Everything in Psychologist','18 clinical modules','NABH compliance reporting','Unlimited patients & staff','OPD/IPD management','EHR integration','Dedicated support'],
                 cta:'Book Demo',
               },
@@ -1060,7 +1060,7 @@ export default function Landing({ onGetStarted, onLegal, onPsychLanding, onHospi
         <div style={{ maxWidth:1000, margin:'0 auto' }}>
           <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:24 }}>
             {[
-              { tag:'For Psychologists', h1:'Spend less time writing notes.', h2:'More time treating patients.', sub:'SOAP notes in 2 minutes. AI brief. Free for 14 days.', btn:'Start Free — 14 Days', action:onPsychLanding, primary:true },
+              { tag:'For Psychologists', h1:'Spend less time writing notes.', h2:'More time treating patients.', sub:'SOAP notes in 2 minutes. AI brief. Free for 14 days.', btn:"Start Free — 14 Days", action:onPsychLanding, primary:true },
               { tag:'For Hospitals', h1:'See every patient risk', h2:'before the consultation starts.', sub:'18 modules. NABH compliance. 30-minute setup.', btn:'Book Hospital Demo', action:onHospitalLanding, primary:false },
             ].map(c=>(
               <div key={c.tag} style={{ padding:40, background:'rgba(255,255,255,0.04)', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', transition:'border-color 0.2s' }}
